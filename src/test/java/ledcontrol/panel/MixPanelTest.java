@@ -2,7 +2,6 @@ package ledcontrol.panel;
 
 import static java.awt.Color.BLACK;
 import static java.awt.Color.GREEN;
-import static java.awt.Color.PINK;
 import static java.awt.Color.RED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -39,28 +38,34 @@ public class MixPanelTest {
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel();
 		inner1.setColor(1, 0, RED);
-		inner2.setColor(2, 1, GREEN);
 		inner1.repaint();
+
+		inner2.setColor(2, 1, GREEN);
 		inner2.repaint();
+
 		assertThat(getColors(sut), is(new Color[][] { //
-				new Color[] { OFF, RED, OFF }, //
-				new Color[] { OFF, OFF, GREEN } //
+				{ OFF, RED, OFF }, //
+				{ OFF, OFF, GREEN } //
 		}));
 	}
 
 	@Test
 	public void reappears() {
-		MixPanel sut = newSut(1, 1);
+		MixPanel sut = newSut(3, 2);
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel();
-		inner1.setColor(0, 0, RED);
-		inner2.setColor(0, 0, GREEN);
-		inner2.setColor(0, 0, BLACK);
+		inner1.fill(RED);
 		inner1.repaint();
+
+		inner2.fill(GREEN);
 		inner2.repaint();
+
+		inner2.fill(BLACK);
+		inner2.repaint();
+
 		assertThat(getColors(sut), is(new Color[][] { //
-				new Color[] { RED } //
-		}));
+				{ RED, RED, RED }, //
+				{ RED, RED, RED } }));
 	}
 
 	@Test
@@ -89,13 +94,49 @@ public class MixPanelTest {
 	}
 
 	@Test
-	public void flash() throws InterruptedException {
-		MixPanel sut = newSut(2, 1);
-		sut.createSubPanel().fill(PINK);
-		new FlashScene(sut.createSubPanel()).flash(GREEN, TimeUnit.MILLISECONDS, 10);
+	// TODO Peter ...continue here :-) (professional correct, implementation not)
+	public void flashOnBlack() throws InterruptedException {
+		MixPanel sut = newSut(3, 2);
+		Color colorOnUnderlyingPanel = BLACK;
+		sut.createSubPanel().fill(colorOnUnderlyingPanel);
+		Color flashColor = GREEN;
+		new FlashScene(sut.createSubPanel()) {
+			@Override
+			protected void sleep(TimeUnit unit, long duration) throws InterruptedException {
+				assertThat(getColors(sut), is(new Color[][] { //
+						{ flashColor, flashColor, flashColor }, //
+						{ flashColor, flashColor, flashColor } //
+				}));
+				super.sleep(unit, duration);
+			}
+		}.flash(flashColor, TimeUnit.MILLISECONDS, 10);
 		TimeUnit.MILLISECONDS.sleep(100);
 		assertThat(getColors(sut), is(new Color[][] { //
-				new Color[] { PINK, PINK } //
+				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel }, //
+				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel } //
+		}));
+	}
+
+	@Test
+	public void flashOnColor() throws InterruptedException {
+		MixPanel sut = newSut(3, 2);
+		Color colorOnUnderlyingPanel = RED;
+		sut.createSubPanel().fill(colorOnUnderlyingPanel);
+		Color flashColor = GREEN;
+		new FlashScene(sut.createSubPanel()) {
+			@Override
+			protected void sleep(TimeUnit unit, long duration) throws InterruptedException {
+				assertThat(getColors(sut), is(new Color[][] { //
+						{ flashColor, flashColor, flashColor }, //
+						{ flashColor, flashColor, flashColor } //
+				}));
+				super.sleep(unit, duration);
+			}
+		}.flash(flashColor, TimeUnit.MILLISECONDS, 10);
+		TimeUnit.MILLISECONDS.sleep(100);
+		assertThat(getColors(sut), is(new Color[][] { //
+				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel }, //
+				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel } //
 		}));
 	}
 
