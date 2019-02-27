@@ -6,9 +6,7 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static ledcontrol.TheSystem.MqttMessage.isPayload;
-import static ledcontrol.TheSystem.MqttMessage.isTopic;
+import static ledcontrol.runner.SystemRunner.configure;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -17,13 +15,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -37,10 +30,7 @@ import org.junit.Test;
 
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
-import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
 import ledcontrol.panel.MixPanel;
-import ledcontrol.scene.FlashScene;
-import ledcontrol.scene.GoalScene;
 
 public class SystemIntegrationIT {
 
@@ -147,16 +137,7 @@ public class SystemIntegrationIT {
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
-		GoalScene goalScene = new GoalScene(panel.createSubPanel(), COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT);
-		FlashScene flashScene = new FlashScene(panel.createSubPanel());
-		theSystem = new TheSystem(host, port, panel, outputStream);
-		theSystem.whenThen(isTopic("goal"), m -> {
-			// TODO JSON
-			String payload = m.getPayload();
-			String[] split = payload.split("\\:");
-			goalScene.setScore(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
-		});
-		theSystem.whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
+		theSystem = configure(new TheSystem(host, port, panel, outputStream), panel);
 	}
 
 }

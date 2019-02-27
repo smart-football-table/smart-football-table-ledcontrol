@@ -8,7 +8,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static ledcontrol.TheSystem.MqttMessage.isPayload;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
 
-import java.awt.Color;
 import java.io.IOException;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -52,6 +51,19 @@ public class SystemRunner {
 			}
 		}
 
+	}
+
+	public static TheSystem configure(TheSystem theSystem, MixPanel panel) {
+		GoalScene goalScene = new GoalScene(panel.createSubPanel(), RED, GREEN);
+		FlashScene flashScene = new FlashScene(panel.createSubPanel());
+		theSystem.whenThen(isTopic("goal"), m -> {
+			// TODO JSON
+			String payload = m.getPayload();
+			String[] split = payload.split("\\:");
+			goalScene.setScore(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
+		});
+		theSystem.whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
+		return theSystem;
 	}
 
 }
