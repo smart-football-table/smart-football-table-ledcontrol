@@ -91,7 +91,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "team1");
+		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "1:0");
 		assertThat(panelColors(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, OFF, OFF }, //
 				{ COLOR_TEAM_LEFT, OFF, OFF } }));
@@ -100,8 +100,8 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScoresTwice() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "team1");
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "team1");
+		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "1:0");
+		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "2:0");
 		assertThat(panelColors(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF }, //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF } //
@@ -147,14 +147,16 @@ public class SystemIntegrationIT {
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
-		GoalScene goalScene = new GoalScene(panel.createSubPanel(), COLOR_TEAM_LEFT);
+		GoalScene goalScene = new GoalScene(panel.createSubPanel(), COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT);
 		FlashScene flashScene = new FlashScene(panel.createSubPanel());
-		theSystem = new TheSystem(host, port, panel, outputStream) {
-			{
-				whenThen(isTopic("goal").and(isPayload("team1")), m -> goalScene.incrementScore());
-				whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
-			}
-		};
+		theSystem = new TheSystem(host, port, panel, outputStream);
+		theSystem.whenThen(isTopic("goal"), m -> {
+			// TODO JSON
+			String payload = m.getPayload();
+			String[] split = payload.split("\\:");
+			goalScene.setScore(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
+		});
+		theSystem.whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
 	}
 
 }
