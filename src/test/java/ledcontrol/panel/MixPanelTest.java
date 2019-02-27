@@ -1,0 +1,112 @@
+package ledcontrol.panel;
+
+import static java.awt.Color.BLACK;
+import static java.awt.Color.GREEN;
+import static java.awt.Color.PINK;
+import static java.awt.Color.RED;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+import java.awt.Color;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.Test;
+
+import ledcontrol.panel.MixPanel.OverlayStrategy;
+import ledcontrol.scene.FlashScene;
+
+public class MixPanelTest {
+
+	private static final Color OFF = BLACK;
+	private Color[][] colors;
+
+	@Test
+	public void writeThrough() {
+		MixPanel sut = newSut(3, 2);
+		Panel inner = sut.createSubPanel();
+		inner.setColor(2, 1, RED);
+		inner.repaint();
+		assertThat(getColors(sut), is(new Color[][] { //
+				new Color[] { OFF, OFF, OFF }, //
+				new Color[] { OFF, OFF, RED } //
+		}));
+
+	}
+
+	@Test
+	public void twoPanels() {
+		MixPanel sut = newSut(3, 2);
+		Panel inner1 = sut.createSubPanel();
+		Panel inner2 = sut.createSubPanel();
+		inner1.setColor(1, 0, RED);
+		inner2.setColor(2, 1, GREEN);
+		inner1.repaint();
+		inner2.repaint();
+		assertThat(getColors(sut), is(new Color[][] { //
+				new Color[] { OFF, RED, OFF }, //
+				new Color[] { OFF, OFF, GREEN } //
+		}));
+	}
+
+	@Test
+	public void reappears() {
+		MixPanel sut = newSut(1, 1);
+		Panel inner1 = sut.createSubPanel();
+		Panel inner2 = sut.createSubPanel();
+		inner1.setColor(0, 0, RED);
+		inner2.setColor(0, 0, GREEN);
+		inner2.setColor(0, 0, BLACK);
+		inner1.repaint();
+		inner2.repaint();
+		assertThat(getColors(sut), is(new Color[][] { //
+				new Color[] { RED } //
+		}));
+	}
+
+	@Test
+	public void mixTwoColors() {
+		MixPanel sut = newSut(1, 1).setOverlayStrategy(new OverlayStrategy() {
+			@Override
+			public void copy(int x, int y, Color color, Panel target) {
+				Color e = target.getColors()[y][x];
+				int r = (color.getRed() + e.getRed()) / 2;
+				int g = (color.getGreen() + e.getGreen()) / 2;
+				int b = (color.getBlue() + e.getBlue()) / 2;
+				target.setColor(x, y, new Color(r, g, b));
+			}
+		});
+
+		Panel inner1 = sut.createSubPanel();
+		Panel inner2 = sut.createSubPanel();
+		inner1.setColor(0, 0, RED);
+		inner2.setColor(0, 0, GREEN);
+		inner1.repaint();
+		inner2.repaint();
+		// TODO are this the right colors
+		assertThat(getColors(sut), is(new Color[][] { //
+				new Color[] { new Color(79, 159, 0) } //
+		}));
+	}
+
+	@Test
+	public void flash() throws InterruptedException {
+		MixPanel sut = newSut(2, 1);
+		sut.createSubPanel().fill(PINK);
+		new FlashScene(sut.createSubPanel()).flash(GREEN, TimeUnit.MILLISECONDS, 10);
+		TimeUnit.MILLISECONDS.sleep(100);
+		assertThat(getColors(sut), is(new Color[][] { //
+				new Color[] { PINK, PINK } //
+		}));
+	}
+
+	private MixPanel newSut(int width, int height) {
+		MixPanel sut = new MixPanel(width, height);
+		sut.addRepaintListener(p -> colors = p.getColors());
+		return sut;
+	}
+
+	private Color[][] getColors(Panel sut) {
+		return colors;
+	}
+
+}
