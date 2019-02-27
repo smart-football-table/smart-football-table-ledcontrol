@@ -7,6 +7,8 @@ import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static ledcontrol.TheSystem.MqttMessage.isPayload;
+import static ledcontrol.TheSystem.MqttMessage.isTopic;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -15,8 +17,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -30,6 +37,7 @@ import org.junit.Test;
 
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
+import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
 import ledcontrol.panel.MixPanel;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.GoalScene;
@@ -142,16 +150,9 @@ public class SystemIntegrationIT {
 		GoalScene goalScene = new GoalScene(panel.createSubPanel(), COLOR_TEAM_LEFT);
 		FlashScene flashScene = new FlashScene(panel.createSubPanel());
 		theSystem = new TheSystem(host, port, panel, outputStream) {
-			@Override
-			protected void received(String topic, String payload) {
-				if (topic.equals("goal")) {
-					if (payload.equals("team1")) {
-						goalScene.incrementScore();
-					}
-				}
-				if (topic.equals("flash")) {
-					flashScene.flash(WHITE, SECONDS, 1);
-				}
+			{
+				whenThen(isTopic("goal").and(isPayload("team1")), m -> goalScene.incrementScore());
+				whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
 			}
 		};
 	}

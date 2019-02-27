@@ -4,6 +4,8 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.GREEN;
 import static java.awt.Color.WHITE;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static ledcontrol.TheSystem.MqttMessage.isPayload;
+import static ledcontrol.TheSystem.MqttMessage.isTopic;
 
 import java.io.IOException;
 
@@ -35,17 +37,11 @@ public class SystemRunner {
 		GoalScene goalScene = new GoalScene(panel.createSubPanel(), GREEN);
 		FlashScene flashScene = new FlashScene(panel.createSubPanel());
 		try (TheSystem system = new TheSystem("localhost", 1883, panel, connection.getOutputStream()) {
-			@Override
-			protected void received(String topic, String payload) {
-				if (topic.equals("goal")) {
-					if (payload.equals("team1")) {
-						goalScene.incrementScore();
-					}
-				}
-				if (topic.equals("flash")) {
-					flashScene.flash(WHITE, SECONDS, 1);
-				}
+			{
+				whenThen(isTopic("goal").and(isPayload("team1")), m -> goalScene.incrementScore());
+				whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
 			}
+
 		}) {
 			Object o = new Object();
 			synchronized (o) {

@@ -4,6 +4,10 @@ import java.awt.Color;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -11,9 +15,39 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
+import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.panel.Panel;
 
 public class TheSystem implements Closeable {
+
+	public static class MqttMessage {
+
+		private String topic;
+		private String payload;
+
+		public MqttMessage(String topic, String payload) {
+			this.topic = topic;
+			this.payload = payload;
+		}
+
+		public String getTopic() {
+			return topic;
+		}
+
+		public String getPayload() {
+			return payload;
+		}
+
+		public static Predicate<TheSystem.MqttMessage> isTopic(String topic) {
+			return m -> m.getTopic().equals(topic);
+		}
+
+		public static Predicate<TheSystem.MqttMessage> isPayload(String payload) {
+			return m -> m.getPayload().equals(payload);
+		}
+
+	}
 
 	private final IMqttClient mqttClient;
 	private final Proto proto;
@@ -25,7 +59,7 @@ public class TheSystem implements Closeable {
 		buffer = new Color[panel.getWidth() * panel.getHeight()];
 		mqttClient = makeMqttClient(host, port);
 		mqttClient.subscribe("#", (topic, message) -> {
-			received(topic, new String(message.getPayload()));
+			received(new MqttMessage(topic, new String(message.getPayload())));
 		});
 		panel.addRepaintListener(p -> repaint(p));
 	}
@@ -45,7 +79,18 @@ public class TheSystem implements Closeable {
 		}
 	}
 
-	protected void received(String topic, String payload) {
+	private final Map<Predicate<MqttMessage>, Consumer<MqttMessage>> conditions = new HashMap<>();
+
+	private void received(MqttMessage message) {
+		for (Entry<Predicate<MqttMessage>, Consumer<MqttMessage>> entry : conditions.entrySet()) {
+			if (entry.getKey().test(message)) {
+				entry.getValue().accept(message);
+			}
+		}
+	}
+
+	public void whenThen(Predicate<MqttMessage> predicate, Consumer<MqttMessage> consumer) {
+		conditions.put(predicate, consumer);
 	}
 
 	@Override
