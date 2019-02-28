@@ -23,7 +23,7 @@ FASTLED_USING_NAMESPACE
 CRGB leds[NUM_LEDS];
 
 #define BRIGHTNESS         255
-#define FRAMES_PER_SECOND  120
+#define FRAMES_PER_SECOND  240
 
 void setup() {
   delay(3000); // 3 second delay for recovery
