@@ -23,7 +23,7 @@ import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.MixPanel;
 import ledcontrol.rest.ScoreMessage;
 import ledcontrol.scene.FlashScene;
-import ledcontrol.scene.GoalScene;
+import ledcontrol.scene.ScoreScene;
 
 public class SystemRunner {
 
@@ -36,7 +36,7 @@ public class SystemRunner {
 		int ledCount = 120;
 
 		MixPanel panel = new MixPanel(ledCount, 1);
-		panel.fill(BLACK);
+		panel.createSubPanel().fill(BLACK);
 
 		try (TheSystem theSystem = configure(new TheSystem("localhost", 1883, panel, connection.getOutputStream()),
 				panel)) {
@@ -49,7 +49,7 @@ public class SystemRunner {
 	}
 
 	public static TheSystem configure(TheSystem theSystem, MixPanel panel) {
-		GoalScene goalScene = new GoalScene(panel.createSubPanel(), RED, GREEN);
+		ScoreScene goalScene = new ScoreScene(panel.createSubPanel(), RED, GREEN);
 		FlashScene flashScene = new FlashScene(panel.createSubPanel());
 		Gson gson = new Gson();
 		theSystem.whenThen(isTopic("score"), m -> goalScene.setScore(parsePayload(gson, m, ScoreMessage.class).score));

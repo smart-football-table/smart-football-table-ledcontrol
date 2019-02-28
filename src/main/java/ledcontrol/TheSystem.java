@@ -18,7 +18,6 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
-import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.panel.Panel;
 
 public class TheSystem implements Closeable {
@@ -91,7 +90,11 @@ public class TheSystem implements Closeable {
 	private void received(MqttMessage message) {
 		for (Entry<Predicate<MqttMessage>, Consumer<MqttMessage>> entry : conditions.entrySet()) {
 			if (entry.getKey().test(message)) {
-				entry.getValue().accept(message);
+				try {
+					entry.getValue().accept(message);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

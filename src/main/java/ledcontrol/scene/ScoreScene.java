@@ -4,12 +4,12 @@ import java.awt.Color;
 
 import ledcontrol.panel.Panel;
 
-public class GoalScene implements Scene {
+public class ScoreScene implements Scene {
 
 	private final Panel panel;
 	private final Color[] colors;
 
-	public GoalScene(Panel panel, Color... colors) {
+	public ScoreScene(Panel panel, Color... colors) {
 		this.panel = panel;
 		this.colors = colors;
 	}
@@ -19,13 +19,14 @@ public class GoalScene implements Scene {
 	}
 
 	private void repaint(int... scores) {
-		for (int x = 0; x < panel.getWidth(); x++) {
-			if (scores[0] > x) {
-				drawColumn(x, colors[0]);
-			}
-			if (x >= panel.getWidth() - scores[1]) {
-				drawColumn(x, colors[1]);
-			}
+		panel.clear();
+		// TODO maximum half of width
+		for (int x = 0; x < scores[0]; x++) {
+			drawColumn(x, colors[0]);
+		}
+		// TODO maximum half of width
+		for (int x = 0; x < scores[1]; x++) {
+			drawColumn(panel.getWidth() - x - 1, colors[1]);
 		}
 		panel.repaint();
 	}

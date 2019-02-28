@@ -11,12 +11,12 @@ import org.junit.Test;
 
 import ledcontrol.panel.Panel;
 
-public class GoalSceneTest {
+public class ScoreSceneTest {
 
 	private static final Color OFF = null;
 
 	private Panel panel = new Panel(2 + 1 + 2, 3);
-	private GoalScene sut = new GoalScene(panel, RED, GREEN);
+	private ScoreScene sut = new ScoreScene(panel, RED, GREEN);
 
 	@Test
 	public void _0_0() {
