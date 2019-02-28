@@ -68,13 +68,22 @@ public class SystemRunner {
 			int[] score = parsePayload(gson, m, ScoreMessage.class).score;
 			goalScene.setScore(score);
 		});
-		theSystem.whenThen(isTopic("foul"), ((Consumer<MqttMessage>) m -> flashScene.fill(WHITE))
-				.andThen(sleep(SECONDS, 1)).andThen(m -> flashScene.clear()));
+		theSystem.whenThen(isTopic("foul"), flashThenWait(flashScene, WHITE, SECONDS, 1));
+		Consumer<MqttMessage> winnerColor = (Consumer<MqttMessage>) m -> flashScene
+				.fill(parsePayload(gson, m, WinnerMessage.class).winner == 0 ? colorTeam1 : colorTeam2);
+		Consumer<MqttMessage> sleep250Ms = sleep(TimeUnit.MILLISECONDS, 250);
+		Consumer<? super MqttMessage> clear = m -> flashScene.clear();
 		theSystem.whenThen(isTopic("winner"),
-				((Consumer<MqttMessage>) m -> flashScene
-						.fill(parsePayload(gson, m, WinnerMessage.class).winner == 0 ? colorTeam1 : colorTeam2))
-								.andThen(sleep(SECONDS, 5)).andThen(m -> flashScene.clear()));
+				winnerColor.andThen(sleep250Ms).andThen(clear).andThen(sleep250Ms).andThen(winnerColor)
+						.andThen(sleep250Ms).andThen(clear).andThen(sleep250Ms).andThen(winnerColor).andThen(sleep250Ms)
+						.andThen(clear));
 		return theSystem;
+	}
+
+	private static Consumer<MqttMessage> flashThenWait(FlashScene flashScene, Color color, TimeUnit timeUnit,
+			int duration) {
+		return ((Consumer<MqttMessage>) m -> flashScene.fill(color)).andThen(sleep(timeUnit, duration))
+				.andThen(m -> flashScene.clear());
 	}
 
 	private static Consumer<MqttMessage> sleep(TimeUnit timeUnit, int duration) {
