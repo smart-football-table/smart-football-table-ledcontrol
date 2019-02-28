@@ -3,6 +3,7 @@ package ledcontrol;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.awt.Color.BLACK;
+import static java.awt.Color.BLUE;
 import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
@@ -38,14 +39,14 @@ public class SystemIntegrationIT {
 
 	private static final String LOCALHOST = "localhost";
 	private static final Color OFF = BLACK;
-	private static final Color COLOR_TEAM_LEFT = RED;
-	private static final Color COLOR_TEAM_RIGHT = GREEN;
+	private static final Color COLOR_TEAM_LEFT = BLUE;
+	private static final Color COLOR_TEAM_RIGHT = RED;
 
 	private static final int BROKER_PORT = 1883;
 
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-	private final StackedPanel panel = new StackedPanel(3, 2);
+	private final StackedPanel panel = new StackedPanel(5, 2);
 
 	private Server server;
 	private TheSystem theSystem;
@@ -85,8 +86,9 @@ public class SystemIntegrationIT {
 		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
 		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(1, 0));
 		assertThat(panelColors(), is(new Color[][] { //
-				{ COLOR_TEAM_LEFT, OFF, OFF }, //
-				{ COLOR_TEAM_LEFT, OFF, OFF } }));
+				{ COLOR_TEAM_LEFT, OFF, OFF, OFF, OFF }, //
+				{ COLOR_TEAM_LEFT, OFF, OFF, OFF, OFF }, //
+		}));
 	}
 
 	@Test
@@ -95,8 +97,8 @@ public class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(1, 0));
 		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(2, 0));
 		assertThat(panelColors(), is(new Color[][] { //
-				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF }, //
-				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF } //
+				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF, OFF, OFF }, //
+				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF, OFF, OFF }, //
 		}));
 	}
 
@@ -106,12 +108,12 @@ public class SystemIntegrationIT {
 	}
 
 	@Test
-	public void flash() throws MqttSecurityException, MqttException, InterruptedException, IOException {
+	public void flashesOnFoul() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "flash", "");
+		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "foul", "");
 		assertThat(panelColors(), is(new Color[][] { //
-				{ WHITE, WHITE, WHITE }, //
-				{ WHITE, WHITE, WHITE } //
+				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
+				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 		}));
 
 	}
