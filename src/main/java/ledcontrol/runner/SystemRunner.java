@@ -18,6 +18,7 @@ import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.UnsupportedCommOperationException;
 import ledcontrol.TheSystem;
+import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.MixPanel;
 import ledcontrol.rest.ScoreMessage;
@@ -51,12 +52,13 @@ public class SystemRunner {
 		GoalScene goalScene = new GoalScene(panel.createSubPanel(), RED, GREEN);
 		FlashScene flashScene = new FlashScene(panel.createSubPanel());
 		Gson gson = new Gson();
-		theSystem.whenThen(isTopic("score"), m -> {
-			ScoreMessage scoreMessage = gson.fromJson(m.getPayload(), ScoreMessage.class);
-			goalScene.setScore(scoreMessage.score);
-		});
+		theSystem.whenThen(isTopic("score"), m -> goalScene.setScore(parsePayload(gson, m, ScoreMessage.class).score));
 		theSystem.whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
 		return theSystem;
+	}
+
+	private static <T> T parsePayload(Gson gson, MqttMessage m, Class<T> clazz) {
+		return gson.fromJson(m.getPayload(), clazz);
 	}
 
 }
