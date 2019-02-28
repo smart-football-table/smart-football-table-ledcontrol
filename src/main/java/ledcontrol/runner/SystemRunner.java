@@ -9,6 +9,8 @@ import static ledcontrol.TheSystem.MqttMessage.isTopic;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
@@ -21,6 +23,7 @@ import gnu.io.UnsupportedCommOperationException;
 import ledcontrol.TheSystem;
 import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
+import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.rest.ScoreMessage;
 import ledcontrol.rest.WinnerMessage;
@@ -53,14 +56,35 @@ public class SystemRunner {
 	public static TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 		Color colorTeam1 = BLUE;
 		Color colorTeam2 = RED;
-		ScoreScene goalScene = new ScoreScene(panel.createSubPanel(), colorTeam1, colorTeam2).pixelsPerGoal(1);
-		FlashScene flashScene = new FlashScene(panel.createSubPanel());
+
+		Panel goalPanel = panel.createSubPanel();
+		Panel flashPanel = panel.createSubPanel();
+
+		ScoreScene goalScene = new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(1);
+		FlashScene flashScene = new FlashScene(flashPanel);
+
 		Gson gson = new Gson();
-		theSystem.whenThen(isTopic("score"), m -> goalScene.setScore(parsePayload(gson, m, ScoreMessage.class).score));
-		theSystem.whenThen(isTopic("foul"), m -> flashScene.flash(WHITE, SECONDS, 1));
-		theSystem.whenThen(isTopic("winner"), m -> flashScene
-				.flash(parsePayload(gson, m, WinnerMessage.class).winner == 0 ? colorTeam1 : colorTeam2, SECONDS, 5));
+		theSystem.whenThen(isTopic("score"), m -> {
+			int[] score = parsePayload(gson, m, ScoreMessage.class).score;
+			goalScene.setScore(score);
+		});
+		theSystem.whenThen(isTopic("foul"), ((Consumer<MqttMessage>) m -> flashScene.fill(WHITE))
+				.andThen(sleep(SECONDS, 1)).andThen(m -> flashScene.clear()));
+		theSystem.whenThen(isTopic("winner"),
+				((Consumer<MqttMessage>) m -> flashScene
+						.fill(parsePayload(gson, m, WinnerMessage.class).winner == 0 ? colorTeam1 : colorTeam2))
+								.andThen(sleep(SECONDS, 5)).andThen(m -> flashScene.clear()));
 		return theSystem;
+	}
+
+	private static Consumer<MqttMessage> sleep(TimeUnit timeUnit, int duration) {
+		return m -> {
+			try {
+				timeUnit.sleep(duration);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		};
 	}
 
 	private static <T> T parsePayload(Gson gson, MqttMessage m, Class<T> clazz) {

@@ -7,7 +7,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.awt.Color;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
@@ -103,22 +102,14 @@ public class StackedPanelTest {
 	}
 
 	@Test
-	public void flashOnBlack() throws InterruptedException {
+	public void flashOnBlack() {
 		StackedPanel sut = newSut(3, 2);
 		Color colorOnUnderlyingPanel = BLACK;
 		sut.createSubPanel().fill(colorOnUnderlyingPanel);
 		Color flashColor = GREEN;
-		new FlashScene(sut.createSubPanel()) {
-			@Override
-			protected void sleep(TimeUnit unit, long duration) throws InterruptedException {
-				assertThat(getColors(sut), is(new Color[][] { //
-						{ flashColor, flashColor, flashColor }, //
-						{ flashColor, flashColor, flashColor } //
-				}));
-				super.sleep(unit, duration);
-			}
-		}.flash(flashColor, TimeUnit.MILLISECONDS, 10);
-		TimeUnit.MILLISECONDS.sleep(100);
+		FlashScene flashScene = new FlashScene(sut.createSubPanel());
+		flashScene.fill(flashColor);
+		flashScene.clear();
 		assertThat(getColors(sut), is(new Color[][] { //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel }, //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel } //
@@ -126,22 +117,14 @@ public class StackedPanelTest {
 	}
 
 	@Test
-	public void flashOnColor() throws InterruptedException {
+	public void flashOnColor() {
 		StackedPanel sut = newSut(3, 2);
 		Color colorOnUnderlyingPanel = RED;
 		sut.createSubPanel().fill(colorOnUnderlyingPanel);
 		Color flashColor = GREEN;
-		new FlashScene(sut.createSubPanel()) {
-			@Override
-			protected void sleep(TimeUnit unit, long duration) throws InterruptedException {
-				assertThat(getColors(sut), is(new Color[][] { //
-						{ flashColor, flashColor, flashColor }, //
-						{ flashColor, flashColor, flashColor } //
-				}));
-				super.sleep(unit, duration);
-			}
-		}.flash(flashColor, TimeUnit.MILLISECONDS, 10);
-		TimeUnit.MILLISECONDS.sleep(100);
+		FlashScene flashScene = new FlashScene(sut.createSubPanel());
+		flashScene.fill(flashColor);
+		flashScene.clear();
 		assertThat(getColors(sut), is(new Color[][] { //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel }, //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel } //

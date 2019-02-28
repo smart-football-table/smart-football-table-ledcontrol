@@ -4,6 +4,8 @@ import static java.lang.Math.min;
 
 import java.awt.Color;
 
+import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
+import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.panel.Panel;
 
 public class ScoreScene implements Scene {
@@ -23,10 +25,6 @@ public class ScoreScene implements Scene {
 	}
 
 	public void setScore(int... scores) {
-		repaint(scores);
-	}
-
-	private void repaint(int... scores) {
 		panel.clear();
 		int width = panel.getWidth();
 		for (int x = 0; x < min(scores[0] * pixelsPerGoal, width / 2); x++) {
@@ -42,6 +40,10 @@ public class ScoreScene implements Scene {
 		for (int y = 0; y < panel.getHeight(); y++) {
 			panel.setColor(col, y, color);
 		}
+	}
+
+	public Consumer<MqttMessage> consumer(int[] scores) {
+		return m -> setScore(scores);
 	}
 
 }
