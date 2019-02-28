@@ -1,5 +1,7 @@
 package ledcontrol;
 
+import static java.awt.Color.BLACK;
+
 import java.awt.Color;
 import java.io.Closeable;
 import java.io.IOException;
@@ -65,12 +67,17 @@ public class TheSystem implements Closeable {
 	}
 
 	private void repaint(Panel panel) {
+		int width = panel.getWidth();
+		int height = panel.getHeight();
+		Color[][] colors = panel.getColors();
 		synchronized (buffer) {
-			int width = panel.getWidth();
 			try {
-				Color[][] colors = panel.getColors();
-				for (int y = 0; y < colors.length; y++) {
-					System.arraycopy(colors[y], 0, buffer, width * y, width);
+				for (int y = 0; y < height; y++) {
+					Color[] row = colors[y];
+					for (int x = 0; x < width; x++) {
+						Color color = row[x];
+						buffer[width * y + x] = color == null ? BLACK : color;
+					}
 				}
 				proto.write(buffer);
 			} catch (IOException e) {

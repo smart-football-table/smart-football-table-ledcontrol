@@ -1,6 +1,5 @@
 package ledcontrol.scene;
 
-import static java.awt.Color.BLACK;
 import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
 import static org.hamcrest.CoreMatchers.is;
@@ -14,6 +13,8 @@ import ledcontrol.panel.Panel;
 
 public class GoalSceneTest {
 
+	private static final Color OFF = null;
+
 	private Panel panel = new Panel(2 + 1 + 2, 3);
 	private GoalScene sut = new GoalScene(panel, RED, GREEN);
 
@@ -21,9 +22,9 @@ public class GoalSceneTest {
 	public void _0_0() {
 		whenScoreIs(0, 0);
 		thenPanelIs(new Color[][] { //
-				{ BLACK, BLACK, BLACK, BLACK, BLACK }, //
-				{ BLACK, BLACK, BLACK, BLACK, BLACK }, //
-				{ BLACK, BLACK, BLACK, BLACK, BLACK } //
+				{ OFF, OFF, OFF, OFF, OFF }, //
+				{ OFF, OFF, OFF, OFF, OFF }, //
+				{ OFF, OFF, OFF, OFF, OFF } //
 		});
 	}
 
@@ -31,9 +32,9 @@ public class GoalSceneTest {
 	public void _1_0() {
 		whenScoreIs(1, 0);
 		thenPanelIs(new Color[][] { //
-				{ RED, BLACK, BLACK, BLACK, BLACK }, //
-				{ RED, BLACK, BLACK, BLACK, BLACK }, //
-				{ RED, BLACK, BLACK, BLACK, BLACK } //
+				{ RED, OFF, OFF, OFF, OFF }, //
+				{ RED, OFF, OFF, OFF, OFF }, //
+				{ RED, OFF, OFF, OFF, OFF } //
 		});
 	}
 
@@ -41,9 +42,9 @@ public class GoalSceneTest {
 	public void _0_1() {
 		whenScoreIs(0, 1);
 		thenPanelIs(new Color[][] { //
-				{ BLACK, BLACK, BLACK, BLACK, GREEN }, //
-				{ BLACK, BLACK, BLACK, BLACK, GREEN }, //
-				{ BLACK, BLACK, BLACK, BLACK, GREEN } //
+				{ OFF, OFF, OFF, OFF, GREEN }, //
+				{ OFF, OFF, OFF, OFF, GREEN }, //
+				{ OFF, OFF, OFF, OFF, GREEN } //
 		});
 	}
 
@@ -51,9 +52,9 @@ public class GoalSceneTest {
 	public void _2_2() {
 		whenScoreIs(2, 2);
 		thenPanelIs(new Color[][] { //
-				{ RED, RED, BLACK, GREEN, GREEN }, //
-				{ RED, RED, BLACK, GREEN, GREEN }, //
-				{ RED, RED, BLACK, GREEN, GREEN } //
+				{ RED, RED, OFF, GREEN, GREEN }, //
+				{ RED, RED, OFF, GREEN, GREEN }, //
+				{ RED, RED, OFF, GREEN, GREEN } //
 		});
 	}
 

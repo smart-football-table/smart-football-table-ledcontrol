@@ -16,7 +16,8 @@ import ledcontrol.scene.FlashScene;
 
 public class MixPanelTest {
 
-	private static final Color OFF = BLACK;
+	private static final Color OFF = null;
+
 	private Color[][] colors;
 
 	@Test
@@ -60,7 +61,7 @@ public class MixPanelTest {
 		inner2.fill(GREEN);
 		inner2.repaint();
 
-		inner2.fill(BLACK);
+		inner2.fill(OFF);
 		inner2.repaint();
 
 		assertThat(getColors(sut), is(new Color[][] { //
@@ -73,11 +74,16 @@ public class MixPanelTest {
 		MixPanel sut = newSut(1, 1).setOverlayStrategy(new OverlayStrategy() {
 			@Override
 			public void copy(int x, int y, Color color, Panel target) {
-				Color e = target.getColors()[y][x];
-				int r = (color.getRed() + e.getRed()) / 2;
-				int g = (color.getGreen() + e.getGreen()) / 2;
-				int b = (color.getBlue() + e.getBlue()) / 2;
+				Color c1 = orBlack(color);
+				Color c2 = orBlack(target.getColors()[y][x]);
+				int r = (c1.getRed() + c2.getRed()) / 2;
+				int g = (c1.getGreen() + c2.getGreen()) / 2;
+				int b = (c1.getBlue() + c2.getBlue()) / 2;
 				target.setColor(x, y, new Color(r, g, b));
+			}
+
+			private Color orBlack(Color color) {
+				return color == null ? BLACK : color;
 			}
 		});
 

@@ -1,7 +1,5 @@
 package ledcontrol.panel;
 
-import static java.awt.Color.BLACK;
-
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +10,8 @@ public class MixPanel extends Panel {
 
 	public interface OverlayStrategy {
 		OverlayStrategy DEFAULT = new OverlayStrategy() {
-			private Color transparent = BLACK;
+
+			private Color transparent = null;
 
 			@Override
 			public void copy(int x, int y, Color newColor, Panel target) {

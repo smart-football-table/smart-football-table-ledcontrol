@@ -1,7 +1,5 @@
 package ledcontrol.scene;
 
-import static java.awt.Color.BLACK;
-
 import java.awt.Color;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +19,7 @@ public class FlashScene implements Scene {
 		panel.repaint();
 		Executors.newSingleThreadExecutor().submit(() -> {
 			sleep(unit, duration);
-			panel.fill(BLACK);
+			panel.clear();
 			panel.repaint();
 			return null;
 		});
