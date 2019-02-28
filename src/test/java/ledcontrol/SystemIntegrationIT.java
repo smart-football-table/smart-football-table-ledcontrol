@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -81,7 +83,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "1:0");
+		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(1, 0));
 		assertThat(panelColors(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, OFF, OFF }, //
 				{ COLOR_TEAM_LEFT, OFF, OFF } }));
@@ -90,12 +92,17 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScoresTwice() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "1:0");
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "goal", "2:0");
+		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(1, 0));
+		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(2, 0));
 		assertThat(panelColors(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF }, //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF } //
 		}));
+	}
+
+	private String score(int... scores) {
+		return "{ \"score\": [ " + IntStream.of(scores).mapToObj(String::valueOf).collect(Collectors.joining(", "))
+				+ " ] }";
 	}
 
 	@Test

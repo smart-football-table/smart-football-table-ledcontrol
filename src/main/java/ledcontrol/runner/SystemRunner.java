@@ -5,7 +5,6 @@ import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static ledcontrol.TheSystem.MqttMessage.isPayload;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
 
 import java.io.IOException;
@@ -13,12 +12,15 @@ import java.io.IOException;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
+import com.google.gson.Gson;
+
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.UnsupportedCommOperationException;
 import ledcontrol.TheSystem;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.MixPanel;
+import ledcontrol.rest.ScoreMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.GoalScene;
 
@@ -35,16 +37,8 @@ public class SystemRunner {
 		MixPanel panel = new MixPanel(ledCount, 1);
 		panel.fill(BLACK);
 
-		GoalScene goalScene = new GoalScene(panel.createSubPanel(), GREEN, RED);
-		FlashScene flashScene = new FlashScene(panel.createSubPanel());
-		try (TheSystem theSystem = new TheSystem("localhost", 1883, panel, connection.getOutputStream())) {
-			theSystem.whenThen(isTopic("goal"), m -> {
-				// TODO JSON
-				String payload = m.getPayload();
-				String[] split = payload.split("\\:");
-				goalScene.setScore(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
-			});
-			theSystem.whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
+		try (TheSystem theSystem = configure(new TheSystem("localhost", 1883, panel, connection.getOutputStream()),
+				panel)) {
 			Object o = new Object();
 			synchronized (o) {
 				o.wait();
@@ -56,11 +50,10 @@ public class SystemRunner {
 	public static TheSystem configure(TheSystem theSystem, MixPanel panel) {
 		GoalScene goalScene = new GoalScene(panel.createSubPanel(), RED, GREEN);
 		FlashScene flashScene = new FlashScene(panel.createSubPanel());
-		theSystem.whenThen(isTopic("goal"), m -> {
-			// TODO JSON
-			String payload = m.getPayload();
-			String[] split = payload.split("\\:");
-			goalScene.setScore(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
+		Gson gson = new Gson();
+		theSystem.whenThen(isTopic("score"), m -> {
+			ScoreMessage scoreMessage = gson.fromJson(m.getPayload(), ScoreMessage.class);
+			goalScene.setScore(scoreMessage.score);
 		});
 		theSystem.whenThen(isTopic("flash"), m -> flashScene.flash(WHITE, SECONDS, 1));
 		return theSystem;
