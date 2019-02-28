@@ -47,6 +47,7 @@ public class MixPanel extends Panel {
 	}
 
 	private void mixTo(Panel target) {
+		clear();
 		for (Panel inner : inners) {
 			Color[][] colors = inner.getColors();
 			for (int y = 0; y < colors.length; y++) {

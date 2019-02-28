@@ -74,33 +74,35 @@ public class MixPanelTest {
 		MixPanel sut = newSut(1, 1).setOverlayStrategy(new OverlayStrategy() {
 			@Override
 			public void copy(int x, int y, Color color, Panel target) {
-				Color c1 = orBlack(color);
-				Color c2 = orBlack(target.getColors()[y][x]);
+				target.setColor(x, y, mix(color, target.getColors()[y][x]));
+			}
+
+			private Color mix(Color c1, Color c2) {
+				if (c1 == null) {
+					return c2;
+				}
+				if (c2 == null) {
+					return c1;
+				}
 				int r = (c1.getRed() + c2.getRed()) / 2;
 				int g = (c1.getGreen() + c2.getGreen()) / 2;
 				int b = (c1.getBlue() + c2.getBlue()) / 2;
-				target.setColor(x, y, new Color(r, g, b));
-			}
-
-			private Color orBlack(Color color) {
-				return color == null ? BLACK : color;
+				return new Color(r, g, b);
 			}
 		});
 
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel();
 		inner1.setColor(0, 0, RED);
-		inner2.setColor(0, 0, GREEN);
 		inner1.repaint();
+		inner2.setColor(0, 0, GREEN);
 		inner2.repaint();
-		// TODO are this the right colors
 		assertThat(getColors(sut), is(new Color[][] { //
-				new Color[] { new Color(79, 159, 0) } //
+				new Color[] { new Color(127, 127, 0) } //
 		}));
 	}
 
 	@Test
-	// TODO Peter ...continue here :-) (professional correct, implementation not)
 	public void flashOnBlack() throws InterruptedException {
 		MixPanel sut = newSut(3, 2);
 		Color colorOnUnderlyingPanel = BLACK;
