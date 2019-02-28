@@ -1,5 +1,7 @@
 package ledcontrol.scene;
 
+import static java.lang.Math.min;
+
 import java.awt.Color;
 
 import ledcontrol.panel.Panel;
@@ -20,13 +22,12 @@ public class ScoreScene implements Scene {
 
 	private void repaint(int... scores) {
 		panel.clear();
-		// TODO maximum half of width
-		for (int x = 0; x < scores[0]; x++) {
+		int width = panel.getWidth();
+		for (int x = 0; x < min(scores[0], width / 2); x++) {
 			drawColumn(x, colors[0]);
 		}
-		// TODO maximum half of width
-		for (int x = 0; x < scores[1]; x++) {
-			drawColumn(panel.getWidth() - x - 1, colors[1]);
+		for (int x = 0; x < min(scores[1], width / 2); x++) {
+			drawColumn(width - x - 1, colors[1]);
 		}
 		panel.repaint();
 	}

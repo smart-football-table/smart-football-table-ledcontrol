@@ -58,6 +58,16 @@ public class ScoreSceneTest {
 		});
 	}
 
+	@Test
+	public void centerWillNotBePainted() {
+		whenScoreIs(3, 3);
+		thenPanelIs(new Color[][] { //
+				{ RED, RED, OFF, GREEN, GREEN }, //
+				{ RED, RED, OFF, GREEN, GREEN }, //
+				{ RED, RED, OFF, GREEN, GREEN } //
+		});
+	}
+
 	private void thenPanelIs(Color[][] value) {
 		assertThat(panel.getColors(), is(value));
 	}
