@@ -10,10 +10,16 @@ public class ScoreScene implements Scene {
 
 	private final Panel panel;
 	private final Color[] colors;
+	private int pixelsPerGoal = 1;
 
 	public ScoreScene(Panel panel, Color... colors) {
 		this.panel = panel;
 		this.colors = colors;
+	}
+
+	public ScoreScene pixelsPerGoal(int pixelsPerGoal) {
+		this.pixelsPerGoal = pixelsPerGoal;
+		return this;
 	}
 
 	public void setScore(int... scores) {
@@ -23,10 +29,10 @@ public class ScoreScene implements Scene {
 	private void repaint(int... scores) {
 		panel.clear();
 		int width = panel.getWidth();
-		for (int x = 0; x < min(scores[0], width / 2); x++) {
+		for (int x = 0; x < min(scores[0] * pixelsPerGoal, width / 2); x++) {
 			drawColumn(x, colors[0]);
 		}
-		for (int x = 0; x < min(scores[1], width / 2); x++) {
+		for (int x = 0; x < min(scores[1] * pixelsPerGoal, width / 2); x++) {
 			drawColumn(width - x - 1, colors[1]);
 		}
 		panel.repaint();

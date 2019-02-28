@@ -13,59 +13,83 @@ import ledcontrol.panel.Panel;
 
 public class ScoreSceneTest {
 
-	private static final Color OFF = null;
+	private static final Color ____ = null;
 
-	private Panel panel = new Panel(2 + 1 + 2, 3);
-	private ScoreScene sut = new ScoreScene(panel, RED, GREEN);
+	private Panel panel;
+	private ScoreScene sut;
 
 	@Test
 	public void _0_0() {
+		sutOnPanel(2 + 1 + 2, 3);
 		whenScoreIs(0, 0);
 		thenPanelIs(new Color[][] { //
-				{ OFF, OFF, OFF, OFF, OFF }, //
-				{ OFF, OFF, OFF, OFF, OFF }, //
-				{ OFF, OFF, OFF, OFF, OFF } //
+				{ ____, ____, ____, ____, ____ }, //
+				{ ____, ____, ____, ____, ____ }, //
+				{ ____, ____, ____, ____, ____ } //
 		});
 	}
 
 	@Test
 	public void _1_0() {
+		sutOnPanel(2 + 1 + 2, 3);
 		whenScoreIs(1, 0);
 		thenPanelIs(new Color[][] { //
-				{ RED, OFF, OFF, OFF, OFF }, //
-				{ RED, OFF, OFF, OFF, OFF }, //
-				{ RED, OFF, OFF, OFF, OFF } //
+				{ RED, ____, ____, ____, ____ }, //
+				{ RED, ____, ____, ____, ____ }, //
+				{ RED, ____, ____, ____, ____ }, //
 		});
 	}
 
 	@Test
 	public void _0_1() {
+		sutOnPanel(2 + 1 + 2, 3);
 		whenScoreIs(0, 1);
 		thenPanelIs(new Color[][] { //
-				{ OFF, OFF, OFF, OFF, GREEN }, //
-				{ OFF, OFF, OFF, OFF, GREEN }, //
-				{ OFF, OFF, OFF, OFF, GREEN } //
+				{ ____, ____, ____, ____, GREEN }, //
+				{ ____, ____, ____, ____, GREEN }, //
+				{ ____, ____, ____, ____, GREEN }, //
 		});
 	}
 
 	@Test
 	public void _2_2() {
+		sutOnPanel(2 + 1 + 2, 3);
 		whenScoreIs(2, 2);
 		thenPanelIs(new Color[][] { //
-				{ RED, RED, OFF, GREEN, GREEN }, //
-				{ RED, RED, OFF, GREEN, GREEN }, //
-				{ RED, RED, OFF, GREEN, GREEN } //
+				{ RED, RED, ____, GREEN, GREEN }, //
+				{ RED, RED, ____, GREEN, GREEN }, //
+				{ RED, RED, ____, GREEN, GREEN }, //
 		});
 	}
 
 	@Test
 	public void centerWillNotBePainted() {
+		sutOnPanel(2 + 1 + 2, 3);
 		whenScoreIs(3, 3);
 		thenPanelIs(new Color[][] { //
-				{ RED, RED, OFF, GREEN, GREEN }, //
-				{ RED, RED, OFF, GREEN, GREEN }, //
-				{ RED, RED, OFF, GREEN, GREEN } //
+				{ RED, RED, ____, GREEN, GREEN }, //
+				{ RED, RED, ____, GREEN, GREEN }, //
+				{ RED, RED, ____, GREEN, GREEN }, //
 		});
+	}
+
+	@Test
+	public void _2_1_with_2_leds_per_goal() {
+		sutOnPanel(4 + 1 + 4, 5).pixelsPerGoal(2);
+		whenScoreIs(2, 1);
+		thenPanelIs(new Color[][] { //
+				{ RED, RED, RED, RED, ____, ____, ____, GREEN, GREEN }, //
+				{ RED, RED, RED, RED, ____, ____, ____, GREEN, GREEN }, //
+				{ RED, RED, RED, RED, ____, ____, ____, GREEN, GREEN }, //
+				{ RED, RED, RED, RED, ____, ____, ____, GREEN, GREEN }, //
+				{ RED, RED, RED, RED, ____, ____, ____, GREEN, GREEN }, //
+		});
+	}
+
+	private ScoreScene sutOnPanel(int columns, int rows) {
+		panel = new Panel(columns, rows);
+		sut = new ScoreScene(panel, RED, GREEN);
+		return sut;
 	}
 
 	private void thenPanelIs(Color[][] value) {
