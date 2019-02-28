@@ -11,10 +11,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import ledcontrol.panel.MixPanel.OverlayStrategy;
+import ledcontrol.panel.StackedPanel.OverlayStrategy;
 import ledcontrol.scene.FlashScene;
 
-public class MixPanelTest {
+public class StackedPanelTest {
 
 	private static final Color OFF = null;
 
@@ -22,7 +22,7 @@ public class MixPanelTest {
 
 	@Test
 	public void writeThrough() {
-		MixPanel sut = newSut(3, 2);
+		StackedPanel sut = newSut(3, 2);
 		Panel inner = sut.createSubPanel();
 		inner.setColor(2, 1, RED);
 		inner.repaint();
@@ -35,7 +35,7 @@ public class MixPanelTest {
 
 	@Test
 	public void twoPanels() {
-		MixPanel sut = newSut(3, 2);
+		StackedPanel sut = newSut(3, 2);
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel();
 		inner1.setColor(1, 0, RED);
@@ -52,7 +52,7 @@ public class MixPanelTest {
 
 	@Test
 	public void reappears() {
-		MixPanel sut = newSut(3, 2);
+		StackedPanel sut = newSut(3, 2);
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel();
 		inner1.fill(RED);
@@ -71,7 +71,7 @@ public class MixPanelTest {
 
 	@Test
 	public void mixTwoColors() {
-		MixPanel sut = newSut(1, 1).setOverlayStrategy(new OverlayStrategy() {
+		StackedPanel sut = newSut(1, 1).setOverlayStrategy(new OverlayStrategy() {
 			@Override
 			public void copy(int x, int y, Color color, Panel target) {
 				target.setColor(x, y, mix(color, target.getColors()[y][x]));
@@ -104,7 +104,7 @@ public class MixPanelTest {
 
 	@Test
 	public void flashOnBlack() throws InterruptedException {
-		MixPanel sut = newSut(3, 2);
+		StackedPanel sut = newSut(3, 2);
 		Color colorOnUnderlyingPanel = BLACK;
 		sut.createSubPanel().fill(colorOnUnderlyingPanel);
 		Color flashColor = GREEN;
@@ -127,7 +127,7 @@ public class MixPanelTest {
 
 	@Test
 	public void flashOnColor() throws InterruptedException {
-		MixPanel sut = newSut(3, 2);
+		StackedPanel sut = newSut(3, 2);
 		Color colorOnUnderlyingPanel = RED;
 		sut.createSubPanel().fill(colorOnUnderlyingPanel);
 		Color flashColor = GREEN;
@@ -148,8 +148,8 @@ public class MixPanelTest {
 		}));
 	}
 
-	private MixPanel newSut(int width, int height) {
-		MixPanel sut = new MixPanel(width, height);
+	private StackedPanel newSut(int width, int height) {
+		StackedPanel sut = new StackedPanel(width, height);
 		sut.addRepaintListener(p -> colors = p.getColors());
 		return sut;
 	}

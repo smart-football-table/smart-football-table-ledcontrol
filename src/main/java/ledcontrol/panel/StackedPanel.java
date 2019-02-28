@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class MixPanel extends Panel {
+public class StackedPanel extends Panel {
 
 	public interface OverlayStrategy {
 		OverlayStrategy DEFAULT = new OverlayStrategy() {
@@ -31,7 +31,7 @@ public class MixPanel extends Panel {
 	private final List<RepaintListener> repaintListeners = new CopyOnWriteArrayList<>();
 	private OverlayStrategy overlayStrategy = OverlayStrategy.DEFAULT;
 
-	public MixPanel(int width, int height) {
+	public StackedPanel(int width, int height) {
 		super(width, height);
 		this.subPanelRepaintListener = panel -> mixTo(this);
 	}
@@ -41,7 +41,7 @@ public class MixPanel extends Panel {
 		this.repaintListeners.add(listener);
 	}
 
-	public MixPanel setOverlayStrategy(OverlayStrategy overlayStrategy) {
+	public StackedPanel setOverlayStrategy(OverlayStrategy overlayStrategy) {
 		this.overlayStrategy = overlayStrategy;
 		return this;
 	}

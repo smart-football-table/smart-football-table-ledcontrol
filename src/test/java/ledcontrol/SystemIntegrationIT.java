@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
-import ledcontrol.panel.MixPanel;
+import ledcontrol.panel.StackedPanel;
 
 public class SystemIntegrationIT {
 
@@ -45,7 +45,7 @@ public class SystemIntegrationIT {
 
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-	private final MixPanel panel = new MixPanel(3, 2);
+	private final StackedPanel panel = new StackedPanel(3, 2);
 
 	private Server server;
 	private TheSystem theSystem;

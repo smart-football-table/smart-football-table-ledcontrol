@@ -20,7 +20,7 @@ import gnu.io.UnsupportedCommOperationException;
 import ledcontrol.TheSystem;
 import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
-import ledcontrol.panel.MixPanel;
+import ledcontrol.panel.StackedPanel;
 import ledcontrol.rest.ScoreMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.ScoreScene;
@@ -35,7 +35,7 @@ public class SystemRunner {
 		SerialConnection connection = new SerialConnection("/dev/ttyUSB4", 230400);
 		int ledCount = 120;
 
-		MixPanel panel = new MixPanel(ledCount, 1);
+		StackedPanel panel = new StackedPanel(ledCount, 1);
 		panel.createSubPanel().fill(BLACK);
 
 		try (TheSystem theSystem = configure(new TheSystem("localhost", 1883, panel, connection.getOutputStream()),
@@ -48,7 +48,7 @@ public class SystemRunner {
 
 	}
 
-	public static TheSystem configure(TheSystem theSystem, MixPanel panel) {
+	public static TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 		ScoreScene goalScene = new ScoreScene(panel.createSubPanel(), RED, GREEN);
 		FlashScene flashScene = new FlashScene(panel.createSubPanel());
 		Gson gson = new Gson();
