@@ -18,14 +18,15 @@ public class IdleScene implements Scene {
 	}
 
 	public void startAnimation(Animator animator) {
-		animator.start(() -> {
-			int width = panel.getWidth();
-			drawColumn(x, BLUE);
-			drawColumn(width - 1 - x, RED);
-			panel.repaint();
-			x++;
-			return null;
-		});
+		animator.start(this::nextStep);
+	}
+
+	private void nextStep() {
+		int width = panel.getWidth();
+		drawColumn(x, BLUE);
+		drawColumn(width - 1 - x, RED);
+		panel.repaint();
+		x++;
 	}
 
 	private void drawColumn(int x, Color color) {

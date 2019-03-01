@@ -8,9 +8,13 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -26,14 +30,28 @@ import ledcontrol.panel.Panel;
 public class TheSystem implements Closeable {
 
 	public static class Animator {
-		public void start(Callable<Void> callable) {
-			for (int i = 0; i < 2; i++) {
-				try {
-					callable.call();
-				} catch (Exception e) {
-					e.printStackTrace();
+
+		private final List<Runnable> callables = new CopyOnWriteArrayList<>();
+
+		public Animator() {
+			ExecutorService executor = Executors.newSingleThreadExecutor();
+			executor.submit(() -> {
+				while (true) {
+					for (Runnable runnable : callables) {
+						try {
+							runnable.run();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					TimeUnit.MILLISECONDS.sleep(40);
 				}
-			}
+
+			});
+		}
+
+		public void start(Runnable callable) {
+			callables.add(callable);
 		}
 	}
 
