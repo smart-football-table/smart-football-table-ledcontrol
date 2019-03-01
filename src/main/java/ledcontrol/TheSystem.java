@@ -1,6 +1,7 @@
 package ledcontrol;
 
 import static java.awt.Color.BLACK;
+import static java.util.function.Predicate.isEqual;
 
 import java.awt.Color;
 import java.io.Closeable;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -37,8 +39,8 @@ public class TheSystem implements Closeable {
 
 	public static class MqttMessage {
 
-		private String topic;
-		private String payload;
+		private final String topic;
+		private final String payload;
 
 		public MqttMessage(String topic, String payload) {
 			this.topic = topic;
@@ -53,12 +55,16 @@ public class TheSystem implements Closeable {
 			return payload;
 		}
 
-		public static Predicate<TheSystem.MqttMessage> isTopic(String topic) {
-			return m -> m.getTopic().equals(topic);
+		public static Predicate<MqttMessage> isTopic(String topic) {
+			return matches(topic, MqttMessage::getTopic);
 		}
 
-		public static Predicate<TheSystem.MqttMessage> isPayload(String payload) {
-			return m -> m.getPayload().equals(payload);
+		public static Predicate<MqttMessage> isPayload(String payload) {
+			return matches(payload, MqttMessage::getPayload);
+		}
+
+		public static <T> Predicate<MqttMessage> matches(T value, Function<MqttMessage, T> f) {
+			return m -> isEqual(value).test(f.apply(m));
 		}
 
 	}
