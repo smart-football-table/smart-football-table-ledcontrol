@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ServerSocket;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -37,11 +38,11 @@ import ledcontrol.panel.StackedPanel;
 public class SystemIntegrationIT {
 
 	private static final String LOCALHOST = "localhost";
-	private static final Color OFF = BLACK;
+	private static final Color ___ = BLACK;
 	private static final Color COLOR_TEAM_LEFT = BLUE;
 	private static final Color COLOR_TEAM_RIGHT = RED;
 
-	private static final int BROKER_PORT = 1883;
+	private int brokerPort;
 
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -53,8 +54,15 @@ public class SystemIntegrationIT {
 
 	@Before
 	public void setup() throws IOException, MqttException {
-		server = newMqttServer(LOCALHOST, BROKER_PORT);
-		secondClient = newMqttClient(LOCALHOST, BROKER_PORT, "client2");
+		brokerPort = randomPort();
+		server = newMqttServer(LOCALHOST, brokerPort);
+		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
+	}
+
+	private int randomPort() throws IOException {
+		try (ServerSocket socket = new ServerSocket(0);) {
+			return socket.getLocalPort();
+		}
 	}
 
 	private Server newMqttServer(String host, int port) throws IOException {
@@ -82,22 +90,22 @@ public class SystemIntegrationIT {
 
 	@Test
 	public void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
-		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(1, 0));
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(1, 0));
 		assertThat(panelColors(), is(new Color[][] { //
-				{ COLOR_TEAM_LEFT, OFF, OFF, OFF, OFF }, //
-				{ COLOR_TEAM_LEFT, OFF, OFF, OFF, OFF }, //
+				{ COLOR_TEAM_LEFT, ___, ___, ___, ___ }, //
+				{ COLOR_TEAM_LEFT, ___, ___, ___, ___ }, //
 		}));
 	}
 
 	@Test
 	public void teamLeftScoresTwice() throws MqttSecurityException, MqttException, InterruptedException, IOException {
-		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(1, 0));
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "score", score(2, 0));
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(1, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(2, 0));
 		assertThat(panelColors(), is(new Color[][] { //
-				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF, OFF, OFF }, //
-				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, OFF, OFF, OFF }, //
+				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, ___, ___, ___ }, //
+				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, ___, ___, ___ }, //
 		}));
 	}
 
@@ -108,13 +116,22 @@ public class SystemIntegrationIT {
 
 	@Test
 	public void flashesOnFoul() throws MqttSecurityException, MqttException, InterruptedException, IOException {
-		givenTheSystemConnectedToBroker(LOCALHOST, BROKER_PORT);
-		whenMessageIsReceived(LOCALHOST, BROKER_PORT, "foul", "");
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "foul", "");
 		assertThat(panelColors(), is(new Color[][] { //
 				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 		}));
+	}
 
+	@Test
+	public void animationOnIdle() throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "idle", "{ \"idle\": true }");
+		assertThat(panelColors(), is(new Color[][] { //
+				{ BLUE, ___, ___, ___, RED }, //
+				{ BLUE, ___, ___, ___, RED }, //
+		}));
 	}
 
 	private Color[][] panelColors() throws IOException {
@@ -141,7 +158,7 @@ public class SystemIntegrationIT {
 			throws MqttSecurityException, MqttException, InterruptedException {
 		secondClient.publish(topic, new MqttMessage(message.getBytes()));
 		// TODO use lock/condition
-		TimeUnit.MILLISECONDS.sleep(500);
+		TimeUnit.MILLISECONDS.sleep(250);
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {

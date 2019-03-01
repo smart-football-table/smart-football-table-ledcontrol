@@ -4,6 +4,7 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
 
@@ -25,9 +26,11 @@ import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
+import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
 import ledcontrol.rest.WinnerMessage;
 import ledcontrol.scene.FlashScene;
+import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
 
 public class SystemRunner {
@@ -59,9 +62,11 @@ public class SystemRunner {
 
 		Panel goalPanel = panel.createSubPanel();
 		Panel flashPanel = panel.createSubPanel();
+		Panel idlePanel = panel.createSubPanel();
 
 		ScoreScene goalScene = new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(1);
 		FlashScene flashScene = new FlashScene(flashPanel);
+		IdleScene idleScene = new IdleScene(idlePanel);
 
 		Gson gson = new Gson();
 		theSystem.whenThen(isTopic("score"), m -> {
@@ -71,12 +76,19 @@ public class SystemRunner {
 		theSystem.whenThen(isTopic("foul"), flashThenWait(flashScene, WHITE, SECONDS, 1));
 		Consumer<MqttMessage> winnerColor = (Consumer<MqttMessage>) m -> flashScene
 				.fill(parsePayload(gson, m, WinnerMessage.class).winner == 0 ? colorTeam1 : colorTeam2);
-		Consumer<MqttMessage> sleep250Ms = sleep(TimeUnit.MILLISECONDS, 250);
+		Consumer<MqttMessage> sleep250Ms = sleep(MILLISECONDS, 250);
 		Consumer<? super MqttMessage> clear = m -> flashScene.clear();
 		theSystem.whenThen(isTopic("winner"),
 				winnerColor.andThen(sleep250Ms).andThen(clear).andThen(sleep250Ms).andThen(winnerColor)
 						.andThen(sleep250Ms).andThen(clear).andThen(sleep250Ms).andThen(winnerColor).andThen(sleep250Ms)
 						.andThen(clear));
+		theSystem.whenThen(isTopic("idle"), m -> {
+			if (parsePayload(gson, m, IdleMessage.class).idle) {
+				idleScene.startAnimation(theSystem.getAnimator());
+			} else {
+				idleScene.stopAnimation();
+			}
+		});
 		return theSystem;
 	}
 

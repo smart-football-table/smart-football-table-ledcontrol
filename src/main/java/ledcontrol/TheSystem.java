@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -21,6 +22,16 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import ledcontrol.panel.Panel;
 
 public class TheSystem implements Closeable {
+
+	public static class Animator {
+		public void start(Callable<Void> callable) {
+			try {
+				callable.call();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public static class MqttMessage {
 
@@ -86,6 +97,7 @@ public class TheSystem implements Closeable {
 	}
 
 	private final Map<Predicate<MqttMessage>, Consumer<MqttMessage>> conditions = new HashMap<>();
+	private final Animator animator = new Animator();
 
 	private void received(MqttMessage message) {
 		for (Entry<Predicate<MqttMessage>, Consumer<MqttMessage>> entry : conditions.entrySet()) {
@@ -117,6 +129,10 @@ public class TheSystem implements Closeable {
 		IMqttClient client = new MqttClient("tcp://" + host + ":" + port, "theSystemClient", new MemoryPersistence());
 		client.connect();
 		return client;
+	}
+
+	public Animator getAnimator() {
+		return animator;
 	}
 
 }
