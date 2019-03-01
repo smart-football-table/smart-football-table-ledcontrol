@@ -16,6 +16,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -92,7 +95,7 @@ public class SystemIntegrationIT {
 	public void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(1, 0));
-		assertThat(panelColors(), is(new Color[][] { //
+		assertThat(lastPanelState(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, ___, ___, ___, ___ }, //
 				{ COLOR_TEAM_LEFT, ___, ___, ___, ___ }, //
 		}));
@@ -103,7 +106,7 @@ public class SystemIntegrationIT {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(1, 0));
 		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(2, 0));
-		assertThat(panelColors(), is(new Color[][] { //
+		assertThat(lastPanelState(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, ___, ___, ___ }, //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, ___, ___, ___ }, //
 		}));
@@ -118,7 +121,7 @@ public class SystemIntegrationIT {
 	public void flashesOnFoul() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "foul", "");
-		assertThat(panelColors(), is(new Color[][] { //
+		assertThat(lastPanelState(), is(new Color[][] { //
 				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 		}));
@@ -128,30 +131,50 @@ public class SystemIntegrationIT {
 	public void animationOnIdle() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "idle", "{ \"idle\": true }");
-		assertThat(panelColors(), is(new Color[][] { //
+		List<Color[][]> allPanelColors = allPanelStates();
+		assertThat(allPanelColors.get(0), is(new Color[][] { //
 				{ BLUE, ___, ___, ___, RED }, //
 				{ BLUE, ___, ___, ___, RED }, //
 		}));
+		assertThat(allPanelColors.get(1), is(new Color[][] { //
+				{ BLUE, BLUE, ___, RED, RED }, //
+				{ BLUE, BLUE, ___, RED, RED }, //
+		}));
 	}
 
-	private Color[][] panelColors() throws IOException {
+	private List<Color[][]> allPanelStates() throws IOException {
+		List<Color[][]> colors = new ArrayList<>();
+		for (Tpm2Frame tpm2Frame : receivedFrames()) {
+			colors.add(toColors(tpm2Frame));
+		}
+		return colors;
+	}
+
+	private Color[][] lastPanelState() throws IOException {
+		return toColors(last(receivedFrames()));
+	}
+
+	private Color[][] toColors(Tpm2Frame frame) {
 		int height = panel.getHeight();
 		int width = panel.getWidth();
 		Color[][] colors = new Color[height][width];
-		Tpm2Frame frame = lastFrame();
 		for (int y = 0; y < height; y++) {
 			System.arraycopy(frame.getColors(), y * width, colors[y], 0, width);
 		}
 		return colors;
 	}
 
-	private Tpm2Frame lastFrame() throws IOException {
+	private List<Tpm2Frame> receivedFrames() throws IOException {
 		InputStream is = new ByteArrayInputStream(outputStream.toByteArray());
-		Tpm2Frame frame = null;
+		List<Tpm2Frame> frames = new ArrayList<Tpm2Frame>();
 		while (is.available() > 0) {
-			frame = Tpm2Frame.fromStream(is);
+			frames.add(Tpm2Frame.fromStream(is));
 		}
-		return frame;
+		return frames;
+	}
+
+	private static <T> T last(List<T> list) throws IOException {
+		return list.get(list.size() - 1);
 	}
 
 	private void whenMessageIsReceived(String host, int port, String topic, String message)

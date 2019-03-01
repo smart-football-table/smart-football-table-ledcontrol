@@ -25,10 +25,12 @@ public class TheSystem implements Closeable {
 
 	public static class Animator {
 		public void start(Callable<Void> callable) {
-			try {
-				callable.call();
-			} catch (Exception e) {
-				e.printStackTrace();
+			for (int i = 0; i < 2; i++) {
+				try {
+					callable.call();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
