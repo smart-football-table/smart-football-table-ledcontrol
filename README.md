@@ -7,8 +7,7 @@ However, the Arduino seems to be not fast enough to manage the data send since i
 ## MQTT messages
 | topic      | Description                  | Example payload     |  Implemented |
 | ---------- | ---------------------------- |-------------------- |------------- |
-| score      | The teams' scores            | { "score": { 0, 3 } | ✔            |
+| score      | The teams' scores            | { "score": [ 0, 3 ] | ✔            |
 | foul       | Some foul has happened       | -                   | ✔            |
-| ~~winner~~     | ~~A team has won the match~~     | ~~{ "winner": 0 }~~     | ~~✔~~            |
-| gameover   | A match ended                | { "winner": 0 }     | X            |
+| gameover   | A match ended                | { "winner": 0 }     | ✔            |
 | idle       | Is there action on the table | { "idle": true }    | X            |

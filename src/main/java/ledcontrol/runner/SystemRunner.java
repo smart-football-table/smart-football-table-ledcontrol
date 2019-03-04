@@ -28,7 +28,7 @@ import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
-import ledcontrol.rest.WinnerMessage;
+import ledcontrol.rest.GameoverMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
@@ -75,10 +75,10 @@ public class SystemRunner {
 		});
 		theSystem.whenThen(isTopic("foul"), flashThenWait(flashScene, WHITE, SECONDS, 1));
 		Consumer<MqttMessage> winnerColor = (Consumer<MqttMessage>) m -> flashScene
-				.fill(parsePayload(gson, m, WinnerMessage.class).winner == 0 ? colorTeam1 : colorTeam2);
+				.fill(parsePayload(gson, m, GameoverMessage.class).winner == 0 ? colorTeam1 : colorTeam2);
 		Consumer<MqttMessage> sleep250Ms = sleep(MILLISECONDS, 250);
 		Consumer<? super MqttMessage> clear = m -> flashScene.clear();
-		theSystem.whenThen(isTopic("winner"),
+		theSystem.whenThen(isTopic("gameover"),
 				winnerColor.andThen(sleep250Ms).andThen(clear).andThen(sleep250Ms).andThen(winnerColor)
 						.andThen(sleep250Ms).andThen(clear).andThen(sleep250Ms).andThen(winnerColor).andThen(sleep250Ms)
 						.andThen(clear));
