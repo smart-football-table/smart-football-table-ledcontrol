@@ -133,12 +133,12 @@ public class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, brokerPort, "idle", "{ \"idle\": true }");
 		List<Color[][]> allPanelColors = allPanelStates();
 		assertThat(allPanelColors.get(0), is(new Color[][] { //
-				{ BLUE, ___, ___, ___, RED }, //
-				{ BLUE, ___, ___, ___, RED }, //
+				{ ___, ___, ___, ___, ___ }, //
+				{ ___, ___, ___, ___, ___ }, //
 		}));
 		assertThat(allPanelColors.get(1), is(new Color[][] { //
-				{ BLUE, BLUE, ___, RED, RED }, //
-				{ BLUE, BLUE, ___, RED, RED }, //
+				{ BLUE, ___, ___, ___, ___ }, //
+				{ BLUE, ___, ___, ___, ___ }, //
 		}));
 	}
 

@@ -1,6 +1,7 @@
 package ledcontrol;
 
 import static java.awt.Color.BLACK;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.function.Predicate.isEqual;
 
 import java.awt.Color;
@@ -29,11 +30,11 @@ import ledcontrol.panel.Panel;
 
 public class TheSystem implements Closeable {
 
-	public static class Animator {
+	public static class TheSystemAnimator implements Animator {
 
 		private final List<Runnable> callables = new CopyOnWriteArrayList<>();
 
-		public Animator() {
+		public TheSystemAnimator() {
 			ExecutorService executor = Executors.newSingleThreadExecutor();
 			executor.submit(() -> {
 				while (true) {
@@ -44,12 +45,13 @@ public class TheSystem implements Closeable {
 							e.printStackTrace();
 						}
 					}
-					TimeUnit.MILLISECONDS.sleep(40);
+					MILLISECONDS.sleep(40);
 				}
 
 			});
 		}
 
+		@Override
 		public void start(Runnable callable) {
 			callables.add(callable);
 		}
@@ -123,7 +125,7 @@ public class TheSystem implements Closeable {
 	}
 
 	private final Map<Predicate<MqttMessage>, Consumer<MqttMessage>> conditions = new HashMap<>();
-	private final Animator animator = new Animator();
+	private final Animator animator = new TheSystemAnimator();
 
 	private void received(MqttMessage message) {
 		for (Entry<Predicate<MqttMessage>, Consumer<MqttMessage>> entry : conditions.entrySet()) {
