@@ -9,6 +9,6 @@ However, the Arduino seems to be not fast enough to manage the data send since i
 | ---------- | ---------------------------- |-------------------- |------------- |
 | score      | The teams' scores            | { "score": { 0, 3 } | ✔            |
 | foul       | Some foul has happened       | -                   | ✔            |
-~~| winner     | A team has won the match     | { "winner": 0 }     | ✔            |~~
+| ~~winner~~     | ~~A team has won the match~~     | ~~{ "winner": 0 }~~     | ~~✔~~            |
 | gameover   | A match ended                | { "winner": 0 }     | X            |
 | idle       | Is there action on the table | { "idle": true }    | X            |
