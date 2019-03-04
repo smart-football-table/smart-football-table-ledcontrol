@@ -5,9 +5,9 @@ The LED stripe can be connected using a serial link. The program writes TPM2 fra
 However, the Arduino seems to be not fast enough to manage the data send since it is very limited both in processing speed and the size of the serial buffer. 
 
 ## MQTT messages
-| topic      | Description                  | Example payload     |  Implemented |
-| ---------- | ---------------------------- |-------------------- |------------- |
-| score      | The teams' scores            | { "score": [ 0, 3 ] | ✔            |
-| foul       | Some foul has happened       | -                   | ✔            |
-| gameover   | A match ended                | { "winner": 0 }     | ✔            |
-| idle       | Is there action on the table | { "idle": true }    | X            |
+| topic      | Description                  | Example payload       |  Implemented |
+| ---------- | ---------------------------- |---------------------- |------------- |
+| score      | The teams' scores            | { "score": [ 0, 3 ] } | ✔            |
+| foul       | Some foul has happened       | -                     | ✔            |
+| gameover   | A match ended                | { "winner": 0 }       | ✔            |
+| idle       | Is there action on the table | { "idle": true }      | X            |
