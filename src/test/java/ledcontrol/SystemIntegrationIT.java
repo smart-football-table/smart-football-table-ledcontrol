@@ -6,8 +6,10 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static ledcontrol.runner.SystemRunner.configure;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
 import java.awt.Color;
@@ -17,10 +19,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -36,6 +38,7 @@ import org.junit.Test;
 
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
+import ledcontrol.Animator.AnimatorTask;
 import ledcontrol.panel.StackedPanel;
 
 public class SystemIntegrationIT {
@@ -140,6 +143,22 @@ public class SystemIntegrationIT {
 				{ BLUE, ___, ___, ___, ___ }, //
 				{ BLUE, ___, ___, ___, ___ }, //
 		}));
+	}
+
+	@Test
+	public void canStartAndStopTasks() throws InterruptedException, MqttSecurityException, MqttException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		AtomicInteger incremntor = new AtomicInteger(0);
+		Runnable incremetor = () -> incremntor.incrementAndGet();
+		assertThat(incremntor.get(), is(0));
+		AnimatorTask task = theSystem.getAnimator().start(incremetor);
+		MILLISECONDS.sleep(40 * 2);
+		assertThat(incremntor.get(), is(not(0)));
+
+		task.stop();
+		int currentValue = incremntor.get();
+		MILLISECONDS.sleep(40 * 2);
+		assertThat(incremntor.get(), is(currentValue));
 	}
 
 	private List<Color[][]> allPanelStates() throws IOException {

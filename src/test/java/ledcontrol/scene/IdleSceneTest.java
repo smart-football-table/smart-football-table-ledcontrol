@@ -1,8 +1,7 @@
 package ledcontrol.scene;
 
-import static java.awt.Color.*;
+import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
-import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -17,11 +16,18 @@ import ledcontrol.panel.Panel;
 public class IdleSceneTest {
 
 	private final class DummyAnimator implements Animator {
+
 		private Runnable runnable;
 
 		@Override
-		public void start(Runnable runnable) {
+		public AnimatorTask start(Runnable runnable) {
 			this.runnable = runnable;
+			return new AnimatorTask() {
+				@Override
+				public void stop() {
+					// nothing todo
+				}
+			};
 		}
 
 		public void next() {

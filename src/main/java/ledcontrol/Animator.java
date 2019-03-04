@@ -2,6 +2,10 @@ package ledcontrol;
 
 public interface Animator {
 
-	void start(Runnable callable);
+	public interface AnimatorTask {
+		void stop();
+	}
+
+	AnimatorTask start(Runnable callable);
 
 }

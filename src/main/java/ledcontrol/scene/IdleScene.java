@@ -7,6 +7,7 @@ import static java.awt.Color.RED;
 import java.awt.Color;
 
 import ledcontrol.Animator;
+import ledcontrol.Animator.AnimatorTask;
 import ledcontrol.panel.Panel;
 
 /**
@@ -22,16 +23,24 @@ public class IdleScene implements Scene {
 
 	private int currentColorIdx = 0;
 	private final Color[] paintColors = new Color[] { BLUE, RED, BLACK };
+	private AnimatorTask task;
 
 	public IdleScene(Panel panel) {
 		this.panel = panel;
 	}
 
-	public void startAnimation(Animator animator) {
-		// TODO what will happen when start is called and IdleScene is already running?
-		panel.fill(BLACK);
-		panel.repaint();
-		animator.start(this::nextStep);
+	public synchronized void startAnimation(Animator animator) {
+		if (task == null) {
+			// TODO what will happen when start is called and IdleScene is already running?
+			panel.fill(BLACK);
+			panel.repaint();
+			task = animator.start(this::nextStep);
+		}
+	}
+
+	public synchronized void stopAnimation() {
+		task.stop();
+		task = null;
 	}
 
 	private void nextStep() {
@@ -50,11 +59,6 @@ public class IdleScene implements Scene {
 		for (int y = 0; y < height; y++) {
 			panel.setColor(x, y, color);
 		}
-	}
-
-	public void stopAnimation() {
-		// TODO Auto-generated method stub
-
 	}
 
 }

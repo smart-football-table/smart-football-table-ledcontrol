@@ -15,7 +15,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -31,6 +30,21 @@ import ledcontrol.panel.Panel;
 public class TheSystem implements Closeable {
 
 	public static class TheSystemAnimator implements Animator {
+
+		public class TheSystemAnimatorTask implements AnimatorTask {
+
+			private final Runnable runnable;
+
+			public TheSystemAnimatorTask(Runnable runnable) {
+				this.runnable = runnable;
+			}
+
+			@Override
+			public void stop() {
+				callables.remove(this.runnable);
+			}
+
+		}
 
 		private final List<Runnable> callables = new CopyOnWriteArrayList<>();
 
@@ -52,8 +66,9 @@ public class TheSystem implements Closeable {
 		}
 
 		@Override
-		public void start(Runnable callable) {
-			callables.add(callable);
+		public AnimatorTask start(Runnable runnable) {
+			callables.add(runnable);
+			return new TheSystemAnimatorTask(runnable);
 		}
 	}
 
