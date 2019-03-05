@@ -1,9 +1,5 @@
 package ledcontrol.scene;
 
-import static java.awt.Color.BLACK;
-import static java.awt.Color.BLUE;
-import static java.awt.Color.RED;
-
 import java.awt.Color;
 
 import ledcontrol.Animator;
@@ -22,17 +18,17 @@ public class IdleScene implements Scene {
 	private final Panel panel;
 
 	private int currentColorIdx = 0;
-	private final Color[] paintColors = new Color[] { BLUE, RED, BLACK };
 	private AnimatorTask task;
+	private Color[] paintColors;
 
-	public IdleScene(Panel panel) {
+	public IdleScene(Panel panel, Color... paintColors) {
 		this.panel = panel;
+		this.paintColors = paintColors.clone();
 	}
 
 	public synchronized void startAnimation(Animator animator) {
 		if (task == null) {
-			// TODO what will happen when start is called and IdleScene is already running?
-			panel.fill(BLACK);
+			panel.clear();
 			panel.repaint();
 			task = animator.start(this::nextStep);
 		}

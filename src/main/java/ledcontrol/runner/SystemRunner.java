@@ -66,7 +66,7 @@ public class SystemRunner {
 
 		ScoreScene goalScene = new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(1);
 		FlashScene flashScene = new FlashScene(flashPanel);
-		IdleScene idleScene = new IdleScene(idlePanel);
+		IdleScene idleScene = new IdleScene(idlePanel, BLACK, colorTeam1, colorTeam2);
 
 		Gson gson = new Gson();
 		theSystem.whenThen(isTopic("score"), m -> {

@@ -45,9 +45,23 @@ public class IdleSceneTest {
 		sutOnPanel(3, 2);
 		animationIsStarted();
 		thenPanelIs(new Color[][] { //
+				{ null, null, null, }, //
+				{ null, null, null, }, //
+		});
+
+		afterSwitchPanelIs(new Color[][] { //
+				{ BLACK, null, null, }, //
+				{ BLACK, null, null, }, //
+		});
+		afterSwitchPanelIs(new Color[][] { //
+				{ BLACK, BLACK, null, }, //
+				{ BLACK, BLACK, null, }, //
+		});
+		afterSwitchPanelIs(new Color[][] { //
 				{ BLACK, BLACK, BLACK, }, //
 				{ BLACK, BLACK, BLACK, }, //
 		});
+
 		afterSwitchPanelIs(new Color[][] { //
 				{ BLUE, BLACK, BLACK, }, //
 				{ BLUE, BLACK, BLACK, }, //
@@ -99,7 +113,7 @@ public class IdleSceneTest {
 
 	private IdleScene sutOnPanel(int columns, int rows) {
 		panel = new Panel(columns, rows);
-		sut = new IdleScene(panel);
+		sut = new IdleScene(panel, BLACK, BLUE, RED);
 		return sut;
 	}
 
