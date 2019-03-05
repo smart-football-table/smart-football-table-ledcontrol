@@ -14,12 +14,14 @@ public class SerialConnection {
 
 	private final SerialPort serialPort;
 
-	public SerialConnection(String port, int baudrate) {
+	public SerialConnection(String port, int baudrate) throws IOException {
 		serialPort = SerialPort.getCommPort(port);
 		serialPort.setBaudRate(baudrate);
 		serialPort.setComPortTimeouts(TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
 		serialPort.setComPortParameters(baudrate, 8, ONE_STOP_BIT, NO_PARITY);
-		serialPort.openPort();
+		if (!serialPort.openPort()) {
+			throw new IOException("Could not open port " + port);
+		}
 	}
 
 	public InputStream getInputStream() throws IOException {
