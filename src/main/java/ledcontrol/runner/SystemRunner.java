@@ -7,6 +7,8 @@ import static java.awt.Color.WHITE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
+import static org.kohsuke.args4j.OptionHandlerFilter.ALL;
+import static org.kohsuke.args4j.ParserProperties.defaults;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -15,6 +17,9 @@ import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 import com.google.gson.Gson;
 
@@ -26,34 +31,63 @@ import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
+import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
-import ledcontrol.rest.GameoverMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
 
 public class SystemRunner {
 
+	@Option(name = "-tty")
+	private String tty = "/dev/ttyUSB0";
+	@Option(name = "-baudrate")
+	private int baudrate = 230400;
+	@Option(name = "-leds", required = true)
+	private int leds;
+	@Option(name = "-mqttHost")
+	private String mqttHost = "localhost";
+	@Option(name = "-mqttPort")
+	private int mqttPort = 1883;
+
 	public static void main(String[] args) throws IOException, NoSuchPortException, PortInUseException,
 			UnsupportedCommOperationException, InterruptedException, MqttSecurityException, MqttException {
+		new SystemRunner().doMain(args);
+	}
 
-		SECONDS.sleep(2);
+	private void doMain(String[] args) throws InterruptedException, NoSuchPortException, PortInUseException,
+			UnsupportedCommOperationException, MqttSecurityException, MqttException, IOException {
+		if (parseArgs(this, args)) {
+			SerialConnection connection = new SerialConnection(tty, baudrate);
+			SECONDS.sleep(2);
+			StackedPanel panel = new StackedPanel(leds, 1);
+			panel.createSubPanel().fill(BLACK);
 
-		SerialConnection connection = new SerialConnection("/dev/ttyUSB4", 230400);
-		int ledCount = 120;
-
-		StackedPanel panel = new StackedPanel(ledCount, 1);
-		panel.createSubPanel().fill(BLACK);
-
-		try (TheSystem theSystem = configure(new TheSystem("localhost", 1883, panel, connection.getOutputStream()),
-				panel)) {
-			Object o = new Object();
-			synchronized (o) {
-				o.wait();
+			try (TheSystem theSystem = configure(new TheSystem(mqttHost, mqttPort, panel, connection.getOutputStream()),
+					panel)) {
+				Object o = new Object();
+				synchronized (o) {
+					o.wait();
+				}
 			}
 		}
+	}
 
+	private static boolean parseArgs(SystemRunner bean, String[] args) {
+		CmdLineParser parser = new CmdLineParser(bean, defaults().withUsageWidth(80));
+		try {
+			parser.parseArgument(args);
+			return true;
+		} catch (CmdLineException e) {
+			String mainClassName = bean.getClass().getName();
+			System.err.println(e.getMessage());
+			System.err.println("java " + mainClassName + " [options...] arguments...");
+			parser.printUsage(System.err);
+			System.err.println();
+			System.err.println("  Example: java " + bean.getClass().getName() + parser.printExample(ALL));
+			return false;
+		}
 	}
 
 	public static TheSystem configure(TheSystem theSystem, StackedPanel panel) {
