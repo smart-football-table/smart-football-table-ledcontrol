@@ -18,25 +18,22 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import com.google.gson.Gson;
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.UnsupportedCommOperationException;
 import ledcontrol.TheSystem;
 import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
+import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
-import ledcontrol.rest.GameoverMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
 
 public class SystemRunner {
 
-	public static void main(String[] args) throws IOException, NoSuchPortException, PortInUseException,
-			UnsupportedCommOperationException, InterruptedException, MqttSecurityException, MqttException {
+	public static void main(String[] args)
+			throws InterruptedException, MqttSecurityException, MqttException, IOException {
 
 		SECONDS.sleep(2);
 
