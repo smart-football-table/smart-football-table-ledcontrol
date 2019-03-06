@@ -6,7 +6,9 @@ import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Stream.concat;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
+import static ledcontrol.runner.args4j.EnvVars.readEnvVars;
 import static ledcontrol.scene.FlashScene.FlashConfig.flash;
 import static org.kohsuke.args4j.OptionHandlerFilter.ALL;
 import static org.kohsuke.args4j.ParserProperties.defaults;
@@ -30,7 +32,6 @@ import ledcontrol.panel.StackedPanel;
 import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
-import ledcontrol.runner.args4j.EnvVarSupportingCmdLineParser;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
@@ -139,9 +140,9 @@ public class SystemRunner {
 	}
 
 	boolean parseArgs(String... args) {
-		CmdLineParser parser = new EnvVarSupportingCmdLineParser(this, defaults().withUsageWidth(80));
+		CmdLineParser parser = new CmdLineParser(this, defaults().withUsageWidth(80));
 		try {
-			parser.parseArgument(args);
+			parser.parseArgument(concat(readEnvVars(parser.getOptions()), stream(args)).toArray(String[]::new));
 			if (!help) {
 				return true;
 			}
