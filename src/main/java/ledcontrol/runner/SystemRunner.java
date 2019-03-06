@@ -98,15 +98,18 @@ public class SystemRunner {
 
 	}
 
-	@Option(name = "-tty", metaVar = "TTY")
+	@Option(name = "-h", help = true)
+	boolean help;
+
+	@Option(name = "-tty", metaVar = "TTY", usage = "tty device to use for serial communication")
 	String tty = "/dev/ttyUSB0";
-	@Option(name = "-baudrate", metaVar = "BAUDRATE")
+	@Option(name = "-baudrate", metaVar = "BAUDRATE", usage = "baudrate for the tty device")
 	int baudrate = 230400;
-	@Option(name = "-leds", metaVar = "LEDS", required = true)
+	@Option(name = "-leds", metaVar = "LEDS", required = true, usage = "how many leds are connected to the TPM2 device")
 	int leds;
-	@Option(name = "-mqttHost", metaVar = "MQTTHOST")
+	@Option(name = "-mqttHost", metaVar = "MQTTHOST", usage = "hostname of the mqtt broker")
 	String mqttHost = "localhost";
-	@Option(name = "-mqttPort", metaVar = "MQTTPORT")
+	@Option(name = "-mqttPort", metaVar = "MQTTPORT", usage = "port of the mqtt broker")
 	int mqttPort = 1883;
 
 	public static void main(String... args)
@@ -139,16 +142,23 @@ public class SystemRunner {
 		CmdLineParser parser = new EnvVarSupportingCmdLineParser(this, defaults().withUsageWidth(80));
 		try {
 			parser.parseArgument(args);
-			return true;
+			if (!help) {
+				return true;
+			}
+			printHelp(parser);
 		} catch (CmdLineException e) {
-			String mainClassName = getClass().getName();
 			System.err.println(e.getMessage());
-			System.err.println("java " + mainClassName + " [options...] arguments...");
-			parser.printUsage(System.err);
-			System.err.println();
-			System.err.println("  Example: java " + getClass().getName() + parser.printExample(ALL));
-			return false;
+			printHelp(parser);
 		}
+		return false;
+	}
+
+	private void printHelp(CmdLineParser parser) {
+		String mainClassName = getClass().getName();
+		System.err.println("java " + mainClassName + " [options...] arguments...");
+		parser.printUsage(System.err);
+		System.err.println();
+		System.err.println("  Example: java " + getClass().getName() + parser.printExample(ALL));
 	}
 
 	private static <T> T parsePayload(Gson gson, MqttMessage m, Class<T> clazz) {
