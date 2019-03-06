@@ -1,13 +1,19 @@
 package ledcontrol.runner.args4j;
 
-import static java.util.Collections.addAll;
+import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Stream.concat;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.ParserProperties;
+import org.kohsuke.args4j.spi.OptionHandler;
 
 public class EnvVarSupportingCmdLineParser extends CmdLineParser {
 
@@ -21,21 +27,18 @@ public class EnvVarSupportingCmdLineParser extends CmdLineParser {
 
 	@Override
 	public void parseArgument(String... args) throws CmdLineException {
-		List<String> allArgs = new ArrayList<>(envVarArgs());
-		addAll(allArgs, args);
-		super.parseArgument(allArgs.toArray(new String[allArgs.size()]));
+		super.parseArgument(concat(envVarArgs(), stream(args)).toArray(String[]::new));
 	}
 
-	private List<String> envVarArgs() {
-		List<String> args = new ArrayList<>();
-		getOptions().forEach(h -> {
-			String envVar = System.getenv(h.option.metaVar());
-			if (envVar != null) {
-				args.add(h.option.toString());
-				args.add(envVar);
-			}
-		});
-		return args;
+	private Stream<String> envVarArgs() {
+		@SuppressWarnings("rawtypes")
+		Function<OptionHandler, List<String>> mapper = this::readEnvVar;
+		return getOptions().stream().map(mapper).flatMap(Collection::stream);
+	}
+
+	private List<String> readEnvVar(@SuppressWarnings("rawtypes") OptionHandler h) {
+		String envVar = System.getenv(h.option.metaVar());
+		return envVar == null ? emptyList() : Arrays.asList(h.option.toString(), envVar);
 	}
 
 }
