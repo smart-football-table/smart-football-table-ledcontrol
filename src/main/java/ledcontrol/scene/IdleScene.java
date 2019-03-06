@@ -34,9 +34,18 @@ public class IdleScene implements Scene {
 		}
 	}
 
-	public synchronized void stopAnimation() {
+	public synchronized IdleScene stopAnimation() {
 		task.stop();
 		task = null;
+		panel.clear();
+		panel.repaint();
+		return this;
+	}
+
+	public IdleScene reset() {
+		x = 0;
+		currentColorIdx = 0;
+		return this;
 	}
 
 	private void nextStep() {
