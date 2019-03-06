@@ -30,6 +30,7 @@ import ledcontrol.panel.StackedPanel;
 import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
+import ledcontrol.runner.args4j.EnvVarSupportingCmdLineParser;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
@@ -66,7 +67,7 @@ public class SystemRunner {
 				FlashScene winnerScene = new FlashScene(winnerPanel, //
 						flash(flashColor, 24), flash(BLACK, 24), //
 						flash(flashColor, 24), flash(BLACK, 24), //
-						flash(flashColor, 24), flash(BLACK, 24), //
+						flash(flashColor, 24), flash(BLACK, 24), // l
 						flash(flashColor, 6), flash(BLACK, 6), //
 						flash(flashColor, 6), flash(BLACK, 6), //
 						flash(flashColor, 6), flash(BLACK, 6));
@@ -97,51 +98,55 @@ public class SystemRunner {
 
 	}
 
-	@Option(name = "-tty")
-	private String tty = "/dev/ttyUSB0";
-	@Option(name = "-baudrate")
-	private int baudrate = 230400;
-	@Option(name = "-leds", required = true)
-	private int leds;
-	@Option(name = "-mqttHost")
-	private String mqttHost = "localhost";
-	@Option(name = "-mqttPort")
-	private int mqttPort = 1883;
+	@Option(name = "-tty", metaVar = "TTY")
+	String tty = "/dev/ttyUSB0";
+	@Option(name = "-baudrate", metaVar = "BAUDRATE")
+	int baudrate = 230400;
+	@Option(name = "-leds", metaVar = "LEDS", required = true)
+	int leds;
+	@Option(name = "-mqttHost", metaVar = "MQTTHOST")
+	String mqttHost = "localhost";
+	@Option(name = "-mqttPort", metaVar = "MQTTPORT")
+	int mqttPort = 1883;
 
-	public static void main(String[] args)
+	public static void main(String... args)
 			throws IOException, InterruptedException, MqttSecurityException, MqttException {
 		new SystemRunner().doMain(args);
 	}
 
-	private void doMain(String[] args) throws InterruptedException, MqttSecurityException, MqttException, IOException {
-		if (parseArgs(this, args)) {
-			SerialConnection connection = new SerialConnection(tty, baudrate);
-			SECONDS.sleep(2);
-			StackedPanel panel = new StackedPanel(leds, 1);
-			panel.createSubPanel().fill(BLACK);
+	void doMain(String[] args) throws InterruptedException, MqttSecurityException, MqttException, IOException {
+		if (parseArgs(args)) {
+			runSystem();
+		}
+	}
 
-			try (TheSystem theSystem = new Configurator()
-					.configure(new TheSystem(mqttHost, mqttPort, panel, connection.getOutputStream()), panel)) {
-				Object o = new Object();
-				synchronized (o) {
-					o.wait();
-				}
+	private void runSystem() throws IOException, InterruptedException, MqttSecurityException, MqttException {
+		SerialConnection connection = new SerialConnection(tty, baudrate);
+		SECONDS.sleep(2);
+		StackedPanel panel = new StackedPanel(leds, 1);
+		panel.createSubPanel().fill(BLACK);
+
+		try (TheSystem theSystem = new Configurator()
+				.configure(new TheSystem(mqttHost, mqttPort, panel, connection.getOutputStream()), panel)) {
+			Object o = new Object();
+			synchronized (o) {
+				o.wait();
 			}
 		}
 	}
 
-	private static boolean parseArgs(SystemRunner bean, String[] args) {
-		CmdLineParser parser = new CmdLineParser(bean, defaults().withUsageWidth(80));
+	boolean parseArgs(String... args) {
+		CmdLineParser parser = new EnvVarSupportingCmdLineParser(this, defaults().withUsageWidth(80));
 		try {
 			parser.parseArgument(args);
 			return true;
 		} catch (CmdLineException e) {
-			String mainClassName = bean.getClass().getName();
+			String mainClassName = getClass().getName();
 			System.err.println(e.getMessage());
 			System.err.println("java " + mainClassName + " [options...] arguments...");
 			parser.printUsage(System.err);
 			System.err.println();
-			System.err.println("  Example: java " + bean.getClass().getName() + parser.printExample(ALL));
+			System.err.println("  Example: java " + getClass().getName() + parser.printExample(ALL));
 			return false;
 		}
 	}
