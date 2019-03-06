@@ -33,7 +33,6 @@ import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
 import ledcontrol.scene.FlashScene;
-import ledcontrol.scene.FlashScene.FlashConfig;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
 
@@ -65,16 +64,20 @@ public class SystemRunner {
 			theSystem.whenThen(isTopic("gameover"), m -> {
 				Color flashColor = SystemRunner.parsePayload(gson, m, GameoverMessage.class).winner == 0 ? colorTeam1
 						: colorTeam2;
-				FlashScene winnerScene = new FlashScene(winnerPanel, flash(flashColor, 40 * 6), flash(BLACK, 40 * 6),
-						flash(flashColor, 40 * 6), flash(BLACK, 40 * 6), flash(flashColor, 40 * 6),
-						flash(BLACK, 40 * 6));
+				FlashScene winnerScene = new FlashScene(winnerPanel, //
+						flash(flashColor, 24), flash(BLACK, 24), //
+						flash(flashColor, 24), flash(BLACK, 24), //
+						flash(flashColor, 24), flash(BLACK, 24), //
+						flash(flashColor, 6), flash(BLACK, 6), //
+						flash(flashColor, 6), flash(BLACK, 6), //
+						flash(flashColor, 6), flash(BLACK, 6));
 				winnerScene.flash(theSystem.getAnimator());
 			});
 			theSystem.whenThen(isTopic("idle"), m -> {
 				if (SystemRunner.parsePayload(gson, m, IdleMessage.class).idle) {
 					idleScene.startAnimation(theSystem.getAnimator());
 				} else {
-					idleScene.stopAnimation();
+					idleScene.stopAnimation().reset();
 				}
 			});
 			return theSystem;
@@ -85,7 +88,8 @@ public class SystemRunner {
 		}
 
 		protected FlashScene foulScene(Panel foulPanel) {
-			return new FlashScene(foulPanel, FlashConfig.flash(WHITE, 40 * 25));
+			return new FlashScene(foulPanel, flash(WHITE, 6), flash(BLACK, 6), flash(WHITE, 6), flash(BLACK, 6),
+					flash(WHITE, 6), flash(BLACK, 6));
 		}
 
 		protected ScoreScene goalScene(Panel goalPanel) {
