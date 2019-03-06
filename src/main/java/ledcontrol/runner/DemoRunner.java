@@ -11,9 +11,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.stream.IntStream;
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.UnsupportedCommOperationException;
 import ledcontrol.Proto;
 import ledcontrol.connection.SerialConnection;
 
@@ -23,8 +20,7 @@ public class DemoRunner {
 			new Color(160, 80, 154), new Color(255, 102, 0), new Color(209, 10, 69), new Color(86, 188, 177),
 			new Color(250, 203, 65) };
 
-	public static void main(String[] args) throws IOException, NoSuchPortException, PortInUseException,
-			UnsupportedCommOperationException, InterruptedException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 
 		SECONDS.sleep(2);
 
