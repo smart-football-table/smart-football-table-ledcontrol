@@ -21,9 +21,6 @@ import org.kohsuke.args4j.Option;
 
 import com.google.gson.Gson;
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.UnsupportedCommOperationException;
 import ledcontrol.TheSystem;
 import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
@@ -109,13 +106,12 @@ public class SystemRunner {
 	@Option(name = "-mqttPort")
 	private int mqttPort = 1883;
 
-	public static void main(String[] args) throws IOException, NoSuchPortException, PortInUseException,
-			UnsupportedCommOperationException, InterruptedException, MqttSecurityException, MqttException {
+	public static void main(String[] args)
+			throws IOException, InterruptedException, MqttSecurityException, MqttException {
 		new SystemRunner().doMain(args);
 	}
 
-	private void doMain(String[] args) throws InterruptedException, NoSuchPortException, PortInUseException,
-			UnsupportedCommOperationException, MqttSecurityException, MqttException, IOException {
+	private void doMain(String[] args) throws InterruptedException, MqttSecurityException, MqttException, IOException {
 		if (parseArgs(this, args)) {
 			SerialConnection connection = new SerialConnection(tty, baudrate);
 			SECONDS.sleep(2);
