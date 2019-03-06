@@ -10,31 +10,9 @@ import java.awt.Color;
 
 import org.junit.Test;
 
-import ledcontrol.Animator;
 import ledcontrol.panel.Panel;
 
 public class IdleSceneTest {
-
-	private final class DummyAnimator implements Animator {
-
-		private Runnable runnable;
-
-		@Override
-		public AnimatorTask start(Runnable runnable) {
-			this.runnable = runnable;
-			return new AnimatorTask() {
-				@Override
-				public void stop() {
-					// nothing todo
-				}
-			};
-		}
-
-		public void next() {
-			runnable.run();
-		}
-
-	}
 
 	private DummyAnimator animator = new DummyAnimator();
 	private Panel panel;

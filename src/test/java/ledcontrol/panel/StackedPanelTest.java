@@ -3,6 +3,7 @@ package ledcontrol.panel;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
+import static ledcontrol.scene.FlashScene.FlashConfig.flash;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -10,14 +11,19 @@ import java.awt.Color;
 
 import org.junit.Test;
 
+import ledcontrol.Animator;
 import ledcontrol.panel.StackedPanel.OverlayStrategy;
+import ledcontrol.scene.DummyAnimator;
 import ledcontrol.scene.FlashScene;
+import ledcontrol.scene.FlashScene.FlashConfig;
 
 public class StackedPanelTest {
 
 	private static final Color OFF = null;
 
 	private Color[][] colors;
+
+	private DummyAnimator animator = new DummyAnimator();
 
 	@Test
 	public void writeThrough() {
@@ -107,9 +113,13 @@ public class StackedPanelTest {
 		Color colorOnUnderlyingPanel = BLACK;
 		sut.createSubPanel().fill(colorOnUnderlyingPanel);
 		Color flashColor = GREEN;
-		FlashScene flashScene = new FlashScene(sut.createSubPanel());
-		flashScene.fill(flashColor);
-		flashScene.clear();
+		doFlash(new FlashScene(sut.createSubPanel(), flash(flashColor, 1)));
+		animator.next();
+		assertThat(getColors(sut), is(new Color[][] { //
+				{ flashColor, flashColor, flashColor }, //
+				{ flashColor, flashColor, flashColor } //
+		}));
+		animator.next();
 		assertThat(getColors(sut), is(new Color[][] { //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel }, //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel } //
@@ -122,13 +132,21 @@ public class StackedPanelTest {
 		Color colorOnUnderlyingPanel = RED;
 		sut.createSubPanel().fill(colorOnUnderlyingPanel);
 		Color flashColor = GREEN;
-		FlashScene flashScene = new FlashScene(sut.createSubPanel());
-		flashScene.fill(flashColor);
-		flashScene.clear();
+		doFlash(new FlashScene(sut.createSubPanel(), flash(flashColor, 1)));
+		animator.next();
+		assertThat(getColors(sut), is(new Color[][] { //
+				{ flashColor, flashColor, flashColor }, //
+				{ flashColor, flashColor, flashColor } //
+		}));
+		animator.next();
 		assertThat(getColors(sut), is(new Color[][] { //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel }, //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel } //
 		}));
+	}
+
+	private void doFlash(FlashScene flashScene) {
+		flashScene.flash(animator);
 	}
 
 	private StackedPanel newSut(int width, int height) {
