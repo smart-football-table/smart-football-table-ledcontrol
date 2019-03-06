@@ -4,108 +4,146 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
+import static ledcontrol.scene.FlashScene.FlashConfig.flash;
+import static org.kohsuke.args4j.OptionHandlerFilter.ALL;
+import static org.kohsuke.args4j.ParserProperties.defaults;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 import com.google.gson.Gson;
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.UnsupportedCommOperationException;
 import ledcontrol.TheSystem;
 import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
+import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
-import ledcontrol.rest.GameoverMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
 
 public class SystemRunner {
 
-	public static void main(String[] args) throws IOException, NoSuchPortException, PortInUseException,
-			UnsupportedCommOperationException, InterruptedException, MqttSecurityException, MqttException {
+	public static class Configurator {
 
-		SECONDS.sleep(2);
+		private Color colorTeam1 = BLUE;
+		private Color colorTeam2 = RED;
 
-		SerialConnection connection = new SerialConnection("/dev/ttyUSB4", 230400);
-		int ledCount = 120;
+		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
+			new SystemRunner.Configurator();
 
-		StackedPanel panel = new StackedPanel(ledCount, 1);
-		panel.createSubPanel().fill(BLACK);
+			Panel goalPanel = panel.createSubPanel();
+			Panel foulPanel = panel.createSubPanel();
+			Panel winnerPanel = panel.createSubPanel();
+			Panel idlePanel = panel.createSubPanel();
 
-		try (TheSystem theSystem = configure(new TheSystem("localhost", 1883, panel, connection.getOutputStream()),
-				panel)) {
-			Object o = new Object();
-			synchronized (o) {
-				o.wait();
-			}
+			ScoreScene goalScene = goalScene(goalPanel);
+			FlashScene foulScene = foulScene(foulPanel);
+			IdleScene idleScene = idleScene(idlePanel);
+
+			Gson gson = new Gson();
+			theSystem.whenThen(isTopic("score"), m -> {
+				int[] score = SystemRunner.parsePayload(gson, m, ScoreMessage.class).score;
+				goalScene.setScore(score);
+			});
+			theSystem.whenThen(isTopic("foul"), m -> foulScene.flash(theSystem.getAnimator()));
+			theSystem.whenThen(isTopic("gameover"), m -> {
+				// TODO handle draws
+				Color flashColor = stream(SystemRunner.parsePayload(gson, m, GameoverMessage.class).winners)
+						.anyMatch(i -> i == 0) ? colorTeam1 : colorTeam2;
+				FlashScene winnerScene = new FlashScene(winnerPanel, //
+						flash(flashColor, 24), flash(BLACK, 24), //
+						flash(flashColor, 24), flash(BLACK, 24), //
+						flash(flashColor, 24), flash(BLACK, 24), //
+						flash(flashColor, 6), flash(BLACK, 6), //
+						flash(flashColor, 6), flash(BLACK, 6), //
+						flash(flashColor, 6), flash(BLACK, 6));
+				winnerScene.flash(theSystem.getAnimator());
+			});
+			theSystem.whenThen(isTopic("idle"), m -> {
+				if (SystemRunner.parsePayload(gson, m, IdleMessage.class).idle) {
+					idleScene.startAnimation(theSystem.getAnimator());
+				} else {
+					idleScene.stopAnimation().reset();
+				}
+			});
+			return theSystem;
+		}
+
+		protected IdleScene idleScene(Panel idlePanel) {
+			return new IdleScene(idlePanel, BLACK, colorTeam1, colorTeam2);
+		}
+
+		protected FlashScene foulScene(Panel foulPanel) {
+			return new FlashScene(foulPanel, flash(WHITE, 6), flash(BLACK, 6), flash(WHITE, 6), flash(BLACK, 6),
+					flash(WHITE, 6), flash(BLACK, 6));
+		}
+
+		protected ScoreScene goalScene(Panel goalPanel) {
+			return new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(1);
 		}
 
 	}
 
-	public static TheSystem configure(TheSystem theSystem, StackedPanel panel) {
-		Color colorTeam1 = BLUE;
-		Color colorTeam2 = RED;
+	@Option(name = "-tty")
+	private String tty = "/dev/ttyUSB0";
+	@Option(name = "-baudrate")
+	private int baudrate = 230400;
+	@Option(name = "-leds", required = true)
+	private int leds;
+	@Option(name = "-mqttHost")
+	private String mqttHost = "localhost";
+	@Option(name = "-mqttPort")
+	private int mqttPort = 1883;
 
-		Panel goalPanel = panel.createSubPanel();
-		Panel flashPanel = panel.createSubPanel();
-		Panel idlePanel = panel.createSubPanel();
-
-		ScoreScene goalScene = new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(1);
-		FlashScene flashScene = new FlashScene(flashPanel);
-		IdleScene idleScene = new IdleScene(idlePanel);
-
-		Gson gson = new Gson();
-		theSystem.whenThen(isTopic("score"), m -> {
-			int[] score = parsePayload(gson, m, ScoreMessage.class).score;
-			goalScene.setScore(score);
-		});
-		theSystem.whenThen(isTopic("foul"), flashThenWait(flashScene, WHITE, SECONDS, 1));
-		Consumer<MqttMessage> winnerColor = (Consumer<MqttMessage>) m -> flashScene
-				.fill(parsePayload(gson, m, GameoverMessage.class).winner == 0 ? colorTeam1 : colorTeam2);
-		Consumer<MqttMessage> sleep250Ms = sleep(MILLISECONDS, 250);
-		Consumer<? super MqttMessage> clear = m -> flashScene.clear();
-		theSystem.whenThen(isTopic("gameover"),
-				winnerColor.andThen(sleep250Ms).andThen(clear).andThen(sleep250Ms).andThen(winnerColor)
-						.andThen(sleep250Ms).andThen(clear).andThen(sleep250Ms).andThen(winnerColor).andThen(sleep250Ms)
-						.andThen(clear));
-		theSystem.whenThen(isTopic("idle"), m -> {
-			if (parsePayload(gson, m, IdleMessage.class).idle) {
-				idleScene.startAnimation(theSystem.getAnimator());
-			} else {
-				idleScene.stopAnimation();
-			}
-		});
-		return theSystem;
+	public static void main(String[] args)
+			throws IOException, InterruptedException, MqttSecurityException, MqttException {
+		new SystemRunner().doMain(args);
 	}
 
-	private static Consumer<MqttMessage> flashThenWait(FlashScene flashScene, Color color, TimeUnit timeUnit,
-			int duration) {
-		return ((Consumer<MqttMessage>) m -> flashScene.fill(color)).andThen(sleep(timeUnit, duration))
-				.andThen(m -> flashScene.clear());
+	private void doMain(String[] args) throws InterruptedException, MqttSecurityException, MqttException, IOException {
+		if (parseArgs(this, args)) {
+			SerialConnection connection = new SerialConnection(tty, baudrate);
+			SECONDS.sleep(2);
+			StackedPanel panel = new StackedPanel(leds, 1);
+			panel.createSubPanel().fill(BLACK);
+
+			try (TheSystem theSystem = new Configurator()
+					.configure(new TheSystem(mqttHost, mqttPort, panel, connection.getOutputStream()), panel)) {
+				Object o = new Object();
+				synchronized (o) {
+					o.wait();
+				}
+			}
+		}
 	}
 
-	private static Consumer<MqttMessage> sleep(TimeUnit timeUnit, int duration) {
-		return m -> {
-			try {
-				timeUnit.sleep(duration);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-		};
+	private static boolean parseArgs(SystemRunner bean, String[] args) {
+		CmdLineParser parser = new CmdLineParser(bean, defaults().withUsageWidth(80));
+		try {
+			parser.parseArgument(args);
+			return true;
+		} catch (CmdLineException e) {
+			String mainClassName = bean.getClass().getName();
+			System.err.println(e.getMessage());
+			System.err.println("java " + mainClassName + " [options...] arguments...");
+			parser.printUsage(System.err);
+			System.err.println();
+			System.err.println("  Example: java " + bean.getClass().getName() + parser.printExample(ALL));
+			return false;
+		}
 	}
 
 	private static <T> T parsePayload(Gson gson, MqttMessage m, Class<T> clazz) {

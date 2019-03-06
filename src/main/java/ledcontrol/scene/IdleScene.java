@@ -1,12 +1,9 @@
 package ledcontrol.scene;
 
-import static java.awt.Color.BLACK;
-import static java.awt.Color.BLUE;
-import static java.awt.Color.RED;
-
 import java.awt.Color;
 
 import ledcontrol.Animator;
+import ledcontrol.Animator.AnimatorTask;
 import ledcontrol.panel.Panel;
 
 /**
@@ -21,17 +18,34 @@ public class IdleScene implements Scene {
 	private final Panel panel;
 
 	private int currentColorIdx = 0;
-	private final Color[] paintColors = new Color[] { BLUE, RED, BLACK };
+	private AnimatorTask task;
+	private Color[] paintColors;
 
-	public IdleScene(Panel panel) {
+	public IdleScene(Panel panel, Color... paintColors) {
 		this.panel = panel;
+		this.paintColors = paintColors.clone();
 	}
 
-	public void startAnimation(Animator animator) {
-		// TODO what will happen when start is called and IdleScene is already running?
-		panel.fill(BLACK);
+	public synchronized void startAnimation(Animator animator) {
+		if (task == null) {
+			panel.clear();
+			panel.repaint();
+			task = animator.start(this::nextStep);
+		}
+	}
+
+	public synchronized IdleScene stopAnimation() {
+		task.stop();
+		task = null;
+		panel.clear();
 		panel.repaint();
-		animator.start(this::nextStep);
+		return this;
+	}
+
+	public IdleScene reset() {
+		x = 0;
+		currentColorIdx = 0;
+		return this;
 	}
 
 	private void nextStep() {
@@ -50,11 +64,6 @@ public class IdleScene implements Scene {
 		for (int y = 0; y < height; y++) {
 			panel.setColor(x, y, color);
 		}
-	}
-
-	public void stopAnimation() {
-		// TODO Auto-generated method stub
-
 	}
 
 }

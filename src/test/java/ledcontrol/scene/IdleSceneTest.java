@@ -1,8 +1,7 @@
 package ledcontrol.scene;
 
-import static java.awt.Color.*;
+import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
-import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -11,24 +10,9 @@ import java.awt.Color;
 
 import org.junit.Test;
 
-import ledcontrol.Animator;
 import ledcontrol.panel.Panel;
 
 public class IdleSceneTest {
-
-	private final class DummyAnimator implements Animator {
-		private Runnable runnable;
-
-		@Override
-		public void start(Runnable runnable) {
-			this.runnable = runnable;
-		}
-
-		public void next() {
-			runnable.run();
-		}
-
-	}
 
 	private DummyAnimator animator = new DummyAnimator();
 	private Panel panel;
@@ -39,9 +23,23 @@ public class IdleSceneTest {
 		sutOnPanel(3, 2);
 		animationIsStarted();
 		thenPanelIs(new Color[][] { //
+				{ null, null, null, }, //
+				{ null, null, null, }, //
+		});
+
+		afterSwitchPanelIs(new Color[][] { //
+				{ BLACK, null, null, }, //
+				{ BLACK, null, null, }, //
+		});
+		afterSwitchPanelIs(new Color[][] { //
+				{ BLACK, BLACK, null, }, //
+				{ BLACK, BLACK, null, }, //
+		});
+		afterSwitchPanelIs(new Color[][] { //
 				{ BLACK, BLACK, BLACK, }, //
 				{ BLACK, BLACK, BLACK, }, //
 		});
+
 		afterSwitchPanelIs(new Color[][] { //
 				{ BLUE, BLACK, BLACK, }, //
 				{ BLUE, BLACK, BLACK, }, //
@@ -93,7 +91,7 @@ public class IdleSceneTest {
 
 	private IdleScene sutOnPanel(int columns, int rows) {
 		panel = new Panel(columns, rows);
-		sut = new IdleScene(panel);
+		sut = new IdleScene(panel, BLACK, BLUE, RED);
 		return sut;
 	}
 

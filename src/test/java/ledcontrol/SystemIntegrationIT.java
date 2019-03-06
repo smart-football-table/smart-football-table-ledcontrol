@@ -6,9 +6,12 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
-import static ledcontrol.runner.SystemRunner.configure;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
@@ -17,10 +20,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -33,10 +36,14 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
+import ledcontrol.Animator.AnimatorTask;
 import ledcontrol.panel.StackedPanel;
+import ledcontrol.runner.SystemRunner.Configurator;
+import ledcontrol.scene.IdleScene;
 
 public class SystemIntegrationIT {
 
@@ -44,6 +51,8 @@ public class SystemIntegrationIT {
 	private static final Color ___ = BLACK;
 	private static final Color COLOR_TEAM_LEFT = BLUE;
 	private static final Color COLOR_TEAM_RIGHT = RED;
+
+	private IdleScene idleScene = mock(IdleScene.class);
 
 	private int brokerPort;
 
@@ -131,23 +140,24 @@ public class SystemIntegrationIT {
 	public void animationOnIdle() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "idle", "{ \"idle\": true }");
-		List<Color[][]> allPanelColors = allPanelStates();
-		assertThat(allPanelColors.get(0), is(new Color[][] { //
-				{ ___, ___, ___, ___, ___ }, //
-				{ ___, ___, ___, ___, ___ }, //
-		}));
-		assertThat(allPanelColors.get(1), is(new Color[][] { //
-				{ BLUE, ___, ___, ___, ___ }, //
-				{ BLUE, ___, ___, ___, ___ }, //
-		}));
+		MILLISECONDS.sleep(40);
+		verify(idleScene).startAnimation(Mockito.any(Animator.class));
 	}
 
-	private List<Color[][]> allPanelStates() throws IOException {
-		List<Color[][]> colors = new ArrayList<>();
-		for (Tpm2Frame tpm2Frame : receivedFrames()) {
-			colors.add(toColors(tpm2Frame));
-		}
-		return colors;
+	@Test
+	public void canStartAndStopTasks() throws InterruptedException, MqttSecurityException, MqttException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		AtomicInteger incremntor = new AtomicInteger(0);
+		Runnable incremetor = () -> incremntor.incrementAndGet();
+		assertThat(incremntor.get(), is(0));
+		AnimatorTask task = theSystem.getAnimator().start(incremetor);
+		MILLISECONDS.sleep(40 * 2);
+		assertThat(incremntor.get(), is(not(0)));
+
+		task.stop();
+		int currentValue = incremntor.get();
+		MILLISECONDS.sleep(40 * 2);
+		assertThat(incremntor.get(), is(currentValue));
 	}
 
 	private Color[][] lastPanelState() throws IOException {
@@ -185,7 +195,11 @@ public class SystemIntegrationIT {
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
-		theSystem = configure(new TheSystem(host, port, panel, outputStream), panel);
+		theSystem = new Configurator() {
+			protected ledcontrol.scene.IdleScene idleScene(ledcontrol.panel.Panel idlePanel) {
+				return idleScene;
+			};
+		}.configure(new TheSystem(host, port, panel, outputStream), panel);
 	}
 
 }
