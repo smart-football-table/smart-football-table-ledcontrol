@@ -1,7 +1,8 @@
 package ledcontrol.runner.args4j;
 
+import static java.util.Collections.addAll;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.kohsuke.args4j.CmdLineException;
@@ -20,19 +21,21 @@ public class EnvVarSupportingCmdLineParser extends CmdLineParser {
 
 	@Override
 	public void parseArgument(String... args) throws CmdLineException {
-		List<String> allArgs = new ArrayList<>();
-		// Allow environment variables to override
+		List<String> allArgs = new ArrayList<>(envVarArgs());
+		addAll(allArgs, args);
+		super.parseArgument(allArgs.toArray(new String[allArgs.size()]));
+	}
+
+	private List<String> envVarArgs() {
+		List<String> args = new ArrayList<>();
 		getOptions().forEach(h -> {
 			String envVar = System.getenv(h.option.metaVar());
 			if (envVar != null) {
-				allArgs.add(h.option.toString());
-				allArgs.add(envVar);
+				args.add(h.option.toString());
+				args.add(envVar);
 			}
 		});
-
-		// Add regular command line args
-		allArgs.addAll(Arrays.asList(args));
-		super.parseArgument(allArgs.toArray(new String[allArgs.size()]));
+		return args;
 	}
 
 }
