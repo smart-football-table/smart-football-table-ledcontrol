@@ -4,6 +4,7 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.BLUE;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
+import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
 import static ledcontrol.scene.FlashScene.FlashConfig.flash;
@@ -59,8 +60,9 @@ public class SystemRunner {
 			});
 			theSystem.whenThen(isTopic("foul"), m -> foulScene.flash(theSystem.getAnimator()));
 			theSystem.whenThen(isTopic("gameover"), m -> {
-				Color flashColor = SystemRunner.parsePayload(gson, m, GameoverMessage.class).winner == 0 ? colorTeam1
-						: colorTeam2;
+				// TODO handle draws
+				Color flashColor = stream(SystemRunner.parsePayload(gson, m, GameoverMessage.class).winners)
+						.anyMatch(i -> i == 0) ? colorTeam1 : colorTeam2;
 				FlashScene winnerScene = new FlashScene(winnerPanel, //
 						flash(flashColor, 24), flash(BLACK, 24), //
 						flash(flashColor, 24), flash(BLACK, 24), //
