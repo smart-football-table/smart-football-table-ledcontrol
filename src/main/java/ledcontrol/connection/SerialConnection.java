@@ -15,13 +15,21 @@ public class SerialConnection {
 	private final SerialPort serialPort;
 
 	public SerialConnection(String port, int baudrate) throws IOException {
-		serialPort = SerialPort.getCommPort(port);
+		serialPort = port == null || port.length() == 0 ? firstAvailable() : SerialPort.getCommPort(port);
 		serialPort.setBaudRate(baudrate);
 		serialPort.setComPortTimeouts(TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
 		serialPort.setComPortParameters(baudrate, 8, ONE_STOP_BIT, NO_PARITY);
 		if (!serialPort.openPort()) {
 			throw new IOException("Could not open port " + port);
 		}
+	}
+
+	private SerialPort firstAvailable() throws IOException {
+		SerialPort[] commPorts = SerialPort.getCommPorts();
+		if (commPorts.length == 0) {
+			throw new IOException("No serial ports available");
+		}
+		return commPorts[0];
 	}
 
 	public InputStream getInputStream() throws IOException {

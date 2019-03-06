@@ -102,8 +102,9 @@ public class SystemRunner {
 	@Option(name = "-h", help = true)
 	boolean help;
 
-	@Option(name = "-tty", metaVar = "TTY", usage = "tty device to use for serial communication")
-	String tty = "/dev/ttyUSB0";
+	@Option(name = "-tty", metaVar = "TTY", usage = "tty device to use for serial communication. "
+			+ "If omitted the first available port is used")
+	String tty;
 	@Option(name = "-baudrate", metaVar = "BAUDRATE", usage = "baudrate for the tty device")
 	int baudrate = 230400;
 	@Option(name = "-leds", metaVar = "LEDS", required = true, usage = "how many leds are connected to the TPM2 device")
