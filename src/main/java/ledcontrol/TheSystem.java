@@ -20,7 +20,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -113,10 +116,14 @@ public class TheSystem implements Closeable {
 		proto = Proto.forFrameSizes(outputStream, panel.getWidth() * panel.getHeight());
 		buffer = new Color[panel.getWidth() * panel.getHeight()];
 		mqttClient = makeMqttClient(host, port);
+		subscribe();
+		panel.addRepaintListener(p -> repaint(p));
+	}
+
+	private void subscribe() throws MqttException, MqttSecurityException {
 		mqttClient.subscribe("#", (topic, message) -> {
 			received(new MqttMessage(topic, new String(message.getPayload())));
 		});
-		panel.addRepaintListener(p -> repaint(p));
 	}
 
 	private void repaint(Panel panel) {
@@ -158,10 +165,16 @@ public class TheSystem implements Closeable {
 		conditions.put(predicate, consumer);
 	}
 
+	public boolean isConnected() {
+		return this.mqttClient.isConnected();
+	}
+
 	@Override
 	public void close() {
 		try {
-			this.mqttClient.disconnect();
+			if (isConnected()) {
+				this.mqttClient.disconnect();
+			}
 			this.mqttClient.close();
 		} catch (MqttException e) {
 			throw new RuntimeException(e);
@@ -170,8 +183,39 @@ public class TheSystem implements Closeable {
 
 	private IMqttClient makeMqttClient(String host, int port) throws MqttException, MqttSecurityException {
 		IMqttClient client = new MqttClient("tcp://" + host + ":" + port, "theSystemClient", new MemoryPersistence());
-		client.connect();
+		client.connect(mqttConnectOptions());
+		client.setCallback(new MqttCallbackExtended() {
+			@Override
+			public void connectionLost(Throwable cause) {
+			}
+
+			@Override
+			public void messageArrived(String topic, org.eclipse.paho.client.mqttv3.MqttMessage message) {
+			}
+
+			@Override
+			public void deliveryComplete(IMqttDeliveryToken token) {
+			}
+
+			@Override
+			public void connectComplete(boolean reconnect, String serverURI) {
+				try {
+					subscribe();
+				} catch (MqttSecurityException e) {
+					e.printStackTrace();
+				} catch (MqttException e) {
+					e.printStackTrace();
+				}
+			}
+
+		});
 		return client;
+	}
+
+	private MqttConnectOptions mqttConnectOptions() {
+		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+		mqttConnectOptions.setAutomaticReconnect(true);
+		return mqttConnectOptions;
 	}
 
 	public Animator getAnimator() {

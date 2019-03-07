@@ -29,6 +29,7 @@ import java.util.stream.IntStream;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
@@ -88,13 +89,21 @@ public class SystemIntegrationIT {
 
 	private MqttClient newMqttClient(String host, int port, String id) throws MqttException, MqttSecurityException {
 		MqttClient client = new MqttClient("tcp://" + host + ":" + port, id, new MemoryPersistence());
-		client.connect();
+		client.connect(mqttConnectOptions());
 		return client;
+	}
+
+	private MqttConnectOptions mqttConnectOptions() {
+		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+		mqttConnectOptions.setAutomaticReconnect(true);
+		return mqttConnectOptions;
 	}
 
 	@After
 	public void tearDown() throws MqttException {
-		secondClient.disconnect();
+		if (secondClient.isConnected()) {
+			secondClient.disconnect();
+		}
 		secondClient.close();
 		theSystem.close();
 		server.stopServer();
@@ -158,6 +167,23 @@ public class SystemIntegrationIT {
 		int currentValue = incremntor.get();
 		MILLISECONDS.sleep(40 * 2);
 		assertThat(incremntor.get(), is(currentValue));
+	}
+
+	@Test
+	public void doesReconnectToBroker() throws InterruptedException, MqttSecurityException, MqttException, IOException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		server.stopServer();
+		assertThat(theSystem.isConnected(), is(false));
+
+		server = newMqttServer(LOCALHOST, brokerPort);
+		TimeUnit.SECONDS.sleep(3);
+		assertThat(theSystem.isConnected(), is(true));
+
+		// does the reconnected client subscribe to the topics again?
+		assertThat(secondClient.isConnected(), is(true));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "idle", "{ \"idle\": true }");
+		MILLISECONDS.sleep(40);
+		verify(idleScene).startAnimation(Mockito.any(Animator.class));
 	}
 
 	private Color[][] lastPanelState() throws IOException {
