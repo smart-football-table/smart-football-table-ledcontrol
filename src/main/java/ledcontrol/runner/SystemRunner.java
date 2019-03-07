@@ -29,6 +29,7 @@ import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
+import ledcontrol.rest.BackgroundLight;
 import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
@@ -40,31 +41,39 @@ public class SystemRunner {
 
 	public static class Configurator {
 
+		private Color backgroundColor = BLACK;
 		private Color colorTeam1 = BLUE;
 		private Color colorTeam2 = RED;
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
-			new SystemRunner.Configurator();
-
+			Panel backgroundPanel = panel.createSubPanel();
 			Panel goalPanel = panel.createSubPanel();
 			Panel foulPanel = panel.createSubPanel();
 			Panel winnerPanel = panel.createSubPanel();
 			Panel idlePanel = panel.createSubPanel();
+
+			backgroundPanel.fill(backgroundColor);
 
 			ScoreScene goalScene = goalScene(goalPanel);
 			FlashScene foulScene = foulScene(foulPanel);
 			IdleScene idleScene = idleScene(idlePanel);
 
 			Gson gson = new Gson();
+			theSystem.whenThen(isTopic("backgroundlight"), m -> {
+				String color = parsePayload(gson, m, BackgroundLight.class).color;
+				backgroundPanel.fill(hex2Rgb(color));
+				backgroundPanel.repaint();
+			});
 			theSystem.whenThen(isTopic("score"), m -> {
-				int[] score = SystemRunner.parsePayload(gson, m, ScoreMessage.class).score;
+				int[] score = parsePayload(gson, m, ScoreMessage.class).score;
 				goalScene.setScore(score);
 			});
 			theSystem.whenThen(isTopic("foul"), m -> foulScene.flash(theSystem.getAnimator()));
 			theSystem.whenThen(isTopic("gameover"), m -> {
 				// TODO handle draws
-				Color flashColor = stream(SystemRunner.parsePayload(gson, m, GameoverMessage.class).winners)
-						.anyMatch(i -> i == 0) ? colorTeam1 : colorTeam2;
+				Color flashColor = stream(parsePayload(gson, m, GameoverMessage.class).winners).anyMatch(i -> i == 0)
+						? colorTeam1
+						: colorTeam2;
 				FlashScene winnerScene = new FlashScene(winnerPanel, //
 						flash(flashColor, 24), flash(BLACK, 24), //
 						flash(flashColor, 24), flash(BLACK, 24), //
@@ -75,13 +84,21 @@ public class SystemRunner {
 				winnerScene.flash(theSystem.getAnimator());
 			});
 			theSystem.whenThen(isTopic("idle"), m -> {
-				if (SystemRunner.parsePayload(gson, m, IdleMessage.class).idle) {
+				if (parsePayload(gson, m, IdleMessage.class).idle) {
 					idleScene.startAnimation(theSystem.getAnimator());
 				} else {
 					idleScene.stopAnimation().reset();
 				}
 			});
 			return theSystem;
+		}
+
+		private static Color hex2Rgb(String value) {
+			return new Color( //
+					Integer.valueOf(value.substring(1, 3), 16), //
+					Integer.valueOf(value.substring(3, 5), 16), //
+					Integer.valueOf(value.substring(5, 7), 16) //
+			);
 		}
 
 		protected IdleScene idleScene(Panel idlePanel) {
@@ -129,8 +146,6 @@ public class SystemRunner {
 		SerialConnection connection = new SerialConnection(tty, baudrate);
 		SECONDS.sleep(2);
 		StackedPanel panel = new StackedPanel(leds, 1);
-		panel.createSubPanel().fill(BLACK);
-
 		try (TheSystem theSystem = new Configurator()
 				.configure(new TheSystem(mqttHost, mqttPort, panel, connection.getOutputStream()), panel)) {
 			Object o = new Object();

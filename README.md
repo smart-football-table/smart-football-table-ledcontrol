@@ -5,14 +5,13 @@ The LED stripe can be connected using a serial link. The program writes TPM2 fra
 However, the Arduino seems to be not fast enough to manage the data send since it is very limited both in processing speed and the size of the serial buffer. 
 
 ## MQTT messages
-| topic      | Description                  | Example payload       |  Implemented |
-| ---------- | ---------------------------- |---------------------- |------------- |
-| score      | The teams' scores            | { "score": [ 0, 3 ] } | ✔            |
-| foul       | Some foul has happened       | -                     | ✔            |
-| gameover   | A match ended                | { "winners": [ 0 ] }  | ✔            |
-| velocity   | current ball velocity        | { "velocity": 46.3 }  | -            |
-| position   | current ball position        | { "x": 0, "y": 0 }    | -            |
-| idle       | Is there action on the table | { "idle": true }      | ✔            |
+| topic           | Description                  | Example payload        |  Implemented |
+| --------------- | ---------------------------- |----------------------- |------------- |
+| backgroundlight | Sets the background light    | { "color": "#CC11DD" } | ✔            |
+| score           | The teams' scores            | { "score": [ 0, 3 ] }  | ✔            |
+| foul            | Some foul has happened       | -                      | ✔            |
+| gameover        | A match ended                | { "winners": [ 0 ] }   | ✔            |
+| idle            | Is there action on the table | { "idle": true }       | ✔            |
 
 ## Docker
 You can either run docker in privileged mode (```--privileged```) or pass in the device(s) available in the container
