@@ -7,6 +7,8 @@ import static java.awt.Color.BLUE;
 import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static ledcontrol.SystemIntegrationIT.Waiter.waitFor;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
@@ -23,7 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -36,7 +40,9 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.mockito.Mockito;
 
 import io.moquette.server.Server;
@@ -47,6 +53,40 @@ import ledcontrol.runner.SystemRunner.Configurator;
 import ledcontrol.scene.IdleScene;
 
 public class SystemIntegrationIT {
+
+	public static class Waiter {
+
+		// TODO use timeout/unit
+		private int timeout;
+		private TimeUnit unit;
+
+		public Waiter(int timeout, TimeUnit unit) {
+			this.timeout = timeout;
+			this.unit = unit;
+		}
+
+		public static Waiter waitFor(int timeout, TimeUnit unit) {
+			return new Waiter(timeout, unit);
+		}
+
+		public void until(Supplier<Boolean> supplier, boolean expected) throws InterruptedException, TimeoutException {
+			long start = System.currentTimeMillis();
+			while (supplier.get() != expected) {
+				if (System.currentTimeMillis() > start + unit.toMillis(timeout)) {
+					throw new TimeoutException();
+				}
+				sleep();
+			}
+		}
+
+		private void sleep() throws InterruptedException {
+			MILLISECONDS.sleep(100);
+		}
+
+	}
+
+	@Rule
+	public Timeout timeout = Timeout.seconds(30);
 
 	private static final String LOCALHOST = "localhost";
 	private static final Color ___ = BLACK;
@@ -170,17 +210,17 @@ public class SystemIntegrationIT {
 	}
 
 	@Test
-	public void doesReconnectToBroker() throws InterruptedException, MqttSecurityException, MqttException, IOException {
+	public void doesReconnectToBrokerAndResubscribeToTopics()
+			throws InterruptedException, MqttSecurityException, MqttException, IOException, TimeoutException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		server.stopServer();
-		assertThat(theSystem.isConnected(), is(false));
+		waitFor(10, SECONDS).until(() -> theSystem.isConnected(), false);
 
 		server = newMqttServer(LOCALHOST, brokerPort);
-		TimeUnit.SECONDS.sleep(3);
-		assertThat(theSystem.isConnected(), is(true));
+		waitFor(10, SECONDS).until(() -> theSystem.isConnected(), true);
 
 		// does the reconnected client subscribe to the topics again?
-		assertThat(secondClient.isConnected(), is(true));
+		waitFor(10, SECONDS).until(() -> secondClient.isConnected(), true);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "idle", "{ \"idle\": true }");
 		MILLISECONDS.sleep(40);
 		verify(idleScene).startAnimation(Mockito.any(Animator.class));
