@@ -29,7 +29,6 @@ import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
-import ledcontrol.rest.BackgroundLight;
 import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
@@ -41,7 +40,6 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private Color backgroundColor = BLACK;
 		private Color colorTeam1 = BLUE;
 		private Color colorTeam2 = RED;
 
@@ -52,14 +50,14 @@ public class SystemRunner {
 			Panel winnerPanel = panel.createSubPanel();
 			Panel idlePanel = panel.createSubPanel();
 
-			backgroundPanel.fill(backgroundColor);
+			backgroundPanel.fill(BLACK);
 
 			ScoreScene goalScene = goalScene(goalPanel);
 			IdleScene idleScene = idleScene(idlePanel);
 
 			Gson gson = new Gson();
 			theSystem.whenThen(isTopic("backgroundlight"), m -> {
-				String color = parsePayload(gson, m, BackgroundLight.class).color;
+				String color = m.getPayload();
 				backgroundPanel.fill(Color.decode(color));
 				backgroundPanel.repaint();
 			});

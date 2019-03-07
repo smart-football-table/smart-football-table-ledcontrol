@@ -204,7 +204,7 @@ public class SystemIntegrationIT {
 	public void backgroundColorChanges()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "{ \"color\": \"#1188CC\" }");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "#1188CC");
 		MILLISECONDS.sleep(40);
 		Color c = new Color(17, 136, 204);
 		assertThat(lastPanelState(), is(new Color[][] { //
