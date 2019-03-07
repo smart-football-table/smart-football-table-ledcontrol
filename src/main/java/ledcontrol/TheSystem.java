@@ -187,6 +187,7 @@ public class TheSystem implements Closeable {
 		client.setCallback(new MqttCallbackExtended() {
 			@Override
 			public void connectionLost(Throwable cause) {
+				System.out.println("Connection to " + client.getServerURI() + " lost");
 			}
 
 			@Override
@@ -199,6 +200,7 @@ public class TheSystem implements Closeable {
 
 			@Override
 			public void connectComplete(boolean reconnect, String serverURI) {
+				System.out.println("Connection to " + serverURI + " established");
 				if (reconnect) {
 					try {
 						subscribe();
