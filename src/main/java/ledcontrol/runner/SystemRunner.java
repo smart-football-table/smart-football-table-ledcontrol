@@ -61,7 +61,7 @@ public class SystemRunner {
 			Gson gson = new Gson();
 			theSystem.whenThen(isTopic("backgroundlight"), m -> {
 				String color = parsePayload(gson, m, BackgroundLight.class).color;
-				backgroundPanel.fill(hex2Rgb(color));
+				backgroundPanel.fill(Color.decode(color));
 				backgroundPanel.repaint();
 			});
 			theSystem.whenThen(isTopic("score"), m -> {
@@ -91,14 +91,6 @@ public class SystemRunner {
 				}
 			});
 			return theSystem;
-		}
-
-		private static Color hex2Rgb(String value) {
-			return new Color( //
-					Integer.valueOf(value.substring(1, 3), 16), //
-					Integer.valueOf(value.substring(3, 5), 16), //
-					Integer.valueOf(value.substring(5, 7), 16) //
-			);
 		}
 
 		protected IdleScene idleScene(Panel idlePanel) {
