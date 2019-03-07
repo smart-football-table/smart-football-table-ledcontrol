@@ -199,12 +199,14 @@ public class TheSystem implements Closeable {
 
 			@Override
 			public void connectComplete(boolean reconnect, String serverURI) {
-				try {
-					subscribe();
-				} catch (MqttSecurityException e) {
-					e.printStackTrace();
-				} catch (MqttException e) {
-					e.printStackTrace();
+				if (reconnect) {
+					try {
+						subscribe();
+					} catch (MqttSecurityException e) {
+						e.printStackTrace();
+					} catch (MqttException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 
