@@ -55,7 +55,6 @@ public class SystemRunner {
 			backgroundPanel.fill(backgroundColor);
 
 			ScoreScene goalScene = goalScene(goalPanel);
-			FlashScene foulScene = foulScene(foulPanel);
 			IdleScene idleScene = idleScene(idlePanel);
 
 			Gson gson = new Gson();
@@ -68,7 +67,7 @@ public class SystemRunner {
 				int[] score = parsePayload(gson, m, ScoreMessage.class).score;
 				goalScene.setScore(score);
 			});
-			theSystem.whenThen(isTopic("foul"), m -> foulScene.flash(theSystem.getAnimator()));
+			theSystem.whenThen(isTopic("foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
 			theSystem.whenThen(isTopic("gameover"), m -> {
 				// TODO handle draws
 				Color flashColor = stream(parsePayload(gson, m, GameoverMessage.class).winners).anyMatch(i -> i == 0)
@@ -103,7 +102,7 @@ public class SystemRunner {
 		}
 
 		protected ScoreScene goalScene(Panel goalPanel) {
-			return new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(1);
+			return new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(5);
 		}
 
 	}
