@@ -118,6 +118,7 @@ public class TheSystem implements Closeable {
 		mqttClient = makeMqttClient(host, port);
 		subscribe();
 		panel.addRepaintListener(p -> repaint(p));
+		panel.repaint();
 	}
 
 	private void subscribe() throws MqttException, MqttSecurityException {

@@ -88,7 +88,6 @@ public class SystemIntegrationIT {
 	public Timeout timeout = Timeout.seconds(30);
 
 	private static final String LOCALHOST = "localhost";
-	private static final Color ___ = BLACK;
 	private static final Color COLOR_TEAM_LEFT = BLUE;
 	private static final Color COLOR_TEAM_RIGHT = RED;
 
@@ -149,12 +148,21 @@ public class SystemIntegrationIT {
 	}
 
 	@Test
+	public void panelIsBlackOnSystemStart() throws MqttSecurityException, MqttException, IOException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		assertThat(lastPanelState(), is(new Color[][] { //
+				{ BLACK, BLACK, BLACK, BLACK, BLACK }, //
+				{ BLACK, BLACK, BLACK, BLACK, BLACK }, //
+		}));
+	}
+
+	@Test
 	public void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(1, 0));
 		assertThat(lastPanelState(), is(new Color[][] { //
-				{ COLOR_TEAM_LEFT, ___, ___, ___, ___ }, //
-				{ COLOR_TEAM_LEFT, ___, ___, ___, ___ }, //
+				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
+				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
 		}));
 	}
 
@@ -164,8 +172,8 @@ public class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(1, 0));
 		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(2, 0));
 		assertThat(lastPanelState(), is(new Color[][] { //
-				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, ___, ___, ___ }, //
-				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, ___, ___, ___ }, //
+				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
+				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
 		}));
 	}
 
