@@ -56,9 +56,8 @@ public class SystemIntegrationIT {
 
 	public static class Waiter {
 
-		// TODO use timeout/unit
-		private int timeout;
-		private TimeUnit unit;
+		private final int timeout;
+		private final TimeUnit unit;
 
 		public Waiter(int timeout, TimeUnit unit) {
 			this.timeout = timeout;
