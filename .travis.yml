@@ -3,4 +3,5 @@ services:
   - docker
 
 script:
+  - mvn package
   - mvn jib:dockerBuild
