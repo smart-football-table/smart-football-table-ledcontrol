@@ -9,6 +9,7 @@
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<image>docker.io/smart-football-table/${project.artifactId}:${project.version}</image>
 	</properties>
 
 	<dependencies>
@@ -67,6 +68,7 @@
 				<configuration>
 					<container>
 						<mainClass>ledcontrol.runner.SystemRunner</mainClass>
+						<useCurrentTimestamp>true</useCurrentTimestamp>
 					</container>
 				</configuration>
 			</plugin>
