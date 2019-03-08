@@ -40,8 +40,8 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private Color colorTeam1 = BLUE;
-		private Color colorTeam2 = RED;
+		private Color colorTeam1 = Color.decode("#0066b3"); // BLUE
+		private Color colorTeam2 = Color.decode("#ff6600"); // ORANGE
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel();
@@ -91,7 +91,16 @@ public class SystemRunner {
 		}
 
 		protected IdleScene idleScene(Panel idlePanel) {
-			return new IdleScene(idlePanel, BLACK, colorTeam1, colorTeam2);
+			Color lightBlue = Color.decode("#87d0ea");
+			Color fuchsia = Color.decode("#d10a45");
+			Color yellow = Color.decode("#facb41");
+			Color turquoise = Color.decode("#56bcb1");
+			Color violet = Color.decode("#a0509a");
+			Color green = Color.decode("#8ac056");
+			Color pink = Color.decode("#db4e7a");
+			Color white = Color.decode("#ffffff");
+			return new IdleScene(idlePanel, BLACK, colorTeam1, colorTeam2, lightBlue, fuchsia, yellow, turquoise,
+					violet, green, pink, white);
 		}
 
 		protected FlashScene foulScene(Panel foulPanel) {

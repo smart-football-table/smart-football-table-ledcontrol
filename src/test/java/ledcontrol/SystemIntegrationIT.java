@@ -90,8 +90,8 @@ public class SystemIntegrationIT {
 	public Timeout timeout = Timeout.seconds(30);
 
 	private static final String LOCALHOST = "localhost";
-	private static final Color COLOR_TEAM_LEFT = BLUE;
-	private static final Color COLOR_TEAM_RIGHT = RED;
+	private static final Color COLOR_TEAM_LEFT = Color.decode("#0066b3"); // BLUE
+	private static final Color COLOR_TEAM_RIGHT = Color.decode("#ff6600"); // ORANGE;
 
 	private IdleScene idleScene = mock(IdleScene.class);
 
