@@ -6,6 +6,7 @@ import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Stream.concat;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
+import static ledcontrol.runner.Colors.*;
 import static ledcontrol.runner.args4j.EnvVars.readEnvVars;
 import static ledcontrol.scene.FlashScene.FlashConfig.flash;
 import static org.kohsuke.args4j.OptionHandlerFilter.ALL;
@@ -38,8 +39,8 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private Color colorTeam1 = Color.decode("#0066b3"); // BLUE
-		private Color colorTeam2 = Color.decode("#ff6600"); // ORANGE
+		private Color colorTeam1 = BLUE;
+		private Color colorTeam2 = ORANGE;
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel();
@@ -95,16 +96,8 @@ public class SystemRunner {
 		}
 
 		protected IdleScene idleScene(Panel idlePanel) {
-			Color lightBlue = Color.decode("#87d0ea");
-			Color fuchsia = Color.decode("#d10a45");
-			Color yellow = Color.decode("#facb41");
-			Color turquoise = Color.decode("#56bcb1");
-			Color violet = Color.decode("#a0509a");
-			Color green = Color.decode("#8ac056");
-			Color pink = Color.decode("#db4e7a");
-			Color white = Color.decode("#ffffff");
-			return new IdleScene(idlePanel, BLACK, colorTeam1, colorTeam2, lightBlue, fuchsia, yellow, turquoise,
-					violet, green, pink, white);
+			return new IdleScene(idlePanel, BLACK, colorTeam1, colorTeam2, LIGHT_BLUE, FUCHSIA, YELLOW, TURQUOISE,
+					VIOLET, GREEN, PINK, WHITE);
 		}
 
 		protected FlashScene foulScene(Panel foulPanel) {
