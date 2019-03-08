@@ -15,5 +15,7 @@ However, the Arduino seems to be not fast enough to manage the data send since i
 
 ## Docker
 You can either run docker in privileged mode (```--privileged```) or pass in the device(s) available in the container
-```docker run --rm --device=/dev/ttyUSB4 -e LEDS=120 -e TTY=/dev/ttyUSB4 -e MQTTHOST=mqtt -e MQTTPORT=1883 ledcontrol```
+```docker run --rm --device=/dev/ttyUSB4:/dev/ttyUSB0 -e LEDS=72 -e TTY=/dev/ttyUSB0 -e MQTTHOST=mqtt -e MQTTPORT=1883 ledcontrol```
+Because the device numbers depends on the order the devices are connected you should use static links. You can add your own udev rule or just use the already existing links: 
+```docker run --rm --device=/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0:/dev/ttyUSB0 -e LEDS=72 -e TTY=/dev/ttyUSB0 -e MQTTHOST=mqtt -e MQTTPORT=1883 ledcontrol```
 
