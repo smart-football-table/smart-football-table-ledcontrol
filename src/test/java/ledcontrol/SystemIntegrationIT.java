@@ -38,6 +38,7 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -221,6 +222,36 @@ public class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#22AADD");
 		MILLISECONDS.sleep(40);
 		Color c = new Color(34, 170, 221);
+		assertThat(lastPanelState(), is(new Color[][] { //
+				{ c, c, c, c, c }, //
+				{ c, c, c, c, c }, //
+		}));
+	}
+
+	@Test
+	public void foregroundColorOverridesBackgroundColor()
+			throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#22AADD");
+		MILLISECONDS.sleep(40);
+		Color c = new Color(34, 170, 221);
+		assertThat(lastPanelState(), is(new Color[][] { //
+				{ c, c, c, c, c }, //
+				{ c, c, c, c, c }, //
+		}));
+	}
+
+	@Test
+	@Ignore // to be fixed
+	public void foregroundColorIsTransparent()
+			throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "#112233");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#AABBCC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#000000");
+		MILLISECONDS.sleep(40);
+		Color c = new Color(17, 34, 51);
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ c, c, c, c, c }, //
 				{ c, c, c, c, c }, //
