@@ -48,9 +48,11 @@ import org.mockito.Mockito;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 import ledcontrol.Animator.AnimatorTask;
+import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.runner.SystemRunner.Configurator;
 import ledcontrol.scene.IdleScene;
+import ledcontrol.scene.ScoreScene;
 
 public class SystemIntegrationIT {
 
@@ -282,9 +284,15 @@ public class SystemIntegrationIT {
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
 		theSystem = new Configurator() {
+
+			protected ScoreScene goalScene(Panel goalPanel) {
+				return super.goalScene(goalPanel).pixelsPerGoal(1);
+			}
+
 			protected ledcontrol.scene.IdleScene idleScene(ledcontrol.panel.Panel idlePanel) {
 				return idleScene;
 			};
+
 		}.configure(new TheSystem(host, port, panel, outputStream), panel);
 	}
 
