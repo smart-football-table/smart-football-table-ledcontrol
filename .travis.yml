@@ -1,0 +1,6 @@
+language: java
+services:
+  - docker
+
+script:
+  - mvn package jib:dockerBuild
