@@ -214,6 +214,20 @@ public class SystemIntegrationIT {
 	}
 
 	@Test
+	public void foregroundColorChanges()
+			throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#22AADD");
+		MILLISECONDS.sleep(40);
+		Color c = new Color(34, 170, 221);
+		assertThat(lastPanelState(), is(new Color[][] { //
+				{ c, c, c, c, c }, //
+				{ c, c, c, c, c }, //
+		}));
+	}
+
+	@Test
 	public void canStartAndStopTasks() throws InterruptedException, MqttSecurityException, MqttException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		AtomicInteger incremntor = new AtomicInteger(0);

@@ -47,6 +47,7 @@ public class SystemRunner {
 			Panel foulPanel = panel.createSubPanel();
 			Panel winnerPanel = panel.createSubPanel();
 			Panel idlePanel = panel.createSubPanel();
+			Panel foregrounddPanel = panel.createSubPanel();
 
 			backgroundPanel.fill(BLACK);
 
@@ -58,6 +59,11 @@ public class SystemRunner {
 				String color = m.getPayload();
 				backgroundPanel.fill(Color.decode(color));
 				backgroundPanel.repaint();
+			});
+			theSystem.whenThen(isTopic("foregroundlight"), m -> {
+				String color = m.getPayload();
+				foregrounddPanel.fill(Color.decode(color));
+				foregrounddPanel.repaint();
 			});
 			theSystem.whenThen(isTopic("score"), m -> {
 				int[] score = parsePayload(gson, m, ScoreMessage.class).score;
