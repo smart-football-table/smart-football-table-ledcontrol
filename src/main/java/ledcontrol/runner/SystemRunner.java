@@ -1,8 +1,6 @@
 package ledcontrol.runner;
 
 import static java.awt.Color.BLACK;
-import static java.awt.Color.BLUE;
-import static java.awt.Color.RED;
 import static java.awt.Color.WHITE;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
