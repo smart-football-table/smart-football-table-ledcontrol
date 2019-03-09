@@ -154,12 +154,16 @@ public class TheSystem implements Closeable {
 		for (Entry<Predicate<MqttMessage>, Consumer<MqttMessage>> entry : conditions.entrySet()) {
 			if (entry.getKey().test(message)) {
 				try {
-					entry.getValue().accept(message);
+					handleMessage(entry.getValue(), message);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		}
+	}
+
+	protected void handleMessage(Consumer<MqttMessage> consumer, MqttMessage message) {
+		consumer.accept(message);
 	}
 
 	public void whenThen(Predicate<MqttMessage> predicate, Consumer<MqttMessage> consumer) {

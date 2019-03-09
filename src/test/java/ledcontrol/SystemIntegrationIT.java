@@ -10,6 +10,7 @@ import static ledcontrol.SystemIntegrationIT.Waiter.waitFor;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.rules.Timeout.seconds;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -25,6 +26,10 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -38,7 +43,6 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -49,6 +53,7 @@ import io.moquette.server.config.MemoryConfig;
 import ledcontrol.Animator.AnimatorTask;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
+import ledcontrol.runner.Colors;
 import ledcontrol.runner.SystemRunner.Configurator;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
@@ -86,11 +91,11 @@ public class SystemIntegrationIT {
 	}
 
 	@Rule
-	public Timeout timeout = Timeout.seconds(30);
+	public Timeout timeout = seconds(30);
 
 	private static final String LOCALHOST = "localhost";
-	private static final Color COLOR_TEAM_LEFT = Color.decode("#0066b3"); // BLUE
-	private static final Color COLOR_TEAM_RIGHT = Color.decode("#ff6600"); // ORANGE;
+	private static final Color COLOR_TEAM_LEFT = Colors.BLUE;
+	private static final Color COLOR_TEAM_RIGHT = Colors.ORANGE;
 
 	private IdleScene idleScene = mock(IdleScene.class);
 
@@ -103,6 +108,10 @@ public class SystemIntegrationIT {
 	private Server server;
 	private TheSystem theSystem;
 	private IMqttClient secondClient;
+
+	private final Lock lock = new ReentrantLock();
+	private final Condition consumed = lock.newCondition();
+	private int unconsumedMessages;
 
 	@Before
 	public void setup() throws IOException, MqttException {
@@ -187,6 +196,7 @@ public class SystemIntegrationIT {
 	public void flashesOnFoul() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "foul", "");
+		MILLISECONDS.sleep(40);
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
@@ -319,9 +329,16 @@ public class SystemIntegrationIT {
 
 	private void whenMessageIsReceived(String host, int port, String topic, String message)
 			throws MqttSecurityException, MqttException, InterruptedException {
-		secondClient.publish(topic, new MqttMessage(message.getBytes()));
-		// TODO use lock/condition
-		TimeUnit.MILLISECONDS.sleep(250);
+		lock.lock();
+		try {
+			unconsumedMessages++;
+			secondClient.publish(topic, new MqttMessage(message.getBytes()));
+			while (unconsumedMessages > 0) {
+				consumed.await();
+			}
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
@@ -335,7 +352,20 @@ public class SystemIntegrationIT {
 				return idleScene;
 			};
 
-		}.configure(new TheSystem(host, port, panel, outputStream), panel);
+		}.configure(new TheSystem(host, port, panel, outputStream) {
+			@Override
+			protected void handleMessage(Consumer<MqttMessage> consumer, MqttMessage message) {
+				super.handleMessage(consumer, message);
+				lock.lock();
+				try {
+					unconsumedMessages--;
+					consumed.signalAll();
+				} finally {
+					lock.unlock();
+				}
+
+			}
+		}, panel);
 	}
 
 }
