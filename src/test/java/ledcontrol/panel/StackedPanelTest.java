@@ -11,7 +11,6 @@ import java.awt.Color;
 
 import org.junit.Test;
 
-import ledcontrol.panel.Panel.OverlayStrategy;
 import ledcontrol.scene.DummyAnimator;
 import ledcontrol.scene.FlashScene;
 

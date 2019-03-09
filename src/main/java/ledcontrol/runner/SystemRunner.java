@@ -64,18 +64,18 @@ public class SystemRunner {
 			IdleScene idleScene = idleScene(idlePanel);
 
 			Gson gson = new Gson();
-			theSystem.whenThen(isTopic("backgroundlight"), m -> {
+			theSystem.whenThen(isTopic("leds/backgroundlight"), m -> {
 				backgroundPanel.fill(colorFromPayload(m)).repaint();
 			});
-			theSystem.whenThen(isTopic("foregroundlight"), m -> {
+			theSystem.whenThen(isTopic("leds/foregroundlight"), m -> {
 				foregrounddPanel.fill(colorFromPayload(m)).repaint();
 			});
-			theSystem.whenThen(isTopic("score"), m -> {
+			theSystem.whenThen(isTopic("table/score"), m -> {
 				int[] score = parsePayload(gson, m, ScoreMessage.class).score;
 				goalScene.setScore(score);
 			});
-			theSystem.whenThen(isTopic("foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
-			theSystem.whenThen(isTopic("gameover"), m -> {
+			theSystem.whenThen(isTopic("table/foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
+			theSystem.whenThen(isTopic("table/gameover"), m -> {
 				// TODO handle draws
 				Color flashColor = stream(parsePayload(gson, m, GameoverMessage.class).winners).anyMatch(i -> i == 0)
 						? colorTeam1
@@ -89,7 +89,7 @@ public class SystemRunner {
 						flash(flashColor, 6), flash(BLACK, 6));
 				winnerScene.flash(theSystem.getAnimator());
 			});
-			theSystem.whenThen(isTopic("idle"), m -> {
+			theSystem.whenThen(isTopic("table/idle"), m -> {
 				if (parsePayload(gson, m, IdleMessage.class).idle) {
 					idleScene.startAnimation(theSystem.getAnimator());
 				} else {

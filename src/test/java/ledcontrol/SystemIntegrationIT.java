@@ -169,7 +169,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(1, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "table/score", score(1, 0));
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
 				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
@@ -179,8 +179,8 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScoresTwice() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(1, 0));
-		whenMessageIsReceived(LOCALHOST, brokerPort, "score", score(2, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "table/score", score(1, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "table/score", score(2, 0));
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
@@ -195,7 +195,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void flashesOnFoul() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "foul", "");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "table/foul", "");
 		MILLISECONDS.sleep(40);
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
@@ -206,7 +206,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void animationOnIdle() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "idle", "{ \"idle\": true }");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "table/idle", "{ \"idle\": true }");
 		MILLISECONDS.sleep(40);
 		verify(idleScene).startAnimation(Mockito.any(Animator.class));
 	}
@@ -215,7 +215,7 @@ public class SystemIntegrationIT {
 	public void backgroundColorChanges()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight", "#1188CC");
 		MILLISECONDS.sleep(40);
 		Color c = new Color(17, 136, 204);
 		assertThat(lastPanelState(), is(new Color[][] { //
@@ -228,8 +228,8 @@ public class SystemIntegrationIT {
 	public void foregroundColorChanges()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "#1188CC");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#22AADD");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight", "#22AADD");
 		MILLISECONDS.sleep(40);
 		Color c = new Color(34, 170, 221);
 		assertThat(lastPanelState(), is(new Color[][] { //
@@ -242,8 +242,8 @@ public class SystemIntegrationIT {
 	public void foregroundColorOverridesBackgroundColor()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "#1188CC");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#22AADD");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight", "#22AADD");
 		MILLISECONDS.sleep(40);
 		Color c = new Color(34, 170, 221);
 		assertThat(lastPanelState(), is(new Color[][] { //
@@ -256,9 +256,9 @@ public class SystemIntegrationIT {
 	public void foregroundColorIsTransparent()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "backgroundlight", "#112233");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#AABBCC");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "foregroundlight", "#000000");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight", "#112233");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight", "#AABBCC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight", "#000000");
 		MILLISECONDS.sleep(40);
 		Color c = new Color(17, 34, 51);
 		assertThat(lastPanelState(), is(new Color[][] { //
@@ -295,7 +295,7 @@ public class SystemIntegrationIT {
 
 		// does the reconnected client subscribe to the topics again?
 		waitFor(10, SECONDS).until(() -> secondClient.isConnected(), true);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "idle", "{ \"idle\": true }");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "table/idle", "{ \"idle\": true }");
 		MILLISECONDS.sleep(40);
 		verify(idleScene).startAnimation(Mockito.any(Animator.class));
 	}

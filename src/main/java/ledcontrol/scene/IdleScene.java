@@ -35,10 +35,12 @@ public class IdleScene implements Scene {
 	}
 
 	public synchronized IdleScene stopAnimation() {
-		task.stop();
-		task = null;
-		panel.clear();
-		panel.repaint();
+		if (task != null) {
+			task.stop();
+			task = null;
+			panel.clear();
+			panel.repaint();
+		}
 		return this;
 	}
 
