@@ -38,7 +38,7 @@ public class StackedPanel extends Panel {
 
 	public StackedPanel(int width, int height) {
 		super(width, height);
-		this.subPanelRepaintListener = panel -> mixTo(this);
+		this.subPanelRepaintListener = panel -> copyTo(this);
 	}
 
 	@Override
@@ -46,7 +46,8 @@ public class StackedPanel extends Panel {
 		this.repaintListeners.add(listener);
 	}
 
-	private void mixTo(Panel target) {
+	@Override
+	public void copyTo(Panel target) {
 		clear();
 		for (Panel inner : inners) {
 			inner.copyTo(target);
