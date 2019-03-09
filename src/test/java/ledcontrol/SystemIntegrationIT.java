@@ -169,7 +169,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "table/score", score(1, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score", score(1, 0));
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
 				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
@@ -179,8 +179,8 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScoresTwice() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "table/score", score(1, 0));
-		whenMessageIsReceived(LOCALHOST, brokerPort, "table/score", score(2, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score", score(1, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score", score(2, 0));
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
@@ -195,7 +195,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void flashesOnFoul() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "table/foul", "");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/foul", "");
 		MILLISECONDS.sleep(40);
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
@@ -206,7 +206,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void animationOnIdle() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "table/idle", "{ \"idle\": true }");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "{ \"idle\": true }");
 		MILLISECONDS.sleep(40);
 		verify(idleScene).startAnimation(Mockito.any(Animator.class));
 	}
@@ -295,7 +295,7 @@ public class SystemIntegrationIT {
 
 		// does the reconnected client subscribe to the topics again?
 		waitFor(10, SECONDS).until(() -> secondClient.isConnected(), true);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "table/idle", "{ \"idle\": true }");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "{ \"idle\": true }");
 		MILLISECONDS.sleep(40);
 		verify(idleScene).startAnimation(Mockito.any(Animator.class));
 	}

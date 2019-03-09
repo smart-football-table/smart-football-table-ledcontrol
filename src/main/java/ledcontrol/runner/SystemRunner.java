@@ -70,12 +70,12 @@ public class SystemRunner {
 			theSystem.whenThen(isTopic("leds/foregroundlight/color"), m -> {
 				foregrounddPanel.fill(colorFromPayload(m)).repaint();
 			});
-			theSystem.whenThen(isTopic("table/score"), m -> {
+			theSystem.whenThen(isTopic("game/score"), m -> {
 				int[] score = parsePayload(gson, m, ScoreMessage.class).score;
 				goalScene.setScore(score);
 			});
-			theSystem.whenThen(isTopic("table/foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
-			theSystem.whenThen(isTopic("table/gameover"), m -> {
+			theSystem.whenThen(isTopic("game/foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
+			theSystem.whenThen(isTopic("game/gameover"), m -> {
 				// TODO handle draws
 				Color flashColor = stream(parsePayload(gson, m, GameoverMessage.class).winners).anyMatch(i -> i == 0)
 						? colorTeam1
@@ -89,7 +89,7 @@ public class SystemRunner {
 						flash(flashColor, 6), flash(BLACK, 6));
 				winnerScene.flash(theSystem.getAnimator());
 			});
-			theSystem.whenThen(isTopic("table/idle"), m -> {
+			theSystem.whenThen(isTopic("game/idle"), m -> {
 				if (parsePayload(gson, m, IdleMessage.class).idle) {
 					idleScene.startAnimation(theSystem.getAnimator());
 				} else {
