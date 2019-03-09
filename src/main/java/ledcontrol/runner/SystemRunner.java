@@ -64,10 +64,10 @@ public class SystemRunner {
 			IdleScene idleScene = idleScene(idlePanel);
 
 			Gson gson = new Gson();
-			theSystem.whenThen(isTopic("leds/backgroundlight"), m -> {
+			theSystem.whenThen(isTopic("leds/backgroundlight/color"), m -> {
 				backgroundPanel.fill(colorFromPayload(m)).repaint();
 			});
-			theSystem.whenThen(isTopic("leds/foregroundlight"), m -> {
+			theSystem.whenThen(isTopic("leds/foregroundlight/color"), m -> {
 				foregrounddPanel.fill(colorFromPayload(m)).repaint();
 			});
 			theSystem.whenThen(isTopic("table/score"), m -> {

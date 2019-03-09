@@ -215,12 +215,12 @@ public class SystemIntegrationIT {
 	public void backgroundColorChanges()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 		MILLISECONDS.sleep(40);
-		Color c = new Color(17, 136, 204);
+		Color _1188CC = new Color(17, 136, 204);
 		assertThat(lastPanelState(), is(new Color[][] { //
-				{ c, c, c, c, c }, //
-				{ c, c, c, c, c }, //
+				{ _1188CC, _1188CC, _1188CC, _1188CC, _1188CC }, //
+				{ _1188CC, _1188CC, _1188CC, _1188CC, _1188CC }, //
 		}));
 	}
 
@@ -228,13 +228,13 @@ public class SystemIntegrationIT {
 	public void foregroundColorChanges()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight", "#1188CC");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight", "#22AADD");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 		MILLISECONDS.sleep(40);
-		Color c = new Color(34, 170, 221);
+		Color _22AADD = new Color(34, 170, 221);
 		assertThat(lastPanelState(), is(new Color[][] { //
-				{ c, c, c, c, c }, //
-				{ c, c, c, c, c }, //
+				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
+				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 		}));
 	}
 
@@ -242,13 +242,13 @@ public class SystemIntegrationIT {
 	public void foregroundColorOverridesBackgroundColor()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight", "#1188CC");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight", "#22AADD");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 		MILLISECONDS.sleep(40);
-		Color c = new Color(34, 170, 221);
+		Color _22AADD = new Color(34, 170, 221);
 		assertThat(lastPanelState(), is(new Color[][] { //
-				{ c, c, c, c, c }, //
-				{ c, c, c, c, c }, //
+				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
+				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 		}));
 	}
 
@@ -256,14 +256,14 @@ public class SystemIntegrationIT {
 	public void foregroundColorIsTransparent()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight", "#112233");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight", "#AABBCC");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight", "#000000");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#112233");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#AABBCC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#000000");
 		MILLISECONDS.sleep(40);
-		Color c = new Color(17, 34, 51);
+		Color _112233 = new Color(17, 34, 51);
 		assertThat(lastPanelState(), is(new Color[][] { //
-				{ c, c, c, c, c }, //
-				{ c, c, c, c, c }, //
+				{ _112233, _112233, _112233, _112233, _112233 }, //
+				{ _112233, _112233, _112233, _112233, _112233 }, //
 		}));
 	}
 

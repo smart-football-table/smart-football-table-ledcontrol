@@ -5,14 +5,14 @@ The LED stripe can be connected using a serial link. The program writes TPM2 fra
 However, the Arduino seems to be not fast enough to manage the data send since it is very limited both in processing speed and the size of the serial buffer. 
 
 ## MQTT messages
-| topic                 | Description                                   | Example payload        |
-| --------------------- | --------------------------------------------- |----------------------- |
-| leds/backgroundlight  | Sets the background light, default is #000000 | #CC11DD                |
-| table/score           | The teams' scores                             | { "score": [ 0, 3 ] }  |
-| table/foul            | Some foul has happened                        | -                      |
-| table/gameover        | A match ended                                 | { "winners": [ 0 ] }   |
-| table/idle            | Is there action on the table                  | { "idle": true }       |
-| leds/foregroundlight  | Foreground light overrules everything else if not #000000 | #111111    |
+| topic                       | Description                                   | Example payload        |
+| --------------------------- | --------------------------------------------- |----------------------- |
+| leds/backgroundlight/color  | Sets the background light, default is #000000 | #CC11DD                |
+| table/score                 | The teams' scores                             | { "score": [ 0, 3 ] }  |
+| table/foul                  | Some foul has happened                        | -                      |
+| table/gameover              | A match ended                                 | { "winners": [ 0 ] }   |
+| table/idle                  | Is there action on the table                  | { "idle": true }       |
+| leds/foregroundlight/color  | Foreground light overrules everything else if not #000000 | #111111    |
 
 ## Docker
 You can either run docker in privileged mode (```--privileged```) or pass in the device(s) available in the container
