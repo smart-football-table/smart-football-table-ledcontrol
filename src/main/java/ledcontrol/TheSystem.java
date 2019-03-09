@@ -2,6 +2,7 @@ package ledcontrol;
 
 import static java.awt.Color.BLACK;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Predicate.isEqual;
 
 import java.awt.Color;
@@ -50,11 +51,14 @@ public class TheSystem implements Closeable {
 		}
 
 		private final List<Runnable> callables = new CopyOnWriteArrayList<>();
+		private final long sleepMillis;
 
-		public TheSystemAnimator() {
+		public TheSystemAnimator(int fps) {
+			sleepMillis = SECONDS.toMillis(1) / fps;
 			ExecutorService executor = Executors.newSingleThreadExecutor();
 			executor.submit(() -> {
 				while (true) {
+					long startTime = System.currentTimeMillis();
 					for (Runnable runnable : callables) {
 						try {
 							runnable.run();
@@ -62,7 +66,7 @@ public class TheSystem implements Closeable {
 							e.printStackTrace();
 						}
 					}
-					MILLISECONDS.sleep(40);
+					MILLISECONDS.sleep(sleepMillis - (System.currentTimeMillis() - startTime));
 				}
 
 			});
@@ -111,6 +115,10 @@ public class TheSystem implements Closeable {
 	private final Proto proto;
 	private final Color[] buffer;
 
+	private final Map<Predicate<MqttMessage>, Consumer<MqttMessage>> conditions = new HashMap<>();
+	private final int FPS = 25;
+	private final Animator animator = new TheSystemAnimator(FPS);
+
 	public TheSystem(String host, int port, Panel panel, OutputStream outputStream)
 			throws MqttSecurityException, MqttException {
 		proto = Proto.forFrameSizes(outputStream, panel.getWidth() * panel.getHeight());
@@ -146,9 +154,6 @@ public class TheSystem implements Closeable {
 			}
 		}
 	}
-
-	private final Map<Predicate<MqttMessage>, Consumer<MqttMessage>> conditions = new HashMap<>();
-	private final Animator animator = new TheSystemAnimator();
 
 	private void received(MqttMessage message) {
 		for (Entry<Predicate<MqttMessage>, Consumer<MqttMessage>> entry : conditions.entrySet()) {
