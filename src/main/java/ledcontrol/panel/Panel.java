@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import ledcontrol.panel.StackedPanel.OverlayStrategy;
+import ledcontrol.panel.Panel.OverlayStrategy;
 
 public class Panel {
 
@@ -16,12 +16,31 @@ public class Panel {
 		void repaint(Panel panel);
 	}
 
-	private final int width;
-	private final int height;
+	public interface OverlayStrategy {
+	
+		OverlayStrategy DEFAULT = opaque(null);
+	
+		static OverlayStrategy opaque(Color transparentColor) {
+			return new OverlayStrategy() {
+	
+				@Override
+				public void copy(int x, int y, Color newColor, Panel target) {
+					if (!Objects.equals(transparentColor, newColor)) {
+						target.setColor(x, y, newColor);
+					}
+				}
+	
+			};
+		}
+	
+		void copy(int x, int y, Color color, Panel target);
+	
+	}
+
+	private final int width, height;
 	protected final Color[][] colors;
-	private Color transparent;
 	private final List<RepaintListener> repaintListeners = new CopyOnWriteArrayList<>();
-	private OverlayStrategy overlayStrategy;
+	private Panel.OverlayStrategy overlayStrategy = Panel.OverlayStrategy.DEFAULT;
 
 	public Panel(final int width, final int height) {
 		this.width = width;
@@ -37,6 +56,14 @@ public class Panel {
 	public Panel fill(Color color) {
 		stream(colors).forEach(arr -> Arrays.fill(arr, color));
 		return this;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	public int getWidth() {
+		return width;
 	}
 
 	public Panel clear() {
@@ -60,14 +87,6 @@ public class Panel {
 		return this;
 	}
 
-	public int getHeight() {
-		return height;
-	}
-
-	public int getWidth() {
-		return width;
-	}
-
 	public void copyTo(Panel target) {
 		Color[][] colors = getColors();
 		for (int y = 0; y < colors.length; y++) {
@@ -78,12 +97,14 @@ public class Panel {
 		}
 	}
 
-	public void addRepaintListener(RepaintListener listener) {
+	public Panel addRepaintListener(RepaintListener listener) {
 		this.repaintListeners.add(listener);
+		return this;
 	}
 
-	public void setOverlayStrategy(OverlayStrategy overlayStrategy) {
+	public Panel overlayStrategy(Panel.OverlayStrategy overlayStrategy) {
 		this.overlayStrategy = overlayStrategy;
+		return this;
 	}
 
 }

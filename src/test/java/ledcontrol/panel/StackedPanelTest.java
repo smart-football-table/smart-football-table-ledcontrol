@@ -11,7 +11,7 @@ import java.awt.Color;
 
 import org.junit.Test;
 
-import ledcontrol.panel.StackedPanel.OverlayStrategy;
+import ledcontrol.panel.Panel.OverlayStrategy;
 import ledcontrol.scene.DummyAnimator;
 import ledcontrol.scene.FlashScene;
 
@@ -74,7 +74,7 @@ public class StackedPanelTest {
 
 	@Test
 	public void mixTwoColors() {
-		OverlayStrategy overlayStrategy = new OverlayStrategy() {
+		Panel.OverlayStrategy overlayStrategy = new Panel.OverlayStrategy() {
 			@Override
 			public void copy(int x, int y, Color color, Panel target) {
 				target.setColor(x, y, mix(color, target.getColors()[y][x]));
@@ -96,7 +96,7 @@ public class StackedPanelTest {
 		StackedPanel sut = newSut(1, 1);
 
 		Panel inner1 = sut.createSubPanel();
-		Panel inner2 = sut.createSubPanel(overlayStrategy);
+		Panel inner2 = sut.createSubPanel().overlayStrategy(overlayStrategy);
 		inner1.setColor(0, 0, RED);
 		inner1.repaint();
 		inner2.setColor(0, 0, GREEN);

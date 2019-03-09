@@ -27,8 +27,8 @@ import ledcontrol.TheSystem;
 import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
+import ledcontrol.panel.Panel.OverlayStrategy;
 import ledcontrol.panel.StackedPanel;
-import ledcontrol.panel.StackedPanel.OverlayStrategy;
 import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
@@ -49,7 +49,7 @@ public class SystemRunner {
 			Panel foulPanel = panel.createSubPanel();
 			Panel winnerPanel = panel.createSubPanel();
 			Panel idlePanel = panel.createSubPanel();
-			Panel foregrounddPanel = panel.createSubPanel(OverlayStrategy.opaque(BLACK));
+			Panel foregrounddPanel = panel.createSubPanel().overlayStrategy(Panel.OverlayStrategy.opaque(BLACK));
 
 			backgroundPanel.fill(BLACK);
 			foregrounddPanel.fill(BLACK);
