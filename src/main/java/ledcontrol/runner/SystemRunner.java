@@ -6,7 +6,15 @@ import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Stream.concat;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
-import static ledcontrol.runner.Colors.*;
+import static ledcontrol.runner.Colors.BLUE;
+import static ledcontrol.runner.Colors.FUCHSIA;
+import static ledcontrol.runner.Colors.GREEN;
+import static ledcontrol.runner.Colors.LIGHT_BLUE;
+import static ledcontrol.runner.Colors.ORANGE;
+import static ledcontrol.runner.Colors.PINK;
+import static ledcontrol.runner.Colors.TURQUOISE;
+import static ledcontrol.runner.Colors.VIOLET;
+import static ledcontrol.runner.Colors.YELLOW;
 import static ledcontrol.runner.args4j.EnvVars.readEnvVars;
 import static ledcontrol.scene.FlashScene.FlashConfig.flash;
 import static org.kohsuke.args4j.OptionHandlerFilter.ALL;
@@ -44,29 +52,23 @@ public class SystemRunner {
 		private Color colorTeam2 = ORANGE;
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
-			Panel backgroundPanel = panel.createSubPanel();
+			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
 			Panel goalPanel = panel.createSubPanel();
 			Panel foulPanel = panel.createSubPanel();
 			Panel winnerPanel = panel.createSubPanel();
 			Panel idlePanel = panel.createSubPanel();
-			Panel foregrounddPanel = panel.createSubPanel().overlayStrategy(Panel.OverlayStrategy.opaque(BLACK));
-
-			backgroundPanel.fill(BLACK);
-			foregrounddPanel.fill(BLACK);
+			Panel foregrounddPanel = panel.createSubPanel().fill(BLACK)
+					.overlayStrategy(OverlayStrategy.transparentOn(BLACK));
 
 			ScoreScene goalScene = goalScene(goalPanel);
 			IdleScene idleScene = idleScene(idlePanel);
 
 			Gson gson = new Gson();
 			theSystem.whenThen(isTopic("backgroundlight"), m -> {
-				String color = m.getPayload();
-				backgroundPanel.fill(Color.decode(color));
-				backgroundPanel.repaint();
+				backgroundPanel.fill(colorFromPayload(m)).repaint();
 			});
 			theSystem.whenThen(isTopic("foregroundlight"), m -> {
-				String color = m.getPayload();
-				foregrounddPanel.fill(Color.decode(color));
-				foregrounddPanel.repaint();
+				foregrounddPanel.fill(colorFromPayload(m)).repaint();
 			});
 			theSystem.whenThen(isTopic("score"), m -> {
 				int[] score = parsePayload(gson, m, ScoreMessage.class).score;
@@ -81,7 +83,7 @@ public class SystemRunner {
 				FlashScene winnerScene = new FlashScene(winnerPanel, //
 						flash(flashColor, 24), flash(BLACK, 24), //
 						flash(flashColor, 24), flash(BLACK, 24), //
-						flash(flashColor, 24), flash(BLACK, 24), // l
+						flash(flashColor, 24), flash(BLACK, 24), //
 						flash(flashColor, 6), flash(BLACK, 6), //
 						flash(flashColor, 6), flash(BLACK, 6), //
 						flash(flashColor, 6), flash(BLACK, 6));
@@ -95,6 +97,10 @@ public class SystemRunner {
 				}
 			});
 			return theSystem;
+		}
+
+		private static Color colorFromPayload(MqttMessage message) {
+			return Color.decode(message.getPayload());
 		}
 
 		protected IdleScene idleScene(Panel idlePanel) {

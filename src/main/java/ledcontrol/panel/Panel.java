@@ -8,39 +8,37 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import ledcontrol.panel.Panel.OverlayStrategy;
-
 public class Panel {
 
 	public interface RepaintListener {
 		void repaint(Panel panel);
 	}
 
-	public interface OverlayStrategy {
-	
-		OverlayStrategy DEFAULT = opaque(null);
-	
-		static OverlayStrategy opaque(Color transparentColor) {
+	public static interface OverlayStrategy {
+
+		OverlayStrategy DEFAULT = transparentOn(null);
+
+		static OverlayStrategy transparentOn(Color transparentColor) {
 			return new OverlayStrategy() {
-	
+
 				@Override
 				public void copy(int x, int y, Color newColor, Panel target) {
 					if (!Objects.equals(transparentColor, newColor)) {
 						target.setColor(x, y, newColor);
 					}
 				}
-	
+
 			};
 		}
-	
+
 		void copy(int x, int y, Color color, Panel target);
-	
+
 	}
 
 	private final int width, height;
 	protected final Color[][] colors;
 	private final List<RepaintListener> repaintListeners = new CopyOnWriteArrayList<>();
-	private Panel.OverlayStrategy overlayStrategy = Panel.OverlayStrategy.DEFAULT;
+	private Panel.OverlayStrategy overlayStrategy = OverlayStrategy.DEFAULT;
 
 	public Panel(final int width, final int height) {
 		this.width = width;
@@ -102,7 +100,7 @@ public class Panel {
 		return this;
 	}
 
-	public Panel overlayStrategy(Panel.OverlayStrategy overlayStrategy) {
+	public Panel overlayStrategy(OverlayStrategy overlayStrategy) {
 		this.overlayStrategy = overlayStrategy;
 		return this;
 	}
