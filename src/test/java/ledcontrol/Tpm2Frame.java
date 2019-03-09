@@ -1,7 +1,6 @@
 package ledcontrol;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static ledcontrol.util.Preconditions.checkState;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -19,15 +18,18 @@ public class Tpm2Frame {
 	}
 
 	private Tpm2Frame(InputStream is) throws IOException {
-		assertThat(is.read(), is(0x9C));
-		assertThat(is.read(), is(0xDA));
+		int packetStartByte = is.read();
+		checkState(packetStartByte == 0x9C, "PacketStartByte 0x9C expected but got %s", packetStartByte);
+		int packetType = is.read();
+		checkState(packetType == 0xDA, "PacketType 0xDA expected but got %s", packetType);
 		int size = (is.read() << 8) | is.read() / 3;
 
 		this.currentPaket = is.read();
 		this.totalPaket = is.read();
 
 		this.colors = readColors(is, size);
-		assertThat(is.read(), is(0x36));
+		int packetEndByte = is.read();
+		checkState(packetEndByte == 0x36, "PacketStartByte 0x36 expected but got %s", packetEndByte);
 	}
 
 	private Color[] readColors(InputStream is, int size) {
