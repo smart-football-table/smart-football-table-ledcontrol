@@ -1,5 +1,7 @@
 package ledcontrol.panel;
 
+import static java.awt.Color.BLACK;
+
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,27 +11,30 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class StackedPanel extends Panel {
 
 	public interface OverlayStrategy {
-		OverlayStrategy DEFAULT = new OverlayStrategy() {
 
-			private Color transparent = null;
+		OverlayStrategy DEFAULT = opaque(null);
 
-			@Override
-			public void copy(int x, int y, Color newColor, Panel target) {
-				if (!Objects.equals(transparent, newColor)) {
-					target.setColor(x, y, newColor);
+		static OverlayStrategy opaque(Color transparentColor) {
+			return new OverlayStrategy() {
+
+				@Override
+				public void copy(int x, int y, Color newColor, Panel target) {
+					if (!Objects.equals(transparentColor, newColor)) {
+						target.setColor(x, y, newColor);
+					}
 				}
-			}
 
-		};
+			};
+		}
 
 		void copy(int x, int y, Color color, Panel target);
+
 	}
 
 	private final List<Panel> inners = new ArrayList<>();
 	private final RepaintListener subPanelRepaintListener;
 
 	private final List<RepaintListener> repaintListeners = new CopyOnWriteArrayList<>();
-	private OverlayStrategy overlayStrategy = OverlayStrategy.DEFAULT;
 
 	public StackedPanel(int width, int height) {
 		super(width, height);
@@ -41,20 +46,10 @@ public class StackedPanel extends Panel {
 		this.repaintListeners.add(listener);
 	}
 
-	public StackedPanel setOverlayStrategy(OverlayStrategy overlayStrategy) {
-		this.overlayStrategy = overlayStrategy;
-		return this;
-	}
-
 	private void mixTo(Panel target) {
 		clear();
 		for (Panel inner : inners) {
-			Color[][] colors = inner.getColors();
-			for (int y = 0; y < colors.length; y++) {
-				for (int x = 0; x < colors[y].length; x++) {
-					overlayStrategy.copy(x, y, colors[y][x], target);
-				}
-			}
+			inner.copyTo(target);
 		}
 		repaint();
 	}
@@ -68,7 +63,12 @@ public class StackedPanel extends Panel {
 	}
 
 	public Panel createSubPanel() {
+		return createSubPanel(OverlayStrategy.DEFAULT);
+	}
+
+	public Panel createSubPanel(OverlayStrategy overlayStrategy) {
 		Panel sub = new Panel(getWidth(), getHeight());
+		sub.setOverlayStrategy(overlayStrategy);
 		sub.addRepaintListener(subPanelRepaintListener);
 		this.inners.add(sub);
 		return sub;

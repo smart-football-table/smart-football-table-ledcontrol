@@ -5,7 +5,10 @@ import static java.util.Arrays.stream;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import ledcontrol.panel.StackedPanel.OverlayStrategy;
 
 public class Panel {
 
@@ -16,7 +19,9 @@ public class Panel {
 	private final int width;
 	private final int height;
 	protected final Color[][] colors;
+	private Color transparent;
 	private final List<RepaintListener> repaintListeners = new CopyOnWriteArrayList<>();
+	private OverlayStrategy overlayStrategy;
 
 	public Panel(final int width, final int height) {
 		this.width = width;
@@ -63,8 +68,22 @@ public class Panel {
 		return width;
 	}
 
+	public void copyTo(Panel target) {
+		Color[][] colors = getColors();
+		for (int y = 0; y < colors.length; y++) {
+			for (int x = 0; x < colors[y].length; x++) {
+				Color newColor = colors[y][x];
+				overlayStrategy.copy(x, y, newColor, target);
+			}
+		}
+	}
+
 	public void addRepaintListener(RepaintListener listener) {
 		this.repaintListeners.add(listener);
+	}
+
+	public void setOverlayStrategy(OverlayStrategy overlayStrategy) {
+		this.overlayStrategy = overlayStrategy;
 	}
 
 }

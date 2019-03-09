@@ -243,7 +243,6 @@ public class SystemIntegrationIT {
 	}
 
 	@Test
-	@Ignore // to be fixed
 	public void foregroundColorIsTransparent()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
