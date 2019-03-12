@@ -4,6 +4,7 @@ import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
+import static java.awt.Color.decode;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static ledcontrol.SystemIntegrationIT.Waiter.waitFor;
@@ -217,7 +218,7 @@ public class SystemIntegrationIT {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 		MILLISECONDS.sleep(40);
-		Color _1188CC = new Color(17, 136, 204);
+		Color _1188CC = decode("#1188CC");
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ _1188CC, _1188CC, _1188CC, _1188CC, _1188CC }, //
 				{ _1188CC, _1188CC, _1188CC, _1188CC, _1188CC }, //
@@ -231,7 +232,7 @@ public class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 		MILLISECONDS.sleep(40);
-		Color _22AADD = new Color(34, 170, 221);
+		Color _22AADD = decode("#22AADD");
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
@@ -245,7 +246,7 @@ public class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 		MILLISECONDS.sleep(40);
-		Color _22AADD = new Color(34, 170, 221);
+		Color _22AADD = decode("#22AADD");
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
@@ -253,17 +254,17 @@ public class SystemIntegrationIT {
 	}
 
 	@Test
-	public void foregroundColorIsTransparent()
+	public void foregroundColor_BlackIsTransparent()
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#112233");
-		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#AABBCC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#000000");
 		MILLISECONDS.sleep(40);
-		Color _112233 = new Color(17, 34, 51);
+		Color _1188cc = decode("#1188CC");
 		assertThat(lastPanelState(), is(new Color[][] { //
-				{ _112233, _112233, _112233, _112233, _112233 }, //
-				{ _112233, _112233, _112233, _112233, _112233 }, //
+				{ _1188cc, _1188cc, _1188cc, _1188cc, _1188cc }, //
+				{ _1188cc, _1188cc, _1188cc, _1188cc, _1188cc }, //
 		}));
 	}
 
@@ -345,7 +346,7 @@ public class SystemIntegrationIT {
 		theSystem = new Configurator() {
 
 			protected ScoreScene goalScene(Panel goalPanel) {
-				return super.goalScene(goalPanel).pixelsPerGoal(1);
+				return super.goalScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
 			}
 
 			protected ledcontrol.scene.IdleScene idleScene(ledcontrol.panel.Panel idlePanel) {

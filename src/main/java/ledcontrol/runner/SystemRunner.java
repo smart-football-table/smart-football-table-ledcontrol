@@ -6,6 +6,7 @@ import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Stream.concat;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
+import static ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
 import static ledcontrol.runner.Colors.BLUE;
 import static ledcontrol.runner.Colors.FUCHSIA;
 import static ledcontrol.runner.Colors.GREEN;
@@ -35,7 +36,6 @@ import ledcontrol.TheSystem;
 import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
-import ledcontrol.panel.Panel.OverlayStrategy;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.rest.GameoverMessage;
 import ledcontrol.rest.IdleMessage;
@@ -57,8 +57,7 @@ public class SystemRunner {
 			Panel foulPanel = panel.createSubPanel();
 			Panel winnerPanel = panel.createSubPanel();
 			Panel idlePanel = panel.createSubPanel();
-			Panel foregrounddPanel = panel.createSubPanel().fill(BLACK)
-					.overlayStrategy(OverlayStrategy.transparentOn(BLACK));
+			Panel foregrounddPanel = panel.createSubPanel().fill(BLACK).overlayStrategy(transparentOn(BLACK));
 
 			ScoreScene goalScene = goalScene(goalPanel);
 			IdleScene idleScene = idleScene(idlePanel);
@@ -114,7 +113,7 @@ public class SystemRunner {
 		}
 
 		protected ScoreScene goalScene(Panel goalPanel) {
-			return new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(5);
+			return new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(5).spaceDots(1);
 		}
 
 	}

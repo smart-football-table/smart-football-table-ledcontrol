@@ -86,6 +86,16 @@ public class ScoreSceneTest {
 		});
 	}
 
+	@Test
+	public void _2_1_with_2_leds_per_goal_with_space_dots() {
+		sutOnPanel(7 + 1 + 7, 2).pixelsPerGoal(2).spaceDots(3);
+		whenScoreIs(2, 1);
+		thenPanelIs(new Color[][] { //
+			{ RED, RED, ____, ____, ____, RED, RED, ____, ____, ____, ____, ____, ____, GREEN, GREEN }, //
+			{ RED, RED, ____, ____, ____, RED, RED, ____, ____, ____, ____, ____, ____, GREEN, GREEN }, //
+		});
+	}
+
 	private ScoreScene sutOnPanel(int columns, int rows) {
 		panel = new Panel(columns, rows);
 		sut = new ScoreScene(panel, RED, GREEN);
