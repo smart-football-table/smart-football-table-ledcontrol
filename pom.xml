@@ -70,6 +70,11 @@
 						<mainClass>ledcontrol.runner.SystemRunner</mainClass>
 						<useCurrentTimestamp>true</useCurrentTimestamp>
 					</container>
+					<to>
+						<tags>
+							<tag>latest</tag>
+						</tags>
+					</to>
 				</configuration>
 			</plugin>
 		</plugins>
