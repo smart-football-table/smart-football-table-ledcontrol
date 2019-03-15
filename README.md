@@ -4,16 +4,6 @@ Java program that receives events via MQTT and displays scenes on a connected LE
 The LED stripe can be connected using a serial link. The program writes TPM2 frames to the serial link which will then be interpreted by a TPM2 device. The TPM2 device can be a simple µController like an Arduino or an ESP8266. 
 However, the Arduino seems to be not fast enough to manage the data send since it is very limited both in processing speed and the size of the serial buffer. 
 
-## MQTT messages
-| topic                      | Description                                   | Example payload        |
-| -------------------------- | --------------------------------------------- |----------------------- |
-| leds/backgroundlight/color | Sets the background light, default is #000000 | #CC11DD                |
-| game/score                 | The teams' scores                             | { "score": [ 0, 3 ] }  |
-| game/foul                  | Some foul has happened                        | -                      |
-| game/gameover              | A match ended                                 | { "winners": [ 0 ] }   |
-| game/idle                  | Is there action on the table                  | { "idle": true }       |
-| leds/foregroundlight/color | Foreground light overrules everything else if not #000000 | #111111    |
-
 ## Docker
 You can either run docker in privileged mode (```--privileged```) or pass in the device(s) available in the container
 ```docker run --rm --device=/dev/ttyUSB4:/dev/ttyUSB0 -e LEDS=72 -e TTY=/dev/ttyUSB0 -e MQTTHOST=mqtt -e MQTTPORT=1883 ledcontrol```
