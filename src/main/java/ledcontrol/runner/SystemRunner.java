@@ -75,17 +75,16 @@ public class SystemRunner {
 			});
 			theSystem.whenThen(isTopic("game/foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
 			theSystem.whenThen(isTopic("game/gameover"), m -> {
-				// TODO handle draws
-				Color flashColor = stream(parsePayload(gson, m, GameoverMessage.class).winners).anyMatch(i -> i == 0)
-						? colorTeam1
-						: colorTeam2;
+				Color[] flashColors = getFlashColors(gson, m);
 				FlashScene winnerScene = new FlashScene(winnerPanel, //
-						flash(flashColor, 24), flash(BLACK, 24), //
-						flash(flashColor, 24), flash(BLACK, 24), //
-						flash(flashColor, 24), flash(BLACK, 24), //
-						flash(flashColor, 6), flash(BLACK, 6), //
-						flash(flashColor, 6), flash(BLACK, 6), //
-						flash(flashColor, 6), flash(BLACK, 6));
+						flash(flashColors[0], 24), flash(BLACK, 24), //
+						flash(flashColors[1], 24), flash(BLACK, 24), //
+						flash(flashColors[0], 24), flash(BLACK, 24), //
+						flash(flashColors[1], 24), flash(BLACK, 24), //
+						flash(flashColors[0], 6), flash(BLACK, 6), //
+						flash(flashColors[1], 6), flash(BLACK, 6), //
+						flash(flashColors[0], 6), flash(BLACK, 6), //
+						flash(flashColors[1], 6), flash(BLACK, 6));
 				winnerScene.flash(theSystem.getAnimator());
 			});
 			theSystem.whenThen(isTopic("game/idle"), m -> {
@@ -96,6 +95,19 @@ public class SystemRunner {
 				}
 			});
 			return theSystem;
+		}
+
+		private Color[] getFlashColors(Gson gson, MqttMessage m) {
+			int[] winners = parsePayload(gson, m, GameoverMessage.class).winners;
+			if (winners.length > 1) {
+				return new Color[] { colorTeam1, colorTeam2 };
+			}
+			return contains(winners, 0) ? new Color[] { colorTeam1, colorTeam1 }
+					: new Color[] { colorTeam2, colorTeam2 };
+		}
+
+		private boolean contains(int[] winners, int team) {
+			return stream(winners).anyMatch(i -> i == team);
 		}
 
 		private static Color colorFromPayload(MqttMessage message) {
