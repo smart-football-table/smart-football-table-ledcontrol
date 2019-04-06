@@ -9,7 +9,7 @@
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<image>docker.io/smart-football-table/${project.artifactId}:${project.version}</image>
+		<image>docker.io/smart-football-table/${project.artifactId}:latest</image>
 	</properties>
 
 	<dependencies>
@@ -72,44 +72,10 @@
 					</container>
 					<to>
 						<tags>
-							<tag>latest</tag>
+							<tag>${project.version}</tag>
 						</tags>
 					</to>
 				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.1.1</version>
-				<configuration>
-					<archive>
-						<manifest>
-							<addClasspath>true</addClasspath>
-							<classpathPrefix>lib</classpathPrefix>
-							<mainClass>ledcontrol.runner.SystemRunner</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<finalName>assembly</finalName>
-							<appendAssemblyId>true</appendAssemblyId>
-							<outputDirectory>${project.build.directory}/packaged</outputDirectory>
-							<descriptors>
-								<descriptor>src/main/assembly/dir.xml</descriptor>
-							</descriptors>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
