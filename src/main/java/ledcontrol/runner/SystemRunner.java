@@ -13,7 +13,6 @@ import static ledcontrol.runner.Colors.BLUE;
 import static ledcontrol.runner.Colors.FUCHSIA;
 import static ledcontrol.runner.Colors.GREEN;
 import static ledcontrol.runner.Colors.LIGHT_BLUE;
-import static ledcontrol.runner.Colors.ORANGE;
 import static ledcontrol.runner.Colors.PINK;
 import static ledcontrol.runner.Colors.TURQUOISE;
 import static ledcontrol.runner.Colors.VIOLET;
@@ -49,7 +48,7 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private static final Color[] teamColors = new Color[] { BLUE, ORANGE };
+		private static final Color[] teamColors = new Color[] { BLUE, FUCHSIA };
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
