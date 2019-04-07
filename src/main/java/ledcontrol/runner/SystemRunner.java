@@ -2,6 +2,7 @@ package ledcontrol.runner;
 
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -39,7 +40,6 @@ import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.rest.GameoverMessage;
-import ledcontrol.rest.IdleMessage;
 import ledcontrol.rest.ScoreMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
@@ -100,7 +100,7 @@ public class SystemRunner {
 				winnerScene.flash(theSystem.getAnimator());
 			});
 			theSystem.whenThen(isTopic("game/idle"), m -> {
-				if (parsePayload(gson, m, IdleMessage.class).idle) {
+				if (parseBoolean(m.getPayload())) {
 					idleScene.startAnimation(theSystem.getAnimator());
 				} else {
 					idleScene.stopAnimation().reset();
