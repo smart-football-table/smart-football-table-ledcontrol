@@ -2,6 +2,7 @@ package ledcontrol.runner;
 
 import static java.awt.Color.BLACK;
 import static java.awt.Color.WHITE;
+import static java.lang.Integer.parseInt;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Stream.concat;
@@ -48,8 +49,7 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private Color colorTeam1 = BLUE;
-		private Color colorTeam2 = ORANGE;
+		private static final Color[] teamColors = new Color[] { BLUE, ORANGE };
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
@@ -59,7 +59,7 @@ public class SystemRunner {
 			Panel idlePanel = panel.createSubPanel();
 			Panel foregrounddPanel = panel.createSubPanel().fill(BLACK).overlayStrategy(transparentOn(BLACK));
 
-			ScoreScene goalScene = goalScene(goalPanel);
+			ScoreScene goalScene = scoreScene(goalPanel);
 			IdleScene idleScene = idleScene(idlePanel);
 
 			Gson gson = new Gson();
@@ -68,6 +68,18 @@ public class SystemRunner {
 			});
 			theSystem.whenThen(isTopic("leds/foregroundlight/color"), m -> {
 				foregrounddPanel.fill(colorFromPayload(m)).repaint();
+			});
+			theSystem.whenThen(isTopic("team/scored"), m -> {
+				int idx = parseInt(m.getPayload());
+				if (idx >= 0 && idx < teamColors.length) {
+					Color color = teamColors[idx];
+					FlashScene fc = new FlashScene(winnerPanel, //
+							flash(color, 24), flash(BLACK, 24), //
+							flash(color, 24), flash(BLACK, 24), //
+							flash(color, 24), flash(BLACK, 24));
+					fc.flash(theSystem.getAnimator());
+				}
+
 			});
 			theSystem.whenThen(isTopic("game/score"), m -> {
 				int[] score = parsePayload(gson, m, ScoreMessage.class).score;
@@ -100,10 +112,10 @@ public class SystemRunner {
 		private Color[] getFlashColors(Gson gson, MqttMessage m) {
 			int[] winners = parsePayload(gson, m, GameoverMessage.class).winners;
 			if (winners.length > 1) {
-				return new Color[] { colorTeam1, colorTeam2 };
+				return teamColors;
 			}
-			return contains(winners, 0) ? new Color[] { colorTeam1, colorTeam1 }
-					: new Color[] { colorTeam2, colorTeam2 };
+			return contains(winners, 0) ? new Color[] { teamColors[0], teamColors[0] }
+					: new Color[] { teamColors[1], teamColors[1] };
 		}
 
 		private boolean contains(int[] winners, int team) {
@@ -115,7 +127,7 @@ public class SystemRunner {
 		}
 
 		protected IdleScene idleScene(Panel idlePanel) {
-			return new IdleScene(idlePanel, BLACK, colorTeam1, colorTeam2, LIGHT_BLUE, FUCHSIA, YELLOW, TURQUOISE,
+			return new IdleScene(idlePanel, BLACK, teamColors[0], teamColors[1], LIGHT_BLUE, FUCHSIA, YELLOW, TURQUOISE,
 					VIOLET, GREEN, PINK, WHITE);
 		}
 
@@ -124,8 +136,8 @@ public class SystemRunner {
 					flash(WHITE, 6), flash(BLACK, 6));
 		}
 
-		protected ScoreScene goalScene(Panel goalPanel) {
-			return new ScoreScene(goalPanel, colorTeam1, colorTeam2).pixelsPerGoal(5).spaceDots(1);
+		protected ScoreScene scoreScene(Panel goalPanel) {
+			return new ScoreScene(goalPanel, teamColors[0], teamColors[1]).pixelsPerGoal(5).spaceDots(1);
 		}
 
 	}

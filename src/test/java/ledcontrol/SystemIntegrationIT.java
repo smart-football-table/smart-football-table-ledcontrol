@@ -345,8 +345,8 @@ public class SystemIntegrationIT {
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
 		theSystem = new Configurator() {
 
-			protected ScoreScene goalScene(Panel goalPanel) {
-				return super.goalScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
+			protected ScoreScene scoreScene(Panel goalPanel) {
+				return super.scoreScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
 			}
 
 			protected ledcontrol.scene.IdleScene idleScene(ledcontrol.panel.Panel idlePanel) {
