@@ -48,7 +48,7 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private static final Color[] teamColors = new Color[] { BLUE, FUCHSIA };
+		private static final Color[] teamColors = new Color[] { FUCHSIA, BLUE };
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
