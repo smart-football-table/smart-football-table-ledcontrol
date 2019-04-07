@@ -9,7 +9,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Stream.concat;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
 import static ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
-import static ledcontrol.runner.Colors.BLUE;
 import static ledcontrol.runner.Colors.FUCHSIA;
 import static ledcontrol.runner.Colors.GREEN;
 import static ledcontrol.runner.Colors.LIGHT_BLUE;
@@ -48,7 +47,7 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private static final Color[] teamColors = new Color[] { FUCHSIA, BLUE };
+		private static final Color[] teamColors = new Color[] { TURQUOISE, PINK };
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
