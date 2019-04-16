@@ -8,6 +8,7 @@ import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Stream.concat;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
+import static ledcontrol.TheSystem.MqttMessage.topicStartWith;
 import static ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
 import static ledcontrol.runner.Colors.FUCHSIA;
 import static ledcontrol.runner.Colors.GREEN;
@@ -38,7 +39,6 @@ import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.rest.GameoverMessage;
-import ledcontrol.rest.ScoreMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
@@ -47,7 +47,15 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private static final Color[] teamColors = new Color[] { TURQUOISE, PINK };
+		private final Color[] teamColors;
+
+		public Configurator() {
+			this(TURQUOISE, PINK);
+		}
+
+		public Configurator(Color... teamColors) {
+			this.teamColors = teamColors;
+		}
 
 		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
@@ -79,9 +87,9 @@ public class SystemRunner {
 				}
 
 			});
-			theSystem.whenThen(isTopic("game/score"), m -> {
-				int[] score = parsePayload(gson, m, ScoreMessage.class).score;
-				goalScene.setScore(score);
+			theSystem.whenThen(topicStartWith("game/score/"), m -> {
+				int teamid = parseInt(m.getTopic().substring("game/score/".length()));
+				goalScene.setScore(teamid, parseInt(m.getPayload()));
 			});
 			theSystem.whenThen(isTopic("game/foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
 			theSystem.whenThen(isTopic("game/gameover"), m -> {

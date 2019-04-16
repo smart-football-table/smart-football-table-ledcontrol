@@ -101,6 +101,10 @@ public class TheSystem implements Closeable {
 			return matches(topic, MqttMessage::getTopic);
 		}
 
+		public static Predicate<MqttMessage> topicStartWith(String prefix) {
+			return m -> ((Function<MqttMessage, String>) MqttMessage::getTopic).apply(m).startsWith(prefix);
+		}
+
 		public static Predicate<MqttMessage> isPayload(String payload) {
 			return matches(payload, MqttMessage::getPayload);
 		}

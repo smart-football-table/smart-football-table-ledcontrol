@@ -91,8 +91,8 @@ public class ScoreSceneTest {
 		sutOnPanel(7 + 1 + 7, 2).pixelsPerGoal(2).spaceDots(3);
 		whenScoreIs(2, 1);
 		thenPanelIs(new Color[][] { //
-			{ RED, RED, ____, ____, ____, RED, RED, ____, ____, ____, ____, ____, ____, GREEN, GREEN }, //
-			{ RED, RED, ____, ____, ____, RED, RED, ____, ____, ____, ____, ____, ____, GREEN, GREEN }, //
+				{ RED, RED, ____, ____, ____, RED, RED, ____, ____, ____, ____, ____, ____, GREEN, GREEN }, //
+				{ RED, RED, ____, ____, ____, RED, RED, ____, ____, ____, ____, ____, ____, GREEN, GREEN }, //
 		});
 	}
 
@@ -106,8 +106,9 @@ public class ScoreSceneTest {
 		assertThat(panel.getColors(), is(value));
 	}
 
-	private void whenScoreIs(int a, int b) {
-		sut.setScore(a, b);
+	private void whenScoreIs(int scoreTeam0, int scoreTeam1) {
+		sut.setScore(0, scoreTeam0);
+		sut.setScore(1, scoreTeam1);
 	}
 
 }

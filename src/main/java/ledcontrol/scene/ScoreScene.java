@@ -28,17 +28,36 @@ public class ScoreScene implements Scene {
 		return this;
 	}
 
-	public void setScore(int... scores) {
-		panel.clear();
+	public void setScore(int teamid, int score) {
+		if (teamid == 0) {
+			firstHalf(teamid, score);
+		}
+		if (teamid == 1) {
+			secondHalf(teamid, score);
+		}
+	}
+
+	private void firstHalf(int teamid, int score) {
 		int width = panel.getWidth();
-		for (int x = 0; x < min(scores[0] * (pixelsPerGoal + spaceDots), width / 2); x++) {
+		for (int x = 0; x < width / 2; x++) {
+			drawColumn(x, null);
+		}
+		for (int x = 0; x < min(score * (pixelsPerGoal + spaceDots), width / 2); x++) {
 			if (!isSpaceDot(x)) {
-				drawColumn(x, colors[0]);
+				drawColumn(x, colors[teamid]);
 			}
 		}
-		for (int x = 0; x < min(scores[1] * (pixelsPerGoal + spaceDots), width / 2); x++) {
+		panel.repaint();
+	}
+
+	private void secondHalf(int teamid, int score) {
+		int width = panel.getWidth();
+		for (int x = 0; x < width / 2; x++) {
+			drawColumn(width - x - 1, null);
+		}
+		for (int x = 0; x < min(score * (pixelsPerGoal + spaceDots), width / 2); x++) {
 			if (!isSpaceDot(x)) {
-				drawColumn(width - x - 1, colors[1]);
+				drawColumn(width - x - 1, colors[teamid]);
 			}
 		}
 		panel.repaint();

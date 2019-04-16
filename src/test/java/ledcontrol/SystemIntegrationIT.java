@@ -32,8 +32,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -170,7 +168,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score", score(1, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score/0", "1");
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
 				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
@@ -180,17 +178,12 @@ public class SystemIntegrationIT {
 	@Test
 	public void teamLeftScoresTwice() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score", score(1, 0));
-		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score", score(2, 0));
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score/0", "1");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/score/0", "2");
 		assertThat(lastPanelState(), is(new Color[][] { //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
 				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
 		}));
-	}
-
-	private String score(int... scores) {
-		return "{ \"score\": [ " + IntStream.of(scores).mapToObj(String::valueOf).collect(Collectors.joining(", "))
-				+ " ] }";
 	}
 
 	@Test
@@ -207,7 +200,7 @@ public class SystemIntegrationIT {
 	@Test
 	public void animationOnIdle() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "{ \"idle\": true }");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
 		MILLISECONDS.sleep(40);
 		verify(idleScene).startAnimation(Mockito.any(Animator.class));
 	}
@@ -296,7 +289,7 @@ public class SystemIntegrationIT {
 
 		// does the reconnected client subscribe to the topics again?
 		waitFor(10, SECONDS).until(() -> secondClient.isConnected(), true);
-		whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "{ \"idle\": true }");
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
 		MILLISECONDS.sleep(40);
 		verify(idleScene).startAnimation(Mockito.any(Animator.class));
 	}
@@ -343,7 +336,7 @@ public class SystemIntegrationIT {
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
-		theSystem = new Configurator() {
+		theSystem = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
 
 			protected ScoreScene scoreScene(Panel goalPanel) {
 				return super.scoreScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
