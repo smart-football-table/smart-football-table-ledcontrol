@@ -39,28 +39,26 @@ public class ScoreScene implements Scene {
 
 	private void firstHalf(int teamid, int score) {
 		int width = panel.getWidth();
-		for (int x = 0; x < (width + 1) / 2; x++) {
-			drawColumn(x, null);
-		}
-		for (int x = 0; x < min(score * (pixelsPerGoal + spaceDots), width / 2); x++) {
-			if (!isSpaceDot(x)) {
-				drawColumn(x, colors[teamid]);
-			}
+		for (int x = 0; x < width / 2; x++) {
+			drawColumn(x, isGoalDot(x, score) ? colors[teamid] : null);
 		}
 		panel.repaint();
 	}
 
 	private void secondHalf(int teamid, int score) {
 		int width = panel.getWidth();
-		for (int x = 0; x < (width + 1) / 2; x++) {
-			drawColumn(width - x - 1, null);
-		}
-		for (int x = 0; x < min(score * (pixelsPerGoal + spaceDots), width / 2); x++) {
-			if (!isSpaceDot(x)) {
-				drawColumn(width - x - 1, colors[teamid]);
-			}
+		for (int x = 0; x < width / 2; x++) {
+			drawColumn(width - x - 1, isGoalDot(x, score) ? colors[teamid] : null);
 		}
 		panel.repaint();
+	}
+
+	private boolean isGoalDot(int x, int score) {
+		return isGoalArea(x, score) && !isSpaceDot(x);
+	}
+
+	private boolean isGoalArea(int x, int score) {
+		return x < score * (pixelsPerGoal + spaceDots);
 	}
 
 	private boolean isSpaceDot(int x) {
