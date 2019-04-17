@@ -1,7 +1,5 @@
 package ledcontrol.scene;
 
-import static java.lang.Math.min;
-
 import java.awt.Color;
 
 import ledcontrol.panel.Panel;
