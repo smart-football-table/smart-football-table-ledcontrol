@@ -39,7 +39,7 @@ public class ScoreScene implements Scene {
 
 	private void firstHalf(int teamid, int score) {
 		int width = panel.getWidth();
-		for (int x = 0; x < width / 2; x++) {
+		for (int x = 0; x < (width + 1) / 2; x++) {
 			drawColumn(x, null);
 		}
 		for (int x = 0; x < min(score * (pixelsPerGoal + spaceDots), width / 2); x++) {
@@ -52,7 +52,7 @@ public class ScoreScene implements Scene {
 
 	private void secondHalf(int teamid, int score) {
 		int width = panel.getWidth();
-		for (int x = 0; x < width / 2; x++) {
+		for (int x = 0; x < (width + 1) / 2; x++) {
 			drawColumn(width - x - 1, null);
 		}
 		for (int x = 0; x < min(score * (pixelsPerGoal + spaceDots), width / 2); x++) {

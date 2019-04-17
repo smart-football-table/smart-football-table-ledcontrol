@@ -2,6 +2,7 @@ package ledcontrol.scene;
 
 import static java.awt.Color.GREEN;
 import static java.awt.Color.RED;
+import static java.awt.Color.YELLOW;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -93,6 +94,16 @@ public class ScoreSceneTest {
 		thenPanelIs(new Color[][] { //
 				{ RED, RED, ____, ____, ____, RED, RED, ____, ____, ____, ____, ____, ____, GREEN, GREEN }, //
 				{ RED, RED, ____, ____, ____, RED, RED, ____, ____, ____, ____, ____, ____, GREEN, GREEN }, //
+		});
+	}
+
+	@Test
+	public void panelCenterGetsCleared() {
+		sutOnPanel(3, 1).pixelsPerGoal(1).spaceDots(0);
+		panel.fill(YELLOW);
+		whenScoreIs(1, 1);
+		thenPanelIs(new Color[][] { //
+				{ RED, ____, GREEN }, //
 		});
 	}
 
