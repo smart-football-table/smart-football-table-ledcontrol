@@ -1,5 +1,7 @@
 package ledcontrol.scene;
 
+import static java.util.function.Function.identity;
+
 import java.awt.Color;
 import java.util.function.Function;
 
@@ -9,7 +11,7 @@ public class ScoreScene implements Scene {
 
 	private final Panel panel;
 	private final Color[] colors;
-	private final Function<Integer, Integer> xNormal;
+	private final Function<Integer, Integer> xNormal = identity();
 	private final Function<Integer, Integer> xReversed;
 	private int pixelsPerGoal = 1;
 	private int spaceDots;
@@ -17,7 +19,6 @@ public class ScoreScene implements Scene {
 	public ScoreScene(Panel panel, Color... colors) {
 		this.panel = panel;
 		this.colors = colors;
-		this.xNormal = Function.identity();
 		this.xReversed = x -> panel.getWidth() - x - 1;
 	}
 
