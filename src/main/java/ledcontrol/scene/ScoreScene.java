@@ -1,6 +1,7 @@
 package ledcontrol.scene;
 
 import java.awt.Color;
+import java.util.function.Function;
 
 import ledcontrol.panel.Panel;
 
@@ -8,12 +9,16 @@ public class ScoreScene implements Scene {
 
 	private final Panel panel;
 	private final Color[] colors;
+	private final Function<Integer, Integer> xNormal;
+	private final Function<Integer, Integer> xReversed;
 	private int pixelsPerGoal = 1;
 	private int spaceDots;
 
 	public ScoreScene(Panel panel, Color... colors) {
 		this.panel = panel;
 		this.colors = colors;
+		this.xNormal = Function.identity();
+		this.xReversed = x -> panel.getWidth() - x - 1;
 	}
 
 	public ScoreScene pixelsPerGoal(int pixelsPerGoal) {
@@ -28,27 +33,18 @@ public class ScoreScene implements Scene {
 
 	public void setScore(int teamid, int score) {
 		if (teamid == 0) {
-			firstHalf(teamid, score);
+			draw(teamid, score, xNormal);
 		}
 		if (teamid == 1) {
-			secondHalf(teamid, score);
-		}
-	}
-
-	private void firstHalf(int teamid, int score) {
-		int width = panel.getWidth();
-		for (int x = 0; x < width / 2; x++) {
-			drawColumn(x, isGoalDot(x, score) ? colors[teamid] : null);
+			draw(teamid, score, xReversed);
 		}
 		panel.repaint();
 	}
 
-	private void secondHalf(int teamid, int score) {
-		int width = panel.getWidth();
-		for (int x = 0; x < width / 2; x++) {
-			drawColumn(width - x - 1, isGoalDot(x, score) ? colors[teamid] : null);
+	private void draw(int teamid, int score, Function<Integer, Integer> xCalculaor) {
+		for (int x = 0; x < panel.getWidth() / 2; x++) {
+			drawColumn(xCalculaor.apply(x), isGoalDot(x, score) ? colors[teamid] : null);
 		}
-		panel.repaint();
 	}
 
 	private boolean isGoalDot(int x, int score) {
