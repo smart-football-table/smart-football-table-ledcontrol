@@ -1,6 +1,7 @@
 # smart-football-table-ledcontrol
 
 [![Build Status](https://travis-ci.org/smart-football-table/smart-football-table-ledcontrol.svg?branch=master)](https://travis-ci.org/smart-football-table/smart-football-table-ledcontrol)
+[![codecov](https://codecov.io/gh/smart-football-table/smart-football-table-ledcontrol/branch/master/graph/badge.svg)](https://codecov.io/gh/smart-football-table/smart-football-table-ledcontrol)
 [![BCH compliance](https://bettercodehub.com/edge/badge/smart-football-table/smart-football-table-ledcontrol?branch=master)](https://bettercodehub.com/)
 
 Java program that receives events via MQTT and displays scenes on a connected LED stripe. 
