@@ -3,4 +3,8 @@ services:
   - docker
 
 script:
-  - mvn package jib:dockerBuild
+  - mvn package jib:dockerBuild cobertura:cobertura
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
