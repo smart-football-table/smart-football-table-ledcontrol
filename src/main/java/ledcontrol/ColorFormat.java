@@ -1,9 +1,12 @@
 package ledcontrol;
 
+import static java.util.Arrays.asList;
+
 import java.awt.Color;
 import java.util.List;
 
 public enum ColorFormat {
+
 	RGB(3) {
 		int writeTo(byte[] target, int pos, Color color) {
 			target[pos++] = (byte) color.getRed();
@@ -26,12 +29,11 @@ public enum ColorFormat {
 	}
 
 	public byte[] toBytes(Color[] colors, int offset, int length) {
-		byte[] bytes = new byte[length * bytesPerColor];
-		int idx = 0;
-		for (int i = offset; i < offset + length; i++) {
-			idx += writeTo(bytes, idx, colors[i]);
-		}
-		return bytes;
+		return toBytes(asList(colors), offset, length);
+	}
+
+	public byte[] toBytes(List<Color> colors) {
+		return toBytes(colors, 0, colors.size());
 	}
 
 	public byte[] toBytes(List<Color> colors, int offset, int length) {
