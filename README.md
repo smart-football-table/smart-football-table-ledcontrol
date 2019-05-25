@@ -10,6 +10,17 @@ Java program that receives events via MQTT and displays scenes on a connected LE
 The LED stripe can be connected using a serial link. The program writes TPM2 frames to the serial link which will then be interpreted by a TPM2 device. The TPM2 device can be a simple µController like an Arduino or an ESP8266. 
 However, the Arduino seems to be not fast enough to manage the data send since it is very limited both in processing speed and the size of the serial buffer. 
 
+Scenes visualized using the stripe: 
+-Goals: Whole stripe blinks in the goal getting team's color)
+-Fouls: Whole stripe blinks yellow
+-Score: The score of both teams in visualized during the game
+-Game over: Whole stripe blinks in the winning team's color)
+-Idle: Plays some animation if non one is playing
+
+The stripe can also be used to lighten the football table. 
+-Foreground color: No matter what else should be displayed, only the foreground color is shown. This can be used to have the brightest possible light on the table by selecting white as color (#FFFFFF) or any other RGB color
+Background color: All not active (black) leds can be turned on, also any RGB color is supported
+
 ## Docker
 You can either run docker in privileged mode (```--privileged```) or pass in the device(s) available in the container
 ```docker run --rm --device=/dev/ttyUSB4:/dev/ttyUSB0 -e LEDS=72 -e TTY=/dev/ttyUSB0 -e MQTTHOST=mqtt -e MQTTPORT=1883 ledcontrol```
