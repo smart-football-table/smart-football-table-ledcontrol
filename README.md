@@ -27,11 +27,17 @@ You can either run docker in privileged mode (```--privileged```) or pass in the
 Because the device numbers depends on the order the devices are connected you should use static links. You can add your own udev rule or just use the already existing links: 
 ```docker run --rm --device=/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0:/dev/ttyUSB0 -e LEDS=72 -e TTY=/dev/ttyUSB0 -e MQTTHOST=mqtt -e MQTTPORT=1883 ledcontrol```
 
-![Image 1](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190307_164909.jpg)
+![Score](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190307_164909.jpg)
 LED strip showing score
 
-![Image 2](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190328_171512830.jpg)
-PCB for controlling the LED strip using an ESP8266
-
-![Image 3](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190404_131424825.jpg)
+![Case](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190404_131424825.jpg)
 Showing the ESP8266 module inside a hand crafted case (used to be a RasPi case)
+
+![Top](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-top.png)
+PCB top view 
+
+![Bottom](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-bottom.png)
+PCB bottom view 
+
+![Soldered](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190328_171512830.jpg)
+Soldered PCB for controlling the LED strip using an ESP8266
