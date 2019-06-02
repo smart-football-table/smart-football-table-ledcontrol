@@ -41,7 +41,7 @@ Soldered PCB for controlling the LED strip using an ESP8266
 
 # Part list
 
-Beside the RGB LED stripe and the three wire connection cable (JST), we used the following parts to build the TPM2 box. 
+Beside the RGB LED stripe, the three wire (green/red/white) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
 
 | Amount | Description             | Price (china) |
 | ------ | ----------------------- | ------------- |
