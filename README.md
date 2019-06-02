@@ -33,11 +33,8 @@ LED strip showing score
 ![Case](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190404_131424825.jpg)
 Showing the ESP8266 module inside a hand crafted case (used to be a RasPi case)
 
-![Top](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-top.png)
-PCB top view 
-
-![Bottom](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-bottom.png)
-PCB bottom view 
+![PCB top](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-top.png) ![PCB bottom](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-bottom.png)
+PCB top and bottom view
 
 ![Soldered](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190328_171512830.jpg)
 Soldered PCB for controlling the LED strip using an ESP8266
