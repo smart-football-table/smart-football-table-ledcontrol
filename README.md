@@ -38,3 +38,17 @@ PCB top and bottom view
 
 ![Soldered](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190328_171512830.jpg)
 Soldered PCB for controlling the LED strip using an ESP8266
+
+# Part list
+
+Beside the RGB LED stripe and the three wire connection cable (JST), we used the following parts to build the TPM2 box. 
+
+| Amount | Description        | Price (china) |
+-----------------------------------------------
+| 1 | Resistor 470Ω           | 0,10€         |
+| 1 | Capacitor 1,0mF         | 0,50€         |
+| 1 | WeMos D1 mini (ESP8266) | 2,00€         |
+| 1 | Power supply 30W        | 8,00€         |
+| 1 | PCB mount power socket connector<br>(matching power supply connector) | 0,05€ |
+| 1 | PCB                     | <1€         |
+
