@@ -48,7 +48,7 @@ Beside the RGB LED stripe, the three wire (green/red/white) connection cable (JS
 | 1      | Resistor 470Ω           | 0,10€          |
 | 1      | Capacitor 1,0mF         | 0,50€          |
 | 1      | WeMos D1 mini (ESP8266) | 2,00€          |
-| 1      | 5V Power supply 6A/30W<br>One RBG LED drains upto 60mA | 8,00€ |
+| 1      | 5V Power supply 6A/30W<br>(One RBG LED drains upto 60mA) | 8,00€ |
 | 1      | PCB mount power socket connector<br>(matching power supply connector) | 0,05€ |
 | 1      | PCB 15"x15"             | <1€            |
-| 1      | Optional: Female pin header (8+8) | 0,10€ |
+| (2)    | (Optional) 8 pins single row female pin header | 0,10€ |
