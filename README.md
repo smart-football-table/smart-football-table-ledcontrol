@@ -51,4 +51,4 @@ Beside the RGB LED stripe, the three wire (green/red/white) connection cable (JS
 | 1      | 5V Power supply 6A/30W<br>One RBG LED drains upto 60mA | 8,00€ |
 | 1      | PCB mount power socket connector<br>(matching power supply connector) | 0,05€ |
 | 1      | PCB 15"x15"             | <1€            |
-| 1      | Optional: Female pin header (8+8)  0,10€ |
+| 1      | Optional: Female pin header (8+8) | 0,10€ |
