@@ -41,7 +41,7 @@ Showing the ESP8266 module inside a hand crafted case (used to be a RasPi case)
 
 # Part list
 
-Beside the RGB LED stripe, the three wire (green/red/white) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
+Beside the RGB LED stripe, the three wire (white/green/red) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
 
 | Amount | Description             | Price (china)  |
 | ------ | ----------------------- | -------------- |
