@@ -27,11 +27,11 @@ public class SystemRunnerTest {
 		SystemRunner systemRunner = new SystemRunner();
 		assertThat(systemRunner.parseArgs("-h"), is(false));
 		assertThat(systemErrRule.getLog(), allOf(//
-				containsString("-baudrate BAUDRATE"), //
-				containsString("-leds LEDS"), //
-				containsString("-mqttHost MQTTHOST"), //
-				containsString("-mqttPort MQTTPORT"), //
-				containsString("-tty TTY")));
+				containsString("-baudrate "), //
+				containsString("-leds "), //
+				containsString("-mqttHost "), //
+				containsString("-mqttPort "), //
+				containsString("-tty ")));
 	}
 
 	@Test

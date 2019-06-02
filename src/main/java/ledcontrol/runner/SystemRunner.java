@@ -6,7 +6,6 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Stream.concat;
 import static ledcontrol.TheSystem.MqttMessage.isTopic;
 import static ledcontrol.TheSystem.MqttMessage.topicStartWith;
 import static ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
@@ -17,7 +16,7 @@ import static ledcontrol.runner.Colors.PINK;
 import static ledcontrol.runner.Colors.TURQUOISE;
 import static ledcontrol.runner.Colors.VIOLET;
 import static ledcontrol.runner.Colors.YELLOW;
-import static ledcontrol.runner.args4j.EnvVars.readEnvVars;
+import static ledcontrol.runner.args4j.EnvVars.envVarsAndArgs;
 import static ledcontrol.scene.FlashScene.FlashConfig.flash;
 import static org.kohsuke.args4j.OptionHandlerFilter.ALL;
 import static org.kohsuke.args4j.ParserProperties.defaults;
@@ -151,16 +150,16 @@ public class SystemRunner {
 	@Option(name = "-h", help = true)
 	boolean help;
 
-	@Option(name = "-tty", metaVar = "TTY", usage = "tty device to use for serial communication. "
+	@Option(name = "-tty", usage = "tty device to use for serial communication. "
 			+ "If omitted the first available port is used")
 	String tty;
-	@Option(name = "-baudrate", metaVar = "BAUDRATE", usage = "baudrate for the tty device")
+	@Option(name = "-baudrate", usage = "baudrate for the tty device")
 	int baudrate = 230400;
-	@Option(name = "-leds", metaVar = "LEDS", required = true, usage = "how many leds are connected to the TPM2 device")
+	@Option(name = "-leds", required = true, usage = "how many leds are connected to the TPM2 device")
 	int leds;
-	@Option(name = "-mqttHost", metaVar = "MQTTHOST", usage = "hostname of the mqtt broker")
+	@Option(name = "-mqttHost", usage = "hostname of the mqtt broker")
 	String mqttHost = "localhost";
-	@Option(name = "-mqttPort", metaVar = "MQTTPORT", usage = "port of the mqtt broker")
+	@Option(name = "-mqttPort", usage = "port of the mqtt broker")
 	int mqttPort = 1883;
 
 	public static void main(String... args)
@@ -190,7 +189,7 @@ public class SystemRunner {
 	boolean parseArgs(String... args) {
 		CmdLineParser parser = new CmdLineParser(this, defaults().withUsageWidth(80));
 		try {
-			parser.parseArgument(concat(readEnvVars(parser.getOptions()), stream(args)).toArray(String[]::new));
+			parser.parseArgument(envVarsAndArgs(parser, args));
 			if (!help) {
 				return true;
 			}
@@ -207,7 +206,7 @@ public class SystemRunner {
 		System.err.println("java " + mainClassName + " [options...] arguments...");
 		parser.printUsage(System.err);
 		System.err.println();
-		System.err.println("  Example: java " + getClass().getName() + parser.printExample(ALL));
+		System.err.println("  Example: java " + mainClassName + parser.printExample(ALL));
 	}
 
 	private static <T> T parsePayload(Gson gson, MqttMessage m, Class<T> clazz) {
