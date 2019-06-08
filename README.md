@@ -30,11 +30,25 @@ Because the device numbers depends on the order the devices are connected you sh
 ![Score](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190307_164909.jpg)
 LED strip showing score
 
+![PCB top](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-top.png) ![PCB bottom](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-bottom.png)
+<br>LED controller module using an ESP8266, top and bottom layout view
+
+![Soldered](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190328_171512830.jpg)
+The soldered PCB
+
 ![Case](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190404_131424825.jpg)
 Showing the ESP8266 module inside a hand crafted case (used to be a RasPi case)
 
-![PCB top](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-top.png) ![PCB bottom](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-bottom.png)
-PCB top and bottom view
+# Part list
 
-![Soldered](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190328_171512830.jpg)
-Soldered PCB for controlling the LED strip using an ESP8266
+Beside the RGB LED stripe, the three wire (white/green/red) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
+
+| Amount | Description             | Price (china)  |
+| ------ | ----------------------- | -------------- |
+| 1      | Resistor 470Ω           | 0,10€          |
+| 1      | Capacitor 1,0mF         | 0,50€          |
+| 1      | WeMos D1 mini (ESP8266) | 2,00€          |
+| 1      | 5V Power supply 6A/30W<br>(One RBG LED drains upto 60mA) | 8,00€ |
+| 1      | PCB mount power socket connector<br>(matching power supply connector) | 0,05€ |
+| 1      | PCB 15"x15"             | <1€            |
+| (2)    | (Optional) 8 pins single row female pin header | 0,10€ |
