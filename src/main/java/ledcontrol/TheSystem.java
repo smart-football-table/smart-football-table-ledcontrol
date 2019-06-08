@@ -1,6 +1,7 @@
 package ledcontrol;
 
 import static java.awt.Color.BLACK;
+import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Predicate.isEqual;
@@ -14,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -55,8 +54,7 @@ public class TheSystem implements Closeable {
 
 		public TheSystemAnimator(int fps) {
 			sleepMillis = SECONDS.toMillis(1) / fps;
-			ExecutorService executor = Executors.newSingleThreadExecutor();
-			executor.submit(() -> {
+			runAsync(() -> {
 				while (true) {
 					long startTime = System.currentTimeMillis();
 					for (Runnable runnable : callables) {
@@ -66,7 +64,11 @@ public class TheSystem implements Closeable {
 							e.printStackTrace();
 						}
 					}
-					MILLISECONDS.sleep(sleepMillis - (System.currentTimeMillis() - startTime));
+					try {
+						MILLISECONDS.sleep(sleepMillis - (System.currentTimeMillis() - startTime));
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					}
 				}
 
 			});
