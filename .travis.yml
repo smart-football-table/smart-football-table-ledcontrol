@@ -3,7 +3,7 @@ services:
   - docker
 
 script:
-  - mvn package jib:dockerBuild
+  - mvn verify package jib:dockerBuild
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
