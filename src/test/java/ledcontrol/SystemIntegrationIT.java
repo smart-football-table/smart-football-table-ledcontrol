@@ -198,6 +198,28 @@ public class SystemIntegrationIT {
 	}
 
 	@Test
+	public void flashesOnWinnerLeft() throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/gameover", "0");
+		MILLISECONDS.sleep(40);
+		assertThat(lastPanelState(), is(new Color[][] { //
+				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT }, //
+				{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT }, //
+		}));
+	}
+
+	@Test
+	public void flashesOnWinnerRight() throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
+		whenMessageIsReceived(LOCALHOST, brokerPort, "game/gameover", "1");
+		MILLISECONDS.sleep(40);
+		assertThat(lastPanelState(), is(new Color[][] { //
+				{ COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT }, //
+				{ COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT }, //
+		}));
+	}
+
+	@Test
 	public void animationOnIdle() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");

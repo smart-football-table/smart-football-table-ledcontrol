@@ -136,9 +136,7 @@ public class TheSystem implements Closeable {
 	}
 
 	private void subscribe() throws MqttException, MqttSecurityException {
-		mqttClient.subscribe("#", (topic, message) -> {
-			received(new MqttMessage(topic, new String(message.getPayload())));
-		});
+		mqttClient.subscribe("#", (t, m) -> received(new MqttMessage(t, new String(m.getPayload()))));
 	}
 
 	private void repaint(Panel panel) {
@@ -220,8 +218,6 @@ public class TheSystem implements Closeable {
 				if (reconnect) {
 					try {
 						subscribe();
-					} catch (MqttSecurityException e) {
-						e.printStackTrace();
 					} catch (MqttException e) {
 						e.printStackTrace();
 					}

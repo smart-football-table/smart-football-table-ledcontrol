@@ -23,6 +23,7 @@ import static org.kohsuke.args4j.ParserProperties.defaults;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
@@ -30,14 +31,11 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import com.google.gson.Gson;
-
 import ledcontrol.TheSystem;
 import ledcontrol.TheSystem.MqttMessage;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
-import ledcontrol.rest.GameoverMessage;
 import ledcontrol.scene.FlashScene;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
@@ -67,7 +65,6 @@ public class SystemRunner {
 			ScoreScene goalScene = scoreScene(goalPanel);
 			IdleScene idleScene = idleScene(idlePanel);
 
-			Gson gson = new Gson();
 			theSystem.whenThen(isTopic("leds/backgroundlight/color"), m -> {
 				backgroundPanel.fill(colorFromPayload(m)).repaint();
 			});
@@ -92,7 +89,7 @@ public class SystemRunner {
 			});
 			theSystem.whenThen(isTopic("game/foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
 			theSystem.whenThen(isTopic("game/gameover"), m -> {
-				Color[] flashColors = getFlashColors(gson, m);
+				Color[] flashColors = getFlashColors(null, m);
 				FlashScene winnerScene = new FlashScene(winnerPanel, //
 						flash(flashColors[0], 24), flash(BLACK, 24), //
 						flash(flashColors[1], 24), flash(BLACK, 24), //
@@ -114,8 +111,8 @@ public class SystemRunner {
 			return theSystem;
 		}
 
-		private Color[] getFlashColors(Gson gson, MqttMessage m) {
-			int[] winners = parsePayload(gson, m, GameoverMessage.class).winners;
+		private Color[] getFlashColors(Object x, MqttMessage message) {
+			int[] winners = Arrays.stream(message.getPayload().split("\\,")).mapToInt(Integer::parseInt).toArray();
 			if (winners.length > 1) {
 				return teamColors;
 			}
@@ -207,10 +204,6 @@ public class SystemRunner {
 		parser.printUsage(System.err);
 		System.err.println();
 		System.err.println("  Example: java " + mainClassName + parser.printExample(ALL));
-	}
-
-	private static <T> T parsePayload(Gson gson, MqttMessage m, Class<T> clazz) {
-		return gson.fromJson(m.getPayload(), clazz);
 	}
 
 }
