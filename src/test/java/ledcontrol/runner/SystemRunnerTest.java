@@ -9,7 +9,7 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-public class SystemRunnerTest {
+class SystemRunnerTest {
 
 	@Test
 	void printsHelpOnMinusH() throws Exception {

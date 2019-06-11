@@ -55,7 +55,7 @@ import ledcontrol.runner.SystemRunner.Configurator;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
 
-public class SystemIntegrationIT {
+class SystemIntegrationIT {
 
 	private Duration timeout = ofSeconds(30);
 

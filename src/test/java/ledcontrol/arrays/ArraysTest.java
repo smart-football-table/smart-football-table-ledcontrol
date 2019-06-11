@@ -6,7 +6,7 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-public class ArraysTest {
+class ArraysTest {
 
 	@Test
 	void testRotateSingle() {

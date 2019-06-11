@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import ledcontrol.panel.Panel;
 
-public class ScoreSceneTest {
+class ScoreSceneTest {
 
 	private static final Color ____ = null;
 

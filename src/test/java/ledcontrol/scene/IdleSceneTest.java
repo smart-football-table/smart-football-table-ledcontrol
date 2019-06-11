@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import ledcontrol.panel.Panel;
 
- class IdleSceneTest {
+class IdleSceneTest {
 
 	private DummyAnimator animator = new DummyAnimator();
 	private Panel panel;

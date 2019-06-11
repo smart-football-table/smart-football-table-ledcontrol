@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import ledcontrol.panel.Panel;
 
-public class FlashSceneTest {
+class FlashSceneTest {
 
 	private DummyAnimator animator = new DummyAnimator();
 
