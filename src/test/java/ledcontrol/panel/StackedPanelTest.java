@@ -9,12 +9,12 @@ import static org.junit.Assert.assertThat;
 
 import java.awt.Color;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import ledcontrol.scene.DummyAnimator;
 import ledcontrol.scene.FlashScene;
 
-public class StackedPanelTest {
+class StackedPanelTest {
 
 	private static final Color OFF = null;
 
@@ -23,7 +23,7 @@ public class StackedPanelTest {
 	private DummyAnimator animator = new DummyAnimator();
 
 	@Test
-	public void writeThrough() {
+	void paintThrough() {
 		StackedPanel sut = newSut(3, 2);
 		Panel inner = sut.createSubPanel();
 		inner.setColor(2, 1, RED);
@@ -36,7 +36,7 @@ public class StackedPanelTest {
 	}
 
 	@Test
-	public void twoPanels() {
+	void twoPanels() {
 		StackedPanel sut = newSut(3, 2);
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel();
@@ -53,7 +53,7 @@ public class StackedPanelTest {
 	}
 
 	@Test
-	public void reappears() {
+	void reappears() {
 		StackedPanel sut = newSut(3, 2);
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel();
@@ -72,7 +72,7 @@ public class StackedPanelTest {
 	}
 
 	@Test
-	public void mixTwoColors() {
+	void mixTwoColors() {
 		Panel.OverlayStrategy overlayStrategy = new Panel.OverlayStrategy() {
 			@Override
 			public void copy(int x, int y, Color color, Panel target) {
@@ -106,7 +106,7 @@ public class StackedPanelTest {
 	}
 
 	@Test
-	public void flashOnBlack() {
+	void flashOnBlack() {
 		StackedPanel sut = newSut(3, 2);
 		Color colorOnUnderlyingPanel = BLACK;
 		sut.createSubPanel().fill(colorOnUnderlyingPanel);
@@ -125,7 +125,7 @@ public class StackedPanelTest {
 	}
 
 	@Test
-	public void flashOnColor() {
+	void flashOnColor() {
 		StackedPanel sut = newSut(3, 2);
 		Color colorOnUnderlyingPanel = RED;
 		sut.createSubPanel().fill(colorOnUnderlyingPanel);

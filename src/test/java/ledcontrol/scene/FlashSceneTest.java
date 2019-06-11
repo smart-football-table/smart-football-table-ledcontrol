@@ -9,9 +9,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.awt.Color;
-import java.util.stream.IntStream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import ledcontrol.panel.Panel;
 
@@ -25,7 +24,7 @@ public class FlashSceneTest {
 	private FlashScene sut;
 
 	@Test
-	public void flashYellowBlackRed() {
+	void flashYellowBlackRed() {
 		sutOnPanel(3, 2);
 		whenFlash();
 		afterSwitchPanelIs(allOf(YELLOW));
