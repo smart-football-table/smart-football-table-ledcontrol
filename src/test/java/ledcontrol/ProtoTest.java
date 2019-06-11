@@ -16,26 +16,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ProtoTest {
+class ProtoTest {
 
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
 	@Test
-	public void canControlSingleLed() throws IOException {
+	void canControlSingleLed() throws IOException {
 		whenSwitchingLeds(RED);
 		thenBytesWritten(1, RED);
 	}
 
 	@Test
-	public void canControlMultipleLeds() throws IOException {
+	void canControlMultipleLeds() throws IOException {
 		whenSwitchingLeds(RED, GREEN, BLUE);
 		thenBytesWritten(1, RED, GREEN, BLUE);
 	}
 
 	@Test
-	public void canChunck() throws IOException {
+	void canChunck() throws IOException {
 		whenSwitchingLedsUsingTwoChuncks(RED, GREEN, BLUE, ORANGE);
 		thenBytesWritten(2, RED, GREEN, BLUE, ORANGE);
 	}

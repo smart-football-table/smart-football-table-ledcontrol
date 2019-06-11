@@ -8,18 +8,18 @@ import static org.junit.Assert.assertThat;
 
 import java.awt.Color;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import ledcontrol.panel.Panel;
 
-public class IdleSceneTest {
+class IdleSceneTest {
 
 	private DummyAnimator animator = new DummyAnimator();
 	private Panel panel;
 	private IdleScene sut;
 
 	@Test
-	public void startOfAnimation() {
+	void startOfAnimation() {
 		sutOnPanel(3, 2);
 		animationIsStarted();
 		thenPanelIs(new Color[][] { //
