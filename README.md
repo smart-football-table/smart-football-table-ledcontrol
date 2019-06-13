@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/smart-football-table/smart-football-table-ledcontrol.svg?branch=master)](https://travis-ci.org/smart-football-table/smart-football-table-ledcontrol)
 [![BCH compliance](https://bettercodehub.com/edge/badge/smart-football-table/smart-football-table-ledcontrol?branch=master)](https://bettercodehub.com/)
 [![codecov](https://codecov.io/gh/smart-football-table/smart-football-table-ledcontrol/branch/master/graph/badge.svg)](https://codecov.io/gh/smart-football-table/smart-football-table-ledcontrol)
+[![Maintainability](https://api.codeclimate.com/v1/badges/4e3ba0582647e20a63f7/maintainability)](https://codeclimate.com/github/smart-football-table/smart-football-table-ledcontrol/maintainability)
 [![Known Vulnerabilities](https://snyk.io/test/github/smart-football-table/smart-football-table-ledcontrol/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/smart-football-table/smart-football-table-ledcontrol?targetFile=pom.xml)
 
 
