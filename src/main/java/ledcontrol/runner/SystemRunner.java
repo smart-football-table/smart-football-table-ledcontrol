@@ -83,8 +83,8 @@ public class SystemRunner {
 				}
 
 			});
-			theSystem.whenThen(topicStartWith("game/score/"), m -> {
-				int teamid = parseInt(m.getTopic().substring("game/score/".length()));
+			theSystem.whenThen(topicStartWith("team/score/"), m -> {
+				int teamid = parseInt(m.getTopic().substring("team/score/".length()));
 				goalScene.setScore(teamid, parseInt(m.getPayload()));
 			});
 			theSystem.whenThen(isTopic("game/foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));

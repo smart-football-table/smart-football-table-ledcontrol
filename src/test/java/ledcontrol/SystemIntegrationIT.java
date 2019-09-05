@@ -138,7 +138,7 @@ class SystemIntegrationIT {
 	void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-			whenMessageIsReceived(LOCALHOST, brokerPort, "game/score/0", "1");
+			whenMessageIsReceived(LOCALHOST, brokerPort, "team/score/0", "1");
 			assertThat(lastPanelState(), is(new Color[][] { //
 					{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
 					{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
@@ -150,8 +150,8 @@ class SystemIntegrationIT {
 	void teamLeftScoresTwice() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-			whenMessageIsReceived(LOCALHOST, brokerPort, "game/score/0", "1");
-			whenMessageIsReceived(LOCALHOST, brokerPort, "game/score/0", "2");
+			whenMessageIsReceived(LOCALHOST, brokerPort, "team/score/0", "1");
+			whenMessageIsReceived(LOCALHOST, brokerPort, "team/score/0", "2");
 			assertThat(lastPanelState(), is(new Color[][] { //
 					{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
 					{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
