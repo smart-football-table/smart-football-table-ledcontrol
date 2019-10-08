@@ -65,7 +65,7 @@ class ContractTests {
 	@Pact(consumer = "ledcontrol")
 	MessagePact teamLeftScoresPact(MessagePactBuilder builder) {
 		return builder //
-				.given("goal was shot") //
+				.given("a goal was shot") //
 				.expectsToReceive("the team's new score") //
 				.withContent(new PactDslJsonBody() //
 						.stringMatcher("topic", "team\\/score\\/\\d+", "team/score/0") //
