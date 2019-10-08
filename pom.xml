@@ -71,6 +71,13 @@
 			<version>0.11_1</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- used for contract testing (PACT) -->
+		<dependency>
+			<groupId>au.com.dius</groupId>
+			<artifactId>pact-jvm-consumer-junit5</artifactId>
+			<version>4.0.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -79,6 +86,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.0</version>
 				<configuration>
+					<useSystemClassLoader>false</useSystemClassLoader>
 					<includes>
 						<include>**/Test*.java</include>
 						<include>**/*Test.java</include>

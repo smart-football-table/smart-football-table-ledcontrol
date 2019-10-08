@@ -6,8 +6,8 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static ledcontrol.TheSystem.MqttMessage.isTopic;
-import static ledcontrol.TheSystem.MqttMessage.topicStartWith;
+import static ledcontrol.TheSystem.MessageWithTopic.topicIsEqualTo;
+import static ledcontrol.TheSystem.MessageWithTopic.topicStartWith;
 import static ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
 import static ledcontrol.runner.Colors.FUCHSIA;
 import static ledcontrol.runner.Colors.GREEN;
@@ -32,8 +32,9 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import ledcontrol.TheSystem;
-import ledcontrol.TheSystem.MqttMessage;
+import ledcontrol.TheSystem.MessageWithTopic;
 import ledcontrol.connection.SerialConnection;
+import ledcontrol.mqtt.MqttAdapter;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.scene.FlashScene;
@@ -62,56 +63,60 @@ public class SystemRunner {
 			Panel idlePanel = panel.createSubPanel();
 			Panel foregrounddPanel = panel.createSubPanel().fill(BLACK).overlayStrategy(transparentOn(BLACK));
 
-			ScoreScene goalScene = scoreScene(goalPanel);
+			ScoreScene scoreScene = scoreScene(goalPanel);
 			IdleScene idleScene = idleScene(idlePanel);
 
-			theSystem.whenThen(isTopic("leds/backgroundlight/color"), m -> {
-				backgroundPanel.fill(colorFromPayload(m)).repaint();
-			});
-			theSystem.whenThen(isTopic("leds/foregroundlight/color"), m -> {
-				foregrounddPanel.fill(colorFromPayload(m)).repaint();
-			});
-			theSystem.whenThen(isTopic("team/scored"), m -> {
-				int idx = parseInt(m.getPayload());
-				if (idx >= 0 && idx < teamColors.length) {
-					Color color = teamColors[idx];
-					FlashScene fc = new FlashScene(winnerPanel, //
-							flash(color, 24), flash(BLACK, 24), //
-							flash(color, 24), flash(BLACK, 24), //
-							flash(color, 24), flash(BLACK, 24));
-					fc.flash(theSystem.getAnimator());
-				}
+			return //
+			theSystem //
+					.when(topicIsEqualTo("leds/backgroundlight/color"))
+					.then(m -> backgroundPanel.fill(colorFromPayload(m)).repaint()) //
+					.when(topicIsEqualTo("leds/foregroundlight/color")) //
+					.then(m -> foregrounddPanel.fill(colorFromPayload(m)).repaint()) //
+					.when(topicIsEqualTo("team/scored")) //
+					.then(m -> {
+						int idx = parseInt(m.getPayload());
+						if (idx >= 0 && idx < teamColors.length) {
+							Color color = teamColors[idx];
+							FlashScene fc = new FlashScene(winnerPanel, //
+									flash(color, 24), flash(BLACK, 24), //
+									flash(color, 24), flash(BLACK, 24), //
+									flash(color, 24), flash(BLACK, 24));
+							fc.flash(theSystem.getAnimator());
+						}
 
-			});
-			theSystem.whenThen(topicStartWith("team/score/"), m -> {
-				int teamid = parseInt(m.getTopic().substring("team/score/".length()));
-				goalScene.setScore(teamid, parseInt(m.getPayload()));
-			});
-			theSystem.whenThen(isTopic("game/foul"), m -> foulScene(foulPanel).flash(theSystem.getAnimator()));
-			theSystem.whenThen(isTopic("game/gameover"), m -> {
-				Color[] flashColors = getFlashColors(null, m);
-				FlashScene winnerScene = new FlashScene(winnerPanel, //
-						flash(flashColors[0], 24), flash(BLACK, 24), //
-						flash(flashColors[1], 24), flash(BLACK, 24), //
-						flash(flashColors[0], 24), flash(BLACK, 24), //
-						flash(flashColors[1], 24), flash(BLACK, 24), //
-						flash(flashColors[0], 6), flash(BLACK, 6), //
-						flash(flashColors[1], 6), flash(BLACK, 6), //
-						flash(flashColors[0], 6), flash(BLACK, 6), //
-						flash(flashColors[1], 6), flash(BLACK, 6));
-				winnerScene.flash(theSystem.getAnimator());
-			});
-			theSystem.whenThen(isTopic("game/idle"), m -> {
-				if (parseBoolean(m.getPayload())) {
-					idleScene.startAnimation(theSystem.getAnimator());
-				} else {
-					idleScene.stopAnimation().reset();
-				}
-			});
-			return theSystem;
+					}) //
+					.when(topicStartWith("team/score/")) //
+					.then(m -> {
+						int teamid = parseInt(m.getTopic().substring("team/score/".length()));
+						scoreScene.setScore(teamid, parseInt(m.getPayload()));
+					}) //
+					.when(topicIsEqualTo("game/foul")) //
+					.then(m -> foulScene(foulPanel).flash(theSystem.getAnimator())) //
+					.when(topicIsEqualTo("game/gameover")) //
+					.then(m -> {
+						Color[] flashColors = getFlashColors(m);
+						FlashScene winnerScene = new FlashScene(winnerPanel, //
+								flash(flashColors[0], 24), flash(BLACK, 24), //
+								flash(flashColors[1], 24), flash(BLACK, 24), //
+								flash(flashColors[0], 24), flash(BLACK, 24), //
+								flash(flashColors[1], 24), flash(BLACK, 24), //
+								flash(flashColors[0], 6), flash(BLACK, 6), //
+								flash(flashColors[1], 6), flash(BLACK, 6), //
+								flash(flashColors[0], 6), flash(BLACK, 6), //
+								flash(flashColors[1], 6), flash(BLACK, 6));
+						winnerScene.flash(theSystem.getAnimator());
+					}) //
+					.when(topicIsEqualTo("game/idle")) //
+					.then(m -> {
+						if (parseBoolean(m.getPayload())) {
+							idleScene.startAnimation(theSystem.getAnimator());
+						} else {
+							idleScene.stopAnimation().reset();
+						}
+					});
 		}
 
-		private Color[] getFlashColors(Object x, MqttMessage message) {
+		private Color[] getFlashColors(MessageWithTopic message) {
 			int[] winners = Arrays.stream(message.getPayload().split("\\,")).mapToInt(Integer::parseInt).toArray();
 			if (winners.length > 1) {
 				return teamColors;
@@ -124,7 +129,7 @@ public class SystemRunner {
 			return stream(winners).anyMatch(i -> i == team);
 		}
 
-		private static Color colorFromPayload(MqttMessage message) {
+		private static Color colorFromPayload(MessageWithTopic message) {
 			return Color.decode(message.getPayload());
 		}
 
@@ -174,8 +179,9 @@ public class SystemRunner {
 		SerialConnection connection = new SerialConnection(tty, baudrate);
 		SECONDS.sleep(2);
 		StackedPanel panel = new StackedPanel(leds, 1);
-		try (TheSystem theSystem = new Configurator()
-				.configure(new TheSystem(mqttHost, mqttPort, panel, connection.getOutputStream()), panel)) {
+		TheSystem system = new TheSystem(panel, connection.getOutputStream());
+		try (MqttAdapter mqttAdapter = new MqttAdapter(mqttHost, mqttPort, system)) {
+			new Configurator().configure(system, panel);
 			Object o = new Object();
 			synchronized (o) {
 				o.wait();

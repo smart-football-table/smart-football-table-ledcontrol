@@ -1,7 +1,6 @@
 package ledcontrol.scene;
 
 import ledcontrol.Animator;
-import ledcontrol.Animator.AnimatorTask;
 
 public final class DummyAnimator implements Animator {
 

@@ -13,6 +13,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -43,11 +44,11 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 import ledcontrol.Animator.AnimatorTask;
+import ledcontrol.mqtt.MqttAdapter;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.runner.Colors;
@@ -72,6 +73,7 @@ class SystemIntegrationIT {
 	private final StackedPanel panel = new StackedPanel(5, 2);
 
 	private Server server;
+	private MqttAdapter mqttAdapter;
 	private TheSystem theSystem;
 	private IMqttClient secondClient;
 
@@ -119,7 +121,7 @@ class SystemIntegrationIT {
 			secondClient.disconnect();
 		}
 		secondClient.close();
-		theSystem.close();
+		mqttAdapter.close();
 		server.stopServer();
 	}
 
@@ -135,37 +137,11 @@ class SystemIntegrationIT {
 	}
 
 	@Test
-	void teamLeftScores() throws MqttSecurityException, MqttException, InterruptedException, IOException {
-		assertTimeoutPreemptively(timeout, () -> {
-			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-			whenMessageIsReceived(LOCALHOST, brokerPort, "team/score/0", "1");
-			assertThat(lastPanelState(), is(new Color[][] { //
-					{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
-					{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
-			}));
-		});
-	}
-
-	@Test
-	void teamLeftScoresTwice() throws MqttSecurityException, MqttException, InterruptedException, IOException {
-		assertTimeoutPreemptively(timeout, () -> {
-			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-			whenMessageIsReceived(LOCALHOST, brokerPort, "team/score/0", "1");
-			whenMessageIsReceived(LOCALHOST, brokerPort, "team/score/0", "2");
-			assertThat(lastPanelState(), is(new Color[][] { //
-					{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
-					{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, BLACK, BLACK, BLACK }, //
-			}));
-		});
-	}
-
-	@Test
 	void flashesOnFoul() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/foul", "");
-			MILLISECONDS.sleep(40);
-			assertThat(lastPanelState(), is(new Color[][] { //
+			await().until(() -> lastPanelState(), is(new Color[][] { //
 					{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 					{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 			}));
@@ -177,8 +153,7 @@ class SystemIntegrationIT {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/gameover", "0");
-			MILLISECONDS.sleep(40);
-			assertThat(lastPanelState(), is(new Color[][] { //
+			await().until(() -> lastPanelState(), is(new Color[][] { //
 					{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT }, //
 					{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT }, //
 			}));
@@ -190,8 +165,7 @@ class SystemIntegrationIT {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/gameover", "1");
-			MILLISECONDS.sleep(40);
-			assertThat(lastPanelState(), is(new Color[][] { //
+			await().until(() -> lastPanelState(), is(new Color[][] { //
 					{ COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT }, //
 					{ COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT }, //
 			}));
@@ -204,7 +178,7 @@ class SystemIntegrationIT {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
 			MILLISECONDS.sleep(40);
-			verify(idleScene).startAnimation(Mockito.any(Animator.class));
+			verify(idleScene).startAnimation(any(Animator.class));
 		});
 	}
 
@@ -213,9 +187,8 @@ class SystemIntegrationIT {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
-			MILLISECONDS.sleep(40);
 			Color _1188CC = decode("#1188CC");
-			assertThat(lastPanelState(), is(new Color[][] { //
+			await().until(() -> lastPanelState(), is(new Color[][] { //
 					{ _1188CC, _1188CC, _1188CC, _1188CC, _1188CC }, //
 					{ _1188CC, _1188CC, _1188CC, _1188CC, _1188CC }, //
 			}));
@@ -228,9 +201,8 @@ class SystemIntegrationIT {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 			whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
-			MILLISECONDS.sleep(40);
 			Color _22AADD = decode("#22AADD");
-			assertThat(lastPanelState(), is(new Color[][] { //
+			await().until(() -> lastPanelState(), is(new Color[][] { //
 					{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 					{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 			}));
@@ -244,9 +216,8 @@ class SystemIntegrationIT {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 			whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
-			MILLISECONDS.sleep(40);
 			Color _22AADD = decode("#22AADD");
-			assertThat(lastPanelState(), is(new Color[][] { //
+			await().until(() -> lastPanelState(), is(new Color[][] { //
 					{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 					{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 			}));
@@ -261,9 +232,8 @@ class SystemIntegrationIT {
 			whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 			whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 			whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#000000");
-			MILLISECONDS.sleep(40);
 			Color _1188cc = decode("#1188CC");
-			assertThat(lastPanelState(), is(new Color[][] { //
+			await().until(() -> lastPanelState(), is(new Color[][] { //
 					{ _1188cc, _1188cc, _1188cc, _1188cc, _1188cc }, //
 					{ _1188cc, _1188cc, _1188cc, _1188cc, _1188cc }, //
 			}));
@@ -278,13 +248,11 @@ class SystemIntegrationIT {
 			Runnable incremetor = () -> incremntor.incrementAndGet();
 			assertThat(incremntor.get(), is(0));
 			AnimatorTask task = theSystem.getAnimator().start(incremetor);
-			MILLISECONDS.sleep(40 * 2);
-			assertThat(incremntor.get(), is(not(0)));
+			await().until(() -> incremntor.get(), is(not(0)));
 
 			task.stop();
 			int currentValue = incremntor.get();
-			MILLISECONDS.sleep(40 * 2);
-			assertThat(incremntor.get(), is(currentValue));
+			await().until(() -> incremntor.get(), is(currentValue));
 		});
 	}
 
@@ -296,13 +264,13 @@ class SystemIntegrationIT {
 			server.stopServer();
 
 			server = newMqttServer(LOCALHOST, brokerPort);
-			await().atMost(10, SECONDS).until(theSystem::isConnected);
+			await().atMost(10, SECONDS).until(mqttAdapter::isConnected);
 
 			// does the reconnected client subscribe to the topics again?
 			await().atMost(10, SECONDS).until(secondClient::isConnected);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
 			MILLISECONDS.sleep(40);
-			verify(idleScene).startAnimation(Mockito.any(Animator.class));
+			verify(idleScene).startAnimation(any(Animator.class));
 		});
 	}
 
@@ -358,9 +326,10 @@ class SystemIntegrationIT {
 				return idleScene;
 			};
 
-		}.configure(new TheSystem(host, port, panel, outputStream) {
+		}.configure(new TheSystem(panel, outputStream) {
+
 			@Override
-			protected void handleMessage(Consumer<MqttMessage> consumer, MqttMessage message) {
+			protected void handleMessage(Consumer<MessageWithTopic> consumer, MessageWithTopic message) {
 				super.handleMessage(consumer, message);
 				lock.lock();
 				try {
@@ -372,6 +341,7 @@ class SystemIntegrationIT {
 
 			}
 		}, panel);
+		mqttAdapter = new MqttAdapter(host, port, theSystem);
 	}
 
 }

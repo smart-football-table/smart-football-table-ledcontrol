@@ -7,7 +7,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Predicate.isEqual;
 
 import java.awt.Color;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -19,18 +18,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-
+import ledcontrol.TheSystem.MessageWithTopic;
 import ledcontrol.panel.Panel;
 
-public class TheSystem implements Closeable {
+public class TheSystem implements Consumer<MessageWithTopic> {
 
 	public static class TheSystemAnimator implements Animator {
 
@@ -81,12 +72,12 @@ public class TheSystem implements Closeable {
 		}
 	}
 
-	public static class MqttMessage {
+	public static class MessageWithTopic {
 
 		private final String topic;
 		private final String payload;
 
-		public MqttMessage(String topic, String payload) {
+		public MessageWithTopic(String topic, String payload) {
 			this.topic = topic;
 			this.payload = payload;
 		}
@@ -99,44 +90,32 @@ public class TheSystem implements Closeable {
 			return payload;
 		}
 
-		public static Predicate<MqttMessage> isTopic(String topic) {
-			return matches(topic, MqttMessage::getTopic);
+		public static Predicate<MessageWithTopic> topicIsEqualTo(String topic) {
+			return matches(topic, MessageWithTopic::getTopic);
 		}
 
-		public static Predicate<MqttMessage> topicStartWith(String prefix) {
-			return m -> ((Function<MqttMessage, String>) MqttMessage::getTopic).apply(m).startsWith(prefix);
+		public static Predicate<MessageWithTopic> topicStartWith(String prefix) {
+			return m -> ((Function<MessageWithTopic, String>) MessageWithTopic::getTopic).apply(m).startsWith(prefix);
 		}
 
-		public static Predicate<MqttMessage> isPayload(String payload) {
-			return matches(payload, MqttMessage::getPayload);
-		}
-
-		public static <T> Predicate<MqttMessage> matches(T value, Function<MqttMessage, T> f) {
+		public static <T> Predicate<MessageWithTopic> matches(T value, Function<MessageWithTopic, T> f) {
 			return m -> isEqual(value).test(f.apply(m));
 		}
 
 	}
 
-	private final IMqttClient mqttClient;
 	private final Proto proto;
 	private final Color[] buffer;
 
-	private final Map<Predicate<MqttMessage>, Consumer<MqttMessage>> conditions = new HashMap<>();
+	private final Map<Predicate<MessageWithTopic>, Consumer<MessageWithTopic>> conditions = new HashMap<>();
 	private final int FPS = 25;
 	private final Animator animator = new TheSystemAnimator(FPS);
 
-	public TheSystem(String host, int port, Panel panel, OutputStream outputStream)
-			throws MqttSecurityException, MqttException {
-		proto = Proto.forFrameSizes(outputStream, panel.getWidth() * panel.getHeight());
-		buffer = new Color[panel.getWidth() * panel.getHeight()];
-		mqttClient = makeMqttClient(host, port);
-		subscribe();
+	public TheSystem(Panel panel, OutputStream outputStream) {
+		this.proto = Proto.forFrameSizes(outputStream, panel.getWidth() * panel.getHeight());
+		this.buffer = new Color[panel.getWidth() * panel.getHeight()];
 		panel.addRepaintListener(p -> repaint(p));
 		panel.repaint();
-	}
-
-	private void subscribe() throws MqttException, MqttSecurityException {
-		mqttClient.subscribe("#", (t, m) -> received(new MqttMessage(t, new String(m.getPayload()))));
 	}
 
 	private void repaint(Panel panel) {
@@ -159,8 +138,8 @@ public class TheSystem implements Closeable {
 		}
 	}
 
-	private void received(MqttMessage message) {
-		for (Entry<Predicate<MqttMessage>, Consumer<MqttMessage>> entry : conditions.entrySet()) {
+	public void accept(MessageWithTopic message) {
+		for (Entry<Predicate<MessageWithTopic>, Consumer<MessageWithTopic>> entry : conditions.entrySet()) {
 			if (entry.getKey().test(message)) {
 				try {
 					handleMessage(entry.getValue(), message);
@@ -171,67 +150,27 @@ public class TheSystem implements Closeable {
 		}
 	}
 
-	protected void handleMessage(Consumer<MqttMessage> consumer, MqttMessage message) {
+	protected void handleMessage(Consumer<MessageWithTopic> consumer, MessageWithTopic message) {
 		consumer.accept(message);
 	}
 
-	public void whenThen(Predicate<MqttMessage> predicate, Consumer<MqttMessage> consumer) {
-		conditions.put(predicate, consumer);
-	}
+	public class When {
 
-	public boolean isConnected() {
-		return this.mqttClient.isConnected();
-	}
+		private final Predicate<MessageWithTopic> predicate;
 
-	@Override
-	public void close() {
-		try {
-			if (isConnected()) {
-				this.mqttClient.disconnect();
-			}
-			this.mqttClient.close();
-		} catch (MqttException e) {
-			throw new RuntimeException(e);
+		public When(Predicate<MessageWithTopic> predicate) {
+			this.predicate = predicate;
 		}
+
+		public TheSystem then(Consumer<MessageWithTopic> consumer) {
+			conditions.put(predicate, consumer);
+			return TheSystem.this;
+		}
+
 	}
 
-	private IMqttClient makeMqttClient(String host, int port) throws MqttException, MqttSecurityException {
-		IMqttClient client = new MqttClient("tcp://" + host + ":" + port, "theSystemClient", new MemoryPersistence());
-		client.connect(mqttConnectOptions());
-		client.setCallback(new MqttCallbackExtended() {
-			@Override
-			public void connectionLost(Throwable cause) {
-				System.out.println("Connection to " + client.getServerURI() + " lost");
-			}
-
-			@Override
-			public void messageArrived(String topic, org.eclipse.paho.client.mqttv3.MqttMessage message) {
-			}
-
-			@Override
-			public void deliveryComplete(IMqttDeliveryToken token) {
-			}
-
-			@Override
-			public void connectComplete(boolean reconnect, String serverURI) {
-				System.out.println("Connection to " + serverURI + " established");
-				if (reconnect) {
-					try {
-						subscribe();
-					} catch (MqttException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-		});
-		return client;
-	}
-
-	private MqttConnectOptions mqttConnectOptions() {
-		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
-		mqttConnectOptions.setAutomaticReconnect(true);
-		return mqttConnectOptions;
+	public When when(Predicate<MessageWithTopic> predicate) {
+		return new When(predicate);
 	}
 
 	public Animator getAnimator() {
