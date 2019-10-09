@@ -3,7 +3,6 @@ package ledcontrol;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.awt.Color.BLACK;
-import static java.awt.Color.WHITE;
 import static java.awt.Color.decode;
 import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -132,18 +131,6 @@ class SystemIntegrationIT {
 			assertThat(lastPanelState(), is(new Color[][] { //
 					{ BLACK, BLACK, BLACK, BLACK, BLACK }, //
 					{ BLACK, BLACK, BLACK, BLACK, BLACK }, //
-			}));
-		});
-	}
-
-	@Test
-	void flashesOnFoul() throws MqttSecurityException, MqttException, InterruptedException, IOException {
-		assertTimeoutPreemptively(timeout, () -> {
-			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-			whenMessageIsReceived(LOCALHOST, brokerPort, "game/foul", "");
-			await().until(() -> lastPanelState(), is(new Color[][] { //
-					{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
-					{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
 			}));
 		});
 	}

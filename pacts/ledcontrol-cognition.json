@@ -42,6 +42,42 @@
           }
         }
       }
+    },
+    {
+      "description": "the foul message",
+      "metaData": {
+        "contentType": "application/json; charset\u003dUTF-8"
+      },
+      "contents": {
+        "payload": "",
+        "topic": "game/foul"
+      },
+      "providerStates": [
+        {
+          "name": "a team fouled"
+        }
+      ],
+      "matchingRules": {
+        "body": {
+          "$.topic": {
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ],
+            "combine": "AND"
+          },
+          "$.payload": {
+            "matchers": [
+              {
+                "match": "regex",
+                "regex": ".*"
+              }
+            ],
+            "combine": "AND"
+          }
+        }
+      }
     }
   ],
   "metadata": {

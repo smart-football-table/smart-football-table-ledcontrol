@@ -2,6 +2,7 @@ package ledcontrol;
 
 import static au.com.dius.pact.consumer.junit5.ProviderType.ASYNCH;
 import static java.awt.Color.BLACK;
+import static java.awt.Color.WHITE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -13,8 +14,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,6 +73,30 @@ class ContractTests {
 				.withContent(new PactDslJsonBody() //
 						.stringMatcher("topic", "team\\/score\\/\\d+", "team/score/0") //
 						.stringMatcher("payload", "\\d+", "1")) //
+				.toPact();
+	}
+
+	@Test
+	@PactTestFor(providerName = "cognition", pactMethod = "flashesOnFoulPact", providerType = ASYNCH)
+	void flashesOnFoul(MessagePact pact)
+			throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystem();
+		whenMessagesIsReceived(pact.getMessages());
+		TimeUnit.MILLISECONDS.sleep(40);
+		assertThat(lastPanelState(), is(new Color[][] { //
+				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
+				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
+		}));
+	}
+
+	@Pact(consumer = "ledcontrol")
+	MessagePact flashesOnFoulPact(MessagePactBuilder builder) {
+		return builder //
+				.given("a team fouled") //
+				.expectsToReceive("the foul message") //
+				.withContent(new PactDslJsonBody() //
+						.stringType("topic", "game/foul") //
+						.stringMatcher("payload", ".*", "")) //
 				.toPact();
 	}
 
