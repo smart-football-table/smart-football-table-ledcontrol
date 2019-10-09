@@ -1,20 +1,18 @@
 package ledcontrol;
 
 import static au.com.dius.pact.consumer.junit5.ProviderType.ASYNCH;
-import static java.awt.Color.BLACK;
-import static java.awt.Color.WHITE;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.awt.Color;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
@@ -49,6 +47,7 @@ class ContractTests {
 	private final StackedPanel panel = new StackedPanel(5, 2);
 
 	private LedControl ledControl;
+	private List<MessageWithTopic> messagesHandled;
 
 	@BeforeEach
 	void setup() throws IOException, MqttException {
@@ -60,10 +59,7 @@ class ContractTests {
 	void verifyTeamLeftScores(MessagePact pact) throws InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertThat(lastPanelState(), is(new Color[][] { //
-				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
-				{ COLOR_TEAM_LEFT, BLACK, BLACK, BLACK, BLACK }, //
-		}));
+		assertMessageWasHandled("team/score/0");
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -83,11 +79,11 @@ class ContractTests {
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		TimeUnit.MILLISECONDS.sleep(40);
-		assertThat(lastPanelState(), is(new Color[][] { //
-				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
-				{ WHITE, WHITE, WHITE, WHITE, WHITE }, //
-		}));
+		assertMessageWasHandled("game/foul");
+	}
+
+	private void assertMessageWasHandled(String topic) throws IOException {
+		assertThat(messagesHandled.stream().map(m -> m.getTopic()).collect(toList()), is(Arrays.asList(topic)));
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -99,33 +95,6 @@ class ContractTests {
 						.stringType("topic", "game/foul") //
 						.stringMatcher("payload", ".*", "")) //
 				.toPact();
-	}
-
-	private Color[][] lastPanelState() throws IOException {
-		return toColors(last(receivedFrames()));
-	}
-
-	private Color[][] toColors(Tpm2Frame frame) {
-		int height = panel.getHeight();
-		int width = panel.getWidth();
-		Color[][] colors = new Color[height][width];
-		for (int y = 0; y < height; y++) {
-			System.arraycopy(frame.getColors(), y * width, colors[y], 0, width);
-		}
-		return colors;
-	}
-
-	private List<Tpm2Frame> receivedFrames() throws IOException {
-		InputStream is = new ByteArrayInputStream(outputStream.toByteArray());
-		List<Tpm2Frame> frames = new ArrayList<Tpm2Frame>();
-		while (is.available() > 0) {
-			frames.add(Tpm2Frame.fromStream(is));
-		}
-		return frames;
-	}
-
-	private static <T> T last(List<T> list) throws IOException {
-		return list.get(list.size() - 1);
 	}
 
 	private void whenMessagesIsReceived(List<Message> messages) throws InterruptedException {
@@ -144,6 +113,7 @@ class ContractTests {
 	}
 
 	private void givenTheSystem() {
+		messagesHandled = new ArrayList<>();
 		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
 
 			protected ScoreScene scoreScene(Panel goalPanel) {
@@ -154,7 +124,13 @@ class ContractTests {
 				return idleScene;
 			};
 
-		}.configure(new LedControl(panel, outputStream), panel);
+		}.configure(new LedControl(panel, outputStream) {
+			@Override
+			protected void handleMessage(Consumer<MessageWithTopic> consumer, MessageWithTopic message) {
+				super.handleMessage(consumer, message);
+				messagesHandled.add(message);
+			}
+		}, panel);
 	}
 
 }
