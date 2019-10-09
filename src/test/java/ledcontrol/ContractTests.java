@@ -30,6 +30,7 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.annotations.Pact;
 import au.com.dius.pact.core.model.messaging.Message;
 import au.com.dius.pact.core.model.messaging.MessagePact;
+import ledcontrol.LedControl.MessageWithTopic;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.runner.Colors;
@@ -47,7 +48,7 @@ class ContractTests {
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 	private final StackedPanel panel = new StackedPanel(5, 2);
 
-	private TheSystem theSystem;
+	private LedControl ledControl;
 
 	@BeforeEach
 	void setup() throws IOException, MqttException {
@@ -133,19 +134,17 @@ class ContractTests {
 		}
 	}
 
-	private void whenMessageIsReceived(au.com.dius.pact.core.model.messaging.Message message)
-			throws InterruptedException {
-		theSystem.accept(toMessage(message));
+	private void whenMessageIsReceived(Message message) throws InterruptedException {
+		ledControl.accept(toMessage(message));
 	}
 
-	private ledcontrol.TheSystem.MessageWithTopic toMessage(au.com.dius.pact.core.model.messaging.Message message) {
+	private MessageWithTopic toMessage(Message message) {
 		JSONObject jsonObject = new JSONObject(message.contentsAsString());
-		return new ledcontrol.TheSystem.MessageWithTopic( //
-				jsonObject.getString("topic"), jsonObject.getString("payload"));
+		return new MessageWithTopic(jsonObject.getString("topic"), jsonObject.getString("payload"));
 	}
 
 	private void givenTheSystem() {
-		theSystem = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
+		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
 
 			protected ScoreScene scoreScene(Panel goalPanel) {
 				return super.scoreScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
@@ -155,7 +154,7 @@ class ContractTests {
 				return idleScene;
 			};
 
-		}.configure(new TheSystem(panel, outputStream), panel);
+		}.configure(new LedControl(panel, outputStream), panel);
 	}
 
 }

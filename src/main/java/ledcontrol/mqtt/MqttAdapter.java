@@ -12,7 +12,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import ledcontrol.TheSystem.MessageWithTopic;
+import ledcontrol.LedControl.MessageWithTopic;
 
 public class MqttAdapter implements Closeable {
 

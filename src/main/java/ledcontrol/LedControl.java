@@ -18,18 +18,18 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import ledcontrol.TheSystem.MessageWithTopic;
+import ledcontrol.LedControl.MessageWithTopic;
 import ledcontrol.panel.Panel;
 
-public class TheSystem implements Consumer<MessageWithTopic> {
+public class LedControl implements Consumer<MessageWithTopic> {
 
-	public static class TheSystemAnimator implements Animator {
+	public static class DefaultAnimator implements Animator {
 
-		public class TheSystemAnimatorTask implements AnimatorTask {
+		public class DefaultAnimatorTask implements AnimatorTask {
 
 			private final Runnable runnable;
 
-			public TheSystemAnimatorTask(Runnable runnable) {
+			public DefaultAnimatorTask(Runnable runnable) {
 				this.runnable = runnable;
 			}
 
@@ -43,7 +43,7 @@ public class TheSystem implements Consumer<MessageWithTopic> {
 		private final List<Runnable> callables = new CopyOnWriteArrayList<>();
 		private final long sleepMillis;
 
-		public TheSystemAnimator(int fps) {
+		public DefaultAnimator(int fps) {
 			sleepMillis = SECONDS.toMillis(1) / fps;
 			runAsync(() -> {
 				while (true) {
@@ -68,7 +68,7 @@ public class TheSystem implements Consumer<MessageWithTopic> {
 		@Override
 		public AnimatorTask start(Runnable runnable) {
 			callables.add(runnable);
-			return new TheSystemAnimatorTask(runnable);
+			return new DefaultAnimatorTask(runnable);
 		}
 	}
 
@@ -109,9 +109,9 @@ public class TheSystem implements Consumer<MessageWithTopic> {
 
 	private final Map<Predicate<MessageWithTopic>, Consumer<MessageWithTopic>> conditions = new HashMap<>();
 	private final int FPS = 25;
-	private final Animator animator = new TheSystemAnimator(FPS);
+	private final Animator animator = new DefaultAnimator(FPS);
 
-	public TheSystem(Panel panel, OutputStream outputStream) {
+	public LedControl(Panel panel, OutputStream outputStream) {
 		this.proto = Proto.forFrameSizes(outputStream, panel.getWidth() * panel.getHeight());
 		this.buffer = new Color[panel.getWidth() * panel.getHeight()];
 		panel.addRepaintListener(p -> repaint(p));
@@ -162,9 +162,9 @@ public class TheSystem implements Consumer<MessageWithTopic> {
 			this.predicate = predicate;
 		}
 
-		public TheSystem then(Consumer<MessageWithTopic> consumer) {
+		public LedControl then(Consumer<MessageWithTopic> consumer) {
 			conditions.put(predicate, consumer);
-			return TheSystem.this;
+			return LedControl.this;
 		}
 
 	}

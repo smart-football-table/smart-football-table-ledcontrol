@@ -6,8 +6,8 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static ledcontrol.TheSystem.MessageWithTopic.topicIsEqualTo;
-import static ledcontrol.TheSystem.MessageWithTopic.topicStartWith;
+import static ledcontrol.LedControl.MessageWithTopic.topicIsEqualTo;
+import static ledcontrol.LedControl.MessageWithTopic.topicStartWith;
 import static ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
 import static ledcontrol.runner.Colors.FUCHSIA;
 import static ledcontrol.runner.Colors.GREEN;
@@ -31,8 +31,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import ledcontrol.TheSystem;
-import ledcontrol.TheSystem.MessageWithTopic;
+import ledcontrol.LedControl;
+import ledcontrol.LedControl.MessageWithTopic;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.mqtt.MqttAdapter;
 import ledcontrol.panel.Panel;
@@ -55,7 +55,7 @@ public class SystemRunner {
 			this.teamColors = teamColors;
 		}
 
-		public TheSystem configure(TheSystem theSystem, StackedPanel panel) {
+		public LedControl configure(LedControl ledControl, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
 			Panel goalPanel = panel.createSubPanel();
 			Panel foulPanel = panel.createSubPanel();
@@ -67,7 +67,7 @@ public class SystemRunner {
 			IdleScene idleScene = idleScene(idlePanel);
 
 			return //
-			theSystem //
+			ledControl //
 					.when(topicIsEqualTo("leds/backgroundlight/color"))
 					.then(m -> backgroundPanel.fill(colorFromPayload(m)).repaint()) //
 					.when(topicIsEqualTo("leds/foregroundlight/color")) //
@@ -81,7 +81,7 @@ public class SystemRunner {
 									flash(color, 24), flash(BLACK, 24), //
 									flash(color, 24), flash(BLACK, 24), //
 									flash(color, 24), flash(BLACK, 24));
-							fc.flash(theSystem.getAnimator());
+							fc.flash(ledControl.getAnimator());
 						}
 
 					}) //
@@ -91,7 +91,7 @@ public class SystemRunner {
 						scoreScene.setScore(teamid, parseInt(m.getPayload()));
 					}) //
 					.when(topicIsEqualTo("game/foul")) //
-					.then(m -> foulScene(foulPanel).flash(theSystem.getAnimator())) //
+					.then(m -> foulScene(foulPanel).flash(ledControl.getAnimator())) //
 					.when(topicIsEqualTo("game/gameover")) //
 					.then(m -> {
 						Color[] flashColors = getFlashColors(m);
@@ -104,12 +104,12 @@ public class SystemRunner {
 								flash(flashColors[1], 6), flash(BLACK, 6), //
 								flash(flashColors[0], 6), flash(BLACK, 6), //
 								flash(flashColors[1], 6), flash(BLACK, 6));
-						winnerScene.flash(theSystem.getAnimator());
+						winnerScene.flash(ledControl.getAnimator());
 					}) //
 					.when(topicIsEqualTo("game/idle")) //
 					.then(m -> {
 						if (parseBoolean(m.getPayload())) {
-							idleScene.startAnimation(theSystem.getAnimator());
+							idleScene.startAnimation(ledControl.getAnimator());
 						} else {
 							idleScene.stopAnimation().reset();
 						}
@@ -179,9 +179,9 @@ public class SystemRunner {
 		SerialConnection connection = new SerialConnection(tty, baudrate);
 		SECONDS.sleep(2);
 		StackedPanel panel = new StackedPanel(leds, 1);
-		TheSystem system = new TheSystem(panel, connection.getOutputStream());
-		try (MqttAdapter mqttAdapter = new MqttAdapter(mqttHost, mqttPort, system)) {
-			new Configurator().configure(system, panel);
+		LedControl ledControl = new LedControl(panel, connection.getOutputStream());
+		try (MqttAdapter mqttAdapter = new MqttAdapter(mqttHost, mqttPort, ledControl)) {
+			new Configurator().configure(ledControl, panel);
 			Object o = new Object();
 			synchronized (o) {
 				o.wait();

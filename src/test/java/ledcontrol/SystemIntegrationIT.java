@@ -73,7 +73,7 @@ class SystemIntegrationIT {
 
 	private Server server;
 	private MqttAdapter mqttAdapter;
-	private TheSystem theSystem;
+	private LedControl ledControl;
 	private IMqttClient secondClient;
 
 	private final Lock lock = new ReentrantLock();
@@ -234,7 +234,7 @@ class SystemIntegrationIT {
 			AtomicInteger incremntor = new AtomicInteger(0);
 			Runnable incremetor = () -> incremntor.incrementAndGet();
 			assertThat(incremntor.get(), is(0));
-			AnimatorTask task = theSystem.getAnimator().start(incremetor);
+			AnimatorTask task = ledControl.getAnimator().start(incremetor);
 			await().until(() -> incremntor.get(), is(not(0)));
 
 			task.stop();
@@ -303,7 +303,7 @@ class SystemIntegrationIT {
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
-		theSystem = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
+		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
 
 			protected ScoreScene scoreScene(Panel goalPanel) {
 				return super.scoreScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
@@ -313,7 +313,7 @@ class SystemIntegrationIT {
 				return idleScene;
 			};
 
-		}.configure(new TheSystem(panel, outputStream) {
+		}.configure(new LedControl(panel, outputStream) {
 
 			@Override
 			protected void handleMessage(Consumer<MessageWithTopic> consumer, MessageWithTopic message) {
@@ -328,7 +328,7 @@ class SystemIntegrationIT {
 
 			}
 		}, panel);
-		mqttAdapter = new MqttAdapter(host, port, theSystem);
+		mqttAdapter = new MqttAdapter(host, port, ledControl);
 	}
 
 }
