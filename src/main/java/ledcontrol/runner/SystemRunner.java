@@ -29,6 +29,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import ledcontrol.Animator;
 import ledcontrol.LedControl;
 import ledcontrol.LedControl.ChainElement;
 import ledcontrol.LedControl.MessageWithTopic;
@@ -52,7 +53,7 @@ public class SystemRunner {
 				this.panel = panel;
 			}
 
-			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+			public boolean handle(MessageWithTopic message, Animator animator) {
 				if (message.getTopic().equals("leds/backgroundlight/color")) {
 					panel.fill(colorFromPayload(message)).repaint();
 					return true;
@@ -69,7 +70,7 @@ public class SystemRunner {
 			}
 
 			@Override
-			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+			public boolean handle(MessageWithTopic message, Animator animator) {
 				if (message.getTopic().equals("leds/foregroundlight/color")) {
 					panel.fill(colorFromPayload(message)).repaint();
 					return true;
@@ -88,7 +89,7 @@ public class SystemRunner {
 			}
 
 			@Override
-			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+			public boolean handle(MessageWithTopic message, Animator animator) {
 				if (message.getTopic().equals("leds/foregroundlight/color")) {
 					int idx = parseInt(message.getPayload());
 					if (idx >= 0 && idx < teamColors.length) {
@@ -97,7 +98,7 @@ public class SystemRunner {
 								flash(color, 24), flash(BLACK, 24), //
 								flash(color, 24), flash(BLACK, 24), //
 								flash(color, 24), flash(BLACK, 24));
-						scene.flash(ledControl.getAnimator());
+						scene.flash(animator);
 					}
 					return true;
 				}
@@ -118,7 +119,7 @@ public class SystemRunner {
 			}
 
 			@Override
-			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+			public boolean handle(MessageWithTopic message, Animator animator) {
 				if (message.getTopic().startsWith("team/score/")) {
 					int teamid = parseInt(message.getTopic().substring("team/score/".length()));
 					this.scoreScene.setScore(teamid, parseInt(message.getPayload()));
@@ -137,9 +138,9 @@ public class SystemRunner {
 						flash(WHITE, 6), flash(BLACK, 6));
 			}
 
-			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+			public boolean handle(MessageWithTopic message, Animator animator) {
 				if (message.getTopic().equals("game/foul")) {
-					scene.flash(ledControl.getAnimator());
+					scene.flash(animator);
 					return true;
 				}
 				return false;
@@ -156,7 +157,7 @@ public class SystemRunner {
 			}
 
 			@Override
-			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+			public boolean handle(MessageWithTopic message, Animator animator) {
 				if (message.getTopic().equals("game/gameover")) {
 					Color[] flashColors = getFlashColors(message);
 					FlashScene scene = new FlashScene(winnerPanel, //
@@ -168,7 +169,7 @@ public class SystemRunner {
 							flash(flashColors[1], 6), flash(BLACK, 6), //
 							flash(flashColors[0], 6), flash(BLACK, 6), //
 							flash(flashColors[1], 6), flash(BLACK, 6));
-					scene.flash(ledControl.getAnimator());
+					scene.flash(animator);
 					return true;
 				}
 				return false;
@@ -197,10 +198,10 @@ public class SystemRunner {
 			}
 
 			@Override
-			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+			public boolean handle(MessageWithTopic message, Animator animator) {
 				if (message.getTopic().equals("game/idle")) {
 					if (parseBoolean(message.getPayload())) {
-						scene.startAnimation(ledControl.getAnimator());
+						scene.startAnimation(animator);
 					} else {
 						scene.stopAnimation().reset();
 					}

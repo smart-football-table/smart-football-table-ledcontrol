@@ -118,7 +118,7 @@ class ContractTests {
 	}
 
 	private void assertWasHandled(Class<? extends ChainElement> clazz) {
-		verify(spies.get(clazz)).handle(any(MessageWithTopic.class), any(LedControl.class));
+		verify(spies.get(clazz)).handle(any(MessageWithTopic.class), any(Animator.class));
 	}
 
 	private void whenMessageIsReceived(Message message) throws InterruptedException {

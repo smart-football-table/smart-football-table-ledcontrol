@@ -277,7 +277,7 @@ class SystemIntegrationIT {
 	}
 
 	private void assertWasHandled(Class<? extends ChainElement> name) {
-		verify(spies.get(name), timeout(500)).handle(any(MessageWithTopic.class), any(LedControl.class));
+		verify(spies.get(name), timeout(500)).handle(any(MessageWithTopic.class), any(Animator.class));
 	}
 
 	private static <T> T last(List<T> list) throws IOException {

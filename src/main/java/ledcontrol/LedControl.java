@@ -103,7 +103,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	}
 
 	public static interface ChainElement {
-		abstract boolean handle(MessageWithTopic message, LedControl ledControl);
+		abstract boolean handle(MessageWithTopic message, Animator animator);
 	}
 
 	private final Proto proto;
@@ -147,7 +147,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	public void accept(MessageWithTopic message) {
 		for (ChainElement element : elements) {
 			try {
-				if (element.handle(message, this)) {
+				if (element.handle(message, getAnimator())) {
 					return;
 				}
 			} catch (Exception e) {
