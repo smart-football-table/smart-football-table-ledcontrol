@@ -99,19 +99,23 @@ public class SystemRunner {
 			}
 		}
 
-		private static class Score extends ChainElement {
+		public static class Score extends ChainElement {
 
 			private final ScoreScene scoreScene;
 
-			private Score(Panel panel, ScoreScene scoreScene) {
+			public Score(ScoreScene scoreScene) {
 				super(topicStartWith("team/score/"));
 				this.scoreScene = scoreScene;
+			}
+
+			public ScoreScene getScoreScene() {
+				return scoreScene;
 			}
 
 			@Override
 			public void handle(MessageWithTopic message, LedControl ledControl) {
 				int teamid = parseInt(message.getTopic().substring("team/score/".length()));
-				scoreScene.setScore(teamid, parseInt(message.getPayload()));
+				this.scoreScene.setScore(teamid, parseInt(message.getPayload()));
 			}
 		}
 
@@ -210,16 +214,11 @@ public class SystemRunner {
 			return ledControl.addAll(new Background(backgroundPanel), //
 					new Foreground(foregroundPanel), //
 					new Scored(winnerPanel, teamColors), //
-					new Score(scorePanel, scoreScene(scorePanel)), //
+					new Score(new ScoreScene(panel, teamColors[0], teamColors[1]).pixelsPerGoal(5).spaceDots(1)), //
 					new Foul(foulPanel), //
 					new Gameover(winnerPanel, teamColors), //
 					new Idle(idlePanel, idleScene(idlePanel)) //
 			);
-		}
-
-		@Deprecated
-		protected ScoreScene scoreScene(Panel panel) {
-			return new ScoreScene(panel, teamColors[0], teamColors[1]).pixelsPerGoal(5).spaceDots(1);
 		}
 
 		@Deprecated

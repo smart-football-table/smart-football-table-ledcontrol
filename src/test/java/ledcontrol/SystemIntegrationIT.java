@@ -13,7 +13,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import java.awt.Color;
@@ -25,6 +25,7 @@ import java.net.ServerSocket;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,6 +33,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.collections4.map.HashedMap;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -46,13 +48,13 @@ import org.junit.jupiter.api.Test;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 import ledcontrol.Animator.AnimatorTask;
+import ledcontrol.LedControl.ChainElement;
+import ledcontrol.LedControl.MessageWithTopic;
 import ledcontrol.mqtt.MqttAdapter;
-import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.runner.Colors;
 import ledcontrol.runner.SystemRunner.Configurator;
-import ledcontrol.scene.IdleScene;
-import ledcontrol.scene.ScoreScene;
+import ledcontrol.runner.SystemRunner.Configurator.Score;
 
 class SystemIntegrationIT {
 
@@ -62,10 +64,9 @@ class SystemIntegrationIT {
 	private static final Color COLOR_TEAM_LEFT = Colors.BLUE;
 	private static final Color COLOR_TEAM_RIGHT = Colors.ORANGE;
 
-	private IdleScene idleScene = mock(IdleScene.class);
-
 	private int brokerPort;
 
+	private final Map<String, ChainElement> spies = new HashedMap<>();
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
 	private final StackedPanel panel = new StackedPanel(5, 2);
@@ -74,10 +75,6 @@ class SystemIntegrationIT {
 	private MqttAdapter mqttAdapter;
 	private LedControl ledControl;
 	private IMqttClient secondClient;
-
-	private final Lock lock = new ReentrantLock();
-	private final Condition consumed = lock.newCondition();
-	private int unconsumedMessages;
 
 	@BeforeEach
 	void setup() throws IOException, MqttException {
@@ -164,7 +161,7 @@ class SystemIntegrationIT {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
 			MILLISECONDS.sleep(40);
-			verify(idleScene).startAnimation(any(Animator.class));
+			assertWasHandled("Idle");
 		});
 	}
 
@@ -256,7 +253,7 @@ class SystemIntegrationIT {
 			await().atMost(10, SECONDS).until(secondClient::isConnected);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
 			MILLISECONDS.sleep(40);
-			verify(idleScene).startAnimation(any(Animator.class));
+			assertWasHandled("Idle");
 		});
 	}
 
@@ -283,50 +280,29 @@ class SystemIntegrationIT {
 		return frames;
 	}
 
+	private void assertWasHandled(String name) {
+		verify(spies.get(name)).handle(any(MessageWithTopic.class), any(LedControl.class));
+	}
+
 	private static <T> T last(List<T> list) throws IOException {
 		return list.get(list.size() - 1);
 	}
 
 	private void whenMessageIsReceived(String host, int port, String topic, String message)
 			throws MqttSecurityException, MqttException, InterruptedException {
-		lock.lock();
-		try {
-			unconsumedMessages++;
-			secondClient.publish(topic, new MqttMessage(message.getBytes()));
-			while (unconsumedMessages > 0) {
-				consumed.await();
-			}
-		} finally {
-			lock.unlock();
-		}
+		secondClient.publish(topic, new MqttMessage(message.getBytes()));
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
-		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
-
+		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT).configure(new LedControl(panel, outputStream) {
 			@Override
-			protected ScoreScene scoreScene(Panel goalPanel) {
-				return super.scoreScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
-			}
-
-			@Override
-			protected IdleScene idleScene(Panel idlePanel) {
-				return idleScene;
-			};
-
-		}.configure(new LedControl(panel, outputStream) {
-
-			@Override
-			protected void handleMessage(ChainElement element, MessageWithTopic message) {
-				super.handleMessage(element, message);
-				lock.lock();
-				try {
-					unconsumedMessages--;
-					consumed.signalAll();
-				} finally {
-					lock.unlock();
+			public LedControl add(ChainElement element) {
+				if (element instanceof Score) {
+					element = new Score(((Score) element).getScoreScene().pixelsPerGoal(1).spaceDots(0));
 				}
-
+				ChainElement spy = spy(element);
+				spies.put(element.getClass().getSimpleName(), spy);
+				return super.add(spy);
 			}
 		}, panel);
 		mqttAdapter = new MqttAdapter(host, port, ledControl);
