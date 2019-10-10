@@ -1,25 +1,25 @@
 package ledcontrol;
 
 import static au.com.dius.pact.consumer.junit5.ProviderType.ASYNCH;
-import static java.util.stream.Collectors.toList;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Map;
 
+import org.apache.commons.collections4.map.HashedMap;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockingDetails;
+import org.mockito.Mockito;
 
 import au.com.dius.pact.consumer.MessagePactBuilder;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
@@ -28,12 +28,12 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.annotations.Pact;
 import au.com.dius.pact.core.model.messaging.Message;
 import au.com.dius.pact.core.model.messaging.MessagePact;
+import ledcontrol.LedControl.ChainElement;
 import ledcontrol.LedControl.MessageWithTopic;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.runner.Colors;
 import ledcontrol.runner.SystemRunner.Configurator;
-import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
 
 @ExtendWith(PactConsumerTestExt.class)
@@ -42,12 +42,12 @@ class ContractTests {
 	private static final Color COLOR_TEAM_LEFT = Colors.BLUE;
 	private static final Color COLOR_TEAM_RIGHT = Colors.ORANGE;
 
-	private final IdleScene idleScene = mock(IdleScene.class);
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 	private final StackedPanel panel = new StackedPanel(5, 2);
 
 	private LedControl ledControl;
-	private List<MessageWithTopic> messagesHandled;
+
+	private final Map<String, ChainElement> spies = new HashedMap<>();
 
 	@BeforeEach
 	void setup() throws IOException, MqttException {
@@ -59,7 +59,7 @@ class ContractTests {
 	void verifyTeamLeftScores(MessagePact pact) throws InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertMessageWasHandled("team/score/0");
+		assertWasHandled("teamScore");
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -79,11 +79,7 @@ class ContractTests {
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertMessageWasHandled("game/foul");
-	}
-
-	private void assertMessageWasHandled(String topic) throws IOException {
-		assertThat(messagesHandled.stream().map(m -> m.getTopic()).collect(toList()), is(Arrays.asList(topic)));
+		assertWasHandled("gameFoul");
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -103,6 +99,10 @@ class ContractTests {
 		}
 	}
 
+	private void assertWasHandled(String name) {
+		verify(spies.get(name)).accept(any(MessageWithTopic.class));
+	}
+
 	private void whenMessageIsReceived(Message message) throws InterruptedException {
 		ledControl.accept(toMessage(message));
 	}
@@ -113,24 +113,27 @@ class ContractTests {
 	}
 
 	private void givenTheSystem() {
-		messagesHandled = new ArrayList<>();
 		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
 
 			protected ScoreScene scoreScene(Panel goalPanel) {
 				return super.scoreScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
 			}
 
-			protected ledcontrol.scene.IdleScene idleScene(ledcontrol.panel.Panel idlePanel) {
-				return idleScene;
+			protected ChainElement gameFoul(LedControl ledControl, Panel panel) {
+				return makeSpy("gameFoul", super.gameFoul(ledControl, panel));
 			};
 
-		}.configure(new LedControl(panel, outputStream) {
-			@Override
-			protected void handleMessage(Consumer<MessageWithTopic> consumer, MessageWithTopic message) {
-				super.handleMessage(consumer, message);
-				messagesHandled.add(message);
+			protected ChainElement teamScore(Panel panel) {
+				return makeSpy("teamScore", super.teamScore(panel));
 			}
-		}, panel);
+
+			private ChainElement makeSpy(String name, ChainElement element) {
+				ChainElement spy = spy(element);
+				spies.put(name, spy);
+				return spy;
+			};
+
+		}.configure(new LedControl(panel, outputStream), panel);
 	}
 
 }

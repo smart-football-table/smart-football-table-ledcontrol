@@ -32,6 +32,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import ledcontrol.LedControl;
+import ledcontrol.LedControl.ChainElement;
 import ledcontrol.LedControl.MessageWithTopic;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.mqtt.MqttAdapter;
@@ -57,72 +58,91 @@ public class SystemRunner {
 
 		public LedControl configure(LedControl ledControl, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
-			Panel goalPanel = panel.createSubPanel();
+			Panel scorePanel = panel.createSubPanel();
 			Panel foulPanel = panel.createSubPanel();
 			Panel winnerPanel = panel.createSubPanel();
 			Panel idlePanel = panel.createSubPanel();
-			Panel foregrounddPanel = panel.createSubPanel().fill(BLACK).overlayStrategy(transparentOn(BLACK));
-
-			ScoreScene scoreScene = scoreScene(goalPanel);
-			IdleScene idleScene = idleScene(idlePanel);
-
-			return //
-			ledControl //
-					.when(topicIsEqualTo("leds/backgroundlight/color"))
-					.then(m -> backgroundPanel.fill(colorFromPayload(m)).repaint()) //
-					.when(topicIsEqualTo("leds/foregroundlight/color")) //
-					.then(m -> foregrounddPanel.fill(colorFromPayload(m)).repaint()) //
-					.when(topicIsEqualTo("team/scored")) //
-					.then(m -> {
-						int idx = parseInt(m.getPayload());
-						if (idx >= 0 && idx < teamColors.length) {
-							Color color = teamColors[idx];
-							FlashScene fc = new FlashScene(winnerPanel, //
-									flash(color, 24), flash(BLACK, 24), //
-									flash(color, 24), flash(BLACK, 24), //
-									flash(color, 24), flash(BLACK, 24));
-							fc.flash(ledControl.getAnimator());
-						}
-
-					}) //
-					.when(topicStartWith("team/score/")) //
-					.then(m -> {
-						int teamid = parseInt(m.getTopic().substring("team/score/".length()));
-						scoreScene.setScore(teamid, parseInt(m.getPayload()));
-					}) //
-					.when(topicIsEqualTo("game/foul")) //
-					.then(m -> foulScene(foulPanel).flash(ledControl.getAnimator())) //
-					.when(topicIsEqualTo("game/gameover")) //
-					.then(m -> {
-						Color[] flashColors = getFlashColors(m);
-						FlashScene winnerScene = new FlashScene(winnerPanel, //
-								flash(flashColors[0], 24), flash(BLACK, 24), //
-								flash(flashColors[1], 24), flash(BLACK, 24), //
-								flash(flashColors[0], 24), flash(BLACK, 24), //
-								flash(flashColors[1], 24), flash(BLACK, 24), //
-								flash(flashColors[0], 6), flash(BLACK, 6), //
-								flash(flashColors[1], 6), flash(BLACK, 6), //
-								flash(flashColors[0], 6), flash(BLACK, 6), //
-								flash(flashColors[1], 6), flash(BLACK, 6));
-						winnerScene.flash(ledControl.getAnimator());
-					}) //
-					.when(topicIsEqualTo("game/idle")) //
-					.then(m -> {
-						if (parseBoolean(m.getPayload())) {
-							idleScene.startAnimation(ledControl.getAnimator());
-						} else {
-							idleScene.stopAnimation().reset();
-						}
-					});
+			Panel foregroundPanel = panel.createSubPanel().fill(BLACK).overlayStrategy(transparentOn(BLACK));
+			return ledControl.addAll(backgroundLight(backgroundPanel), //
+					foregroundLight(foregroundPanel), //
+					teamScored(ledControl, winnerPanel), //
+					teamScore(scorePanel), //
+					gameFoul(ledControl, foulPanel), //
+					gameover(ledControl, winnerPanel), //
+					idle(ledControl, idlePanel) //
+			);
 		}
 
-		private Color[] getFlashColors(MessageWithTopic message) {
+		protected ChainElement idle(LedControl ledControl, Panel panel) {
+			IdleScene idleScene = idleScene(panel);
+			return new ChainElement(topicIsEqualTo("game/idle"), m -> {
+				if (parseBoolean(m.getPayload())) {
+					idleScene.startAnimation(ledControl.getAnimator());
+				} else {
+					idleScene.stopAnimation().reset();
+				}
+			});
+		}
+
+		protected ChainElement gameover(LedControl ledControl, Panel winnerPanel) {
+			return new ChainElement(topicIsEqualTo("game/gameover"), m -> {
+				Color[] flashColors = getFlashColors(m);
+				FlashScene winnerScene = new FlashScene(winnerPanel, //
+						flash(flashColors[0], 24), flash(BLACK, 24), //
+						flash(flashColors[1], 24), flash(BLACK, 24), //
+						flash(flashColors[0], 24), flash(BLACK, 24), //
+						flash(flashColors[1], 24), flash(BLACK, 24), //
+						flash(flashColors[0], 6), flash(BLACK, 6), //
+						flash(flashColors[1], 6), flash(BLACK, 6), //
+						flash(flashColors[0], 6), flash(BLACK, 6), //
+						flash(flashColors[1], 6), flash(BLACK, 6));
+				winnerScene.flash(ledControl.getAnimator());
+			});
+		}
+
+		protected Color[] getFlashColors(MessageWithTopic message) {
 			int[] winners = Arrays.stream(message.getPayload().split("\\,")).mapToInt(Integer::parseInt).toArray();
 			if (winners.length > 1) {
 				return teamColors;
 			}
 			return contains(winners, 0) ? new Color[] { teamColors[0], teamColors[0] }
 					: new Color[] { teamColors[1], teamColors[1] };
+		}
+
+		protected ChainElement gameFoul(LedControl ledControl, Panel panel) {
+			return new ChainElement(topicIsEqualTo("game/foul"), m -> foulScene(panel).flash(ledControl.getAnimator()));
+		}
+
+		protected ChainElement teamScore(Panel panel) {
+			ScoreScene scoreScene = scoreScene(panel);
+			return new ChainElement(topicStartWith("team/score/"), m -> {
+				int teamid = parseInt(m.getTopic().substring("team/score/".length()));
+				scoreScene.setScore(teamid, parseInt(m.getPayload()));
+			});
+		}
+
+		protected ChainElement teamScored(LedControl ledControl, Panel panel) {
+			return new ChainElement(topicIsEqualTo("team/scored"), m -> {
+				int idx = parseInt(m.getPayload());
+				if (idx >= 0 && idx < teamColors.length) {
+					Color color = teamColors[idx];
+					FlashScene fc = new FlashScene(panel, //
+							flash(color, 24), flash(BLACK, 24), //
+							flash(color, 24), flash(BLACK, 24), //
+							flash(color, 24), flash(BLACK, 24));
+					fc.flash(ledControl.getAnimator());
+				}
+			});
+		}
+
+		protected ChainElement foregroundLight(Panel panel) {
+			return new ChainElement(topicIsEqualTo("leds/foregroundlight/color"),
+					m -> panel.fill(colorFromPayload(m)).repaint());
+		}
+
+		private ledcontrol.LedControl.ChainElement backgroundLight(Panel panel) {
+			return new ChainElement(topicIsEqualTo("leds/backgroundlight/color"),
+					m -> panel.fill(colorFromPayload(m)).repaint());
 		}
 
 		private boolean contains(int[] winners, int team) {

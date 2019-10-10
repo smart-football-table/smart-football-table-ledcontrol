@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -316,8 +315,8 @@ class SystemIntegrationIT {
 		}.configure(new LedControl(panel, outputStream) {
 
 			@Override
-			protected void handleMessage(Consumer<MessageWithTopic> consumer, MessageWithTopic message) {
-				super.handleMessage(consumer, message);
+			protected void handleMessage(ChainElement element, MessageWithTopic message) {
+				super.handleMessage(element, message);
 				lock.lock();
 				try {
 					unconsumedMessages--;

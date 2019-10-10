@@ -9,10 +9,9 @@ import static java.util.function.Predicate.isEqual;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -35,12 +34,12 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 			@Override
 			public void stop() {
-				callables.remove(this.runnable);
+				runnables.remove(this.runnable);
 			}
 
 		}
 
-		private final List<Runnable> callables = new CopyOnWriteArrayList<>();
+		private final List<Runnable> runnables = new CopyOnWriteArrayList<>();
 		private final long sleepMillis;
 
 		public DefaultAnimator(int fps) {
@@ -48,7 +47,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 			runAsync(() -> {
 				while (true) {
 					long startTime = System.currentTimeMillis();
-					for (Runnable runnable : callables) {
+					for (Runnable runnable : runnables) {
 						try {
 							runnable.run();
 						} catch (Exception e) {
@@ -67,7 +66,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 		@Override
 		public AnimatorTask start(Runnable runnable) {
-			callables.add(runnable);
+			runnables.add(runnable);
 			return new DefaultAnimatorTask(runnable);
 		}
 	}
@@ -104,16 +103,41 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 	}
 
+	public static class ChainElement implements Consumer<MessageWithTopic> {
+
+		private final Predicate<MessageWithTopic> condition;
+		private final Consumer<MessageWithTopic> consumer;
+
+		public ChainElement(Predicate<MessageWithTopic> condition, Consumer<MessageWithTopic> consumer) {
+			this.condition = condition;
+			this.consumer = consumer;
+		}
+
+		public boolean canHandle(MessageWithTopic message) {
+			return condition.test(message);
+		}
+
+		@Override
+		public void accept(MessageWithTopic message) {
+			consumer.accept(message);
+		}
+
+	}
+
 	private final Proto proto;
 	private final Color[] buffer;
 
-	private final Map<Predicate<MessageWithTopic>, Consumer<MessageWithTopic>> conditions = new HashMap<>();
-	private final int FPS = 25;
-	private final Animator animator = new DefaultAnimator(FPS);
+	private final List<ChainElement> elements = new ArrayList<>();
+	private final Animator animator;
 
 	public LedControl(Panel panel, OutputStream outputStream) {
+		this(panel, outputStream, new DefaultAnimator(25));
+	}
+
+	public LedControl(Panel panel, OutputStream outputStream, Animator animator) {
 		this.proto = Proto.forFrameSizes(outputStream, panel.getWidth() * panel.getHeight());
 		this.buffer = new Color[panel.getWidth() * panel.getHeight()];
+		this.animator = animator;
 		panel.addRepaintListener(p -> repaint(p));
 		panel.repaint();
 	}
@@ -139,10 +163,10 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	}
 
 	public void accept(MessageWithTopic message) {
-		for (Entry<Predicate<MessageWithTopic>, Consumer<MessageWithTopic>> entry : conditions.entrySet()) {
-			if (entry.getKey().test(message)) {
+		for (ChainElement element : elements) {
+			if (element.canHandle(message)) {
 				try {
-					handleMessage(entry.getValue(), message);
+					handleMessage(element, message);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -150,27 +174,18 @@ public class LedControl implements Consumer<MessageWithTopic> {
 		}
 	}
 
-	protected void handleMessage(Consumer<MessageWithTopic> consumer, MessageWithTopic message) {
-		consumer.accept(message);
+	protected void handleMessage(ChainElement element, MessageWithTopic message) {
+		element.accept(message);
 	}
 
-	public class When {
-
-		private final Predicate<MessageWithTopic> predicate;
-
-		public When(Predicate<MessageWithTopic> predicate) {
-			this.predicate = predicate;
-		}
-
-		public LedControl then(Consumer<MessageWithTopic> consumer) {
-			conditions.put(predicate, consumer);
-			return LedControl.this;
-		}
-
+	public LedControl addAll(ChainElement... elements) {
+		Collections.addAll(this.elements, elements);
+		return this;
 	}
 
-	public When when(Predicate<MessageWithTopic> predicate) {
-		return new When(predicate);
+	public LedControl add(ChainElement chainElement) {
+		elements.add(chainElement);
+		return this;
 	}
 
 	public Animator getAnimator() {
