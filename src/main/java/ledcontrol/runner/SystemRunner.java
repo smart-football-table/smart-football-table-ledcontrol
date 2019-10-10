@@ -46,7 +46,7 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		private static class Background extends ChainElement {
+		public static class Background extends ChainElement {
 
 			private final Panel panel;
 
@@ -61,7 +61,7 @@ public class SystemRunner {
 			}
 		}
 
-		private static class Foreground extends ChainElement {
+		public static class Foreground extends ChainElement {
 			private final Panel panel;
 
 			private Foreground(Panel panel) {
@@ -75,7 +75,7 @@ public class SystemRunner {
 			}
 		}
 
-		private static class Scored extends ChainElement {
+		public static class Scored extends ChainElement {
 			private final Panel panel;
 			private final Color[] teamColors;
 
@@ -119,7 +119,7 @@ public class SystemRunner {
 			}
 		}
 
-		private static class Foul extends ChainElement {
+		public static class Foul extends ChainElement {
 
 			private final FlashScene scene;
 
@@ -135,7 +135,7 @@ public class SystemRunner {
 			}
 		}
 
-		private static class Gameover extends ChainElement {
+		public static class Gameover extends ChainElement {
 			private final Panel winnerPanel;
 			private final Color[] teamColors;
 
@@ -175,7 +175,7 @@ public class SystemRunner {
 
 		}
 
-		private static class Idle extends ChainElement {
+		public static class Idle extends ChainElement {
 			private final IdleScene scene;
 
 			private Idle(Panel panel, IdleScene scene) {
@@ -214,7 +214,7 @@ public class SystemRunner {
 			return ledControl.addAll(new Background(backgroundPanel), //
 					new Foreground(foregroundPanel), //
 					new Scored(winnerPanel, teamColors), //
-					new Score(new ScoreScene(panel, teamColors[0], teamColors[1]).pixelsPerGoal(5).spaceDots(1)), //
+					new Score(new ScoreScene(scorePanel, teamColors[0], teamColors[1]).pixelsPerGoal(5).spaceDots(1)), //
 					new Foul(foulPanel), //
 					new Gameover(winnerPanel, teamColors), //
 					new Idle(idlePanel, idleScene(idlePanel)) //

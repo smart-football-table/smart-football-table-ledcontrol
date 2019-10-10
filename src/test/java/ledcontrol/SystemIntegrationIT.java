@@ -5,7 +5,6 @@ import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.awt.Color.BLACK;
 import static java.awt.Color.decode;
 import static java.time.Duration.ofSeconds;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
@@ -14,6 +13,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import java.awt.Color;
@@ -29,9 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.collections4.map.HashedMap;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -54,6 +51,7 @@ import ledcontrol.mqtt.MqttAdapter;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.runner.Colors;
 import ledcontrol.runner.SystemRunner.Configurator;
+import ledcontrol.runner.SystemRunner.Configurator.Idle;
 import ledcontrol.runner.SystemRunner.Configurator.Score;
 
 class SystemIntegrationIT {
@@ -66,7 +64,7 @@ class SystemIntegrationIT {
 
 	private int brokerPort;
 
-	private final Map<String, ChainElement> spies = new HashedMap<>();
+	private final Map<Class<? extends ChainElement>, ChainElement> spies = new HashedMap<>();
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
 	private final StackedPanel panel = new StackedPanel(5, 2);
@@ -160,8 +158,7 @@ class SystemIntegrationIT {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
-			MILLISECONDS.sleep(40);
-			assertWasHandled("Idle");
+			assertWasHandled(Idle.class);
 		});
 	}
 
@@ -252,8 +249,7 @@ class SystemIntegrationIT {
 			// does the reconnected client subscribe to the topics again?
 			await().atMost(10, SECONDS).until(secondClient::isConnected);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
-			MILLISECONDS.sleep(40);
-			assertWasHandled("Idle");
+			assertWasHandled(Idle.class);
 		});
 	}
 
@@ -280,8 +276,8 @@ class SystemIntegrationIT {
 		return frames;
 	}
 
-	private void assertWasHandled(String name) {
-		verify(spies.get(name)).handle(any(MessageWithTopic.class), any(LedControl.class));
+	private void assertWasHandled(Class<? extends ChainElement> name) {
+		verify(spies.get(name), timeout(500)).handle(any(MessageWithTopic.class), any(LedControl.class));
 	}
 
 	private static <T> T last(List<T> list) throws IOException {
@@ -301,7 +297,7 @@ class SystemIntegrationIT {
 					element = new Score(((Score) element).getScoreScene().pixelsPerGoal(1).spaceDots(0));
 				}
 				ChainElement spy = spy(element);
-				spies.put(element.getClass().getSimpleName(), spy);
+				spies.put(element.getClass(), spy);
 				return super.add(spy);
 			}
 		}, panel);

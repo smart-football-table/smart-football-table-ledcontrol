@@ -31,6 +31,9 @@ import ledcontrol.LedControl.MessageWithTopic;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.runner.Colors;
 import ledcontrol.runner.SystemRunner.Configurator;
+import ledcontrol.runner.SystemRunner.Configurator.Foul;
+import ledcontrol.runner.SystemRunner.Configurator.Idle;
+import ledcontrol.runner.SystemRunner.Configurator.Score;
 
 @ExtendWith(PactConsumerTestExt.class)
 class ContractTests {
@@ -43,7 +46,7 @@ class ContractTests {
 
 	private LedControl ledControl;
 
-	private final Map<String, ChainElement> spies = new HashedMap<>();
+	private final Map<Class<? extends ChainElement>, ChainElement> spies = new HashedMap<>();
 
 	@BeforeEach
 	void setup() throws IOException, MqttException {
@@ -55,7 +58,7 @@ class ContractTests {
 	void verifyTeamLeftScores(MessagePact pact) throws InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertWasHandled("Score");
+		assertWasHandled(Score.class);
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -75,7 +78,7 @@ class ContractTests {
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertWasHandled("Foul");
+		assertWasHandled(Foul.class);
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -94,7 +97,7 @@ class ContractTests {
 	void idle(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertWasHandled("Idle");
+		assertWasHandled(Idle.class);
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -114,8 +117,8 @@ class ContractTests {
 		}
 	}
 
-	private void assertWasHandled(String name) {
-		verify(spies.get(name)).handle(any(MessageWithTopic.class), any(LedControl.class));
+	private void assertWasHandled(Class<? extends ChainElement> clazz) {
+		verify(spies.get(clazz)).handle(any(MessageWithTopic.class), any(LedControl.class));
 	}
 
 	private void whenMessageIsReceived(Message message) throws InterruptedException {
@@ -132,7 +135,7 @@ class ContractTests {
 			@Override
 			public LedControl add(ChainElement element) {
 				ChainElement spy = spy(element);
-				spies.put(element.getClass().getSimpleName(), spy);
+				spies.put(element.getClass(), spy);
 				return super.add(spy);
 			}
 		}, panel);
