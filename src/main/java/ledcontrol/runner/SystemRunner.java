@@ -6,8 +6,6 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static ledcontrol.LedControl.MessageWithTopic.topicIsEqualTo;
-import static ledcontrol.LedControl.MessageWithTopic.topicStartWith;
 import static ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
 import static ledcontrol.runner.Colors.FUCHSIA;
 import static ledcontrol.runner.Colors.GREEN;
@@ -46,65 +44,72 @@ public class SystemRunner {
 
 	public static class Configurator {
 
-		public static class Background extends ChainElement {
+		public static class Background implements ChainElement {
 
 			private final Panel panel;
 
 			private Background(Panel panel) {
-				super(topicIsEqualTo("leds/backgroundlight/color"));
 				this.panel = panel;
 			}
 
-			@Override
-			public void handle(MessageWithTopic message, LedControl ledControl) {
-				panel.fill(colorFromPayload(message)).repaint();
+			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+				if (message.getTopic().equals("leds/backgroundlight/color")) {
+					panel.fill(colorFromPayload(message)).repaint();
+					return true;
+				}
+				return false;
 			}
 		}
 
-		public static class Foreground extends ChainElement {
+		public static class Foreground implements ChainElement {
 			private final Panel panel;
 
 			private Foreground(Panel panel) {
-				super(topicIsEqualTo("leds/foregroundlight/color"));
 				this.panel = panel;
 			}
 
 			@Override
-			public void handle(MessageWithTopic message, LedControl ledControl) {
-				panel.fill(colorFromPayload(message)).repaint();
+			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+				if (message.getTopic().equals("leds/foregroundlight/color")) {
+					panel.fill(colorFromPayload(message)).repaint();
+					return true;
+				}
+				return false;
 			}
 		}
 
-		public static class Scored extends ChainElement {
+		public static class Scored implements ChainElement {
 			private final Panel panel;
 			private final Color[] teamColors;
 
 			private Scored(Panel panel, Color teamColors[]) {
-				super(topicIsEqualTo("team/scored"));
 				this.panel = panel;
 				this.teamColors = teamColors;
 			}
 
 			@Override
-			public void handle(MessageWithTopic message, LedControl ledControl) {
-				int idx = parseInt(message.getPayload());
-				if (idx >= 0 && idx < teamColors.length) {
-					Color color = teamColors[idx];
-					FlashScene scene = new FlashScene(panel, //
-							flash(color, 24), flash(BLACK, 24), //
-							flash(color, 24), flash(BLACK, 24), //
-							flash(color, 24), flash(BLACK, 24));
-					scene.flash(ledControl.getAnimator());
+			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+				if (message.getTopic().equals("leds/foregroundlight/color")) {
+					int idx = parseInt(message.getPayload());
+					if (idx >= 0 && idx < teamColors.length) {
+						Color color = teamColors[idx];
+						FlashScene scene = new FlashScene(panel, //
+								flash(color, 24), flash(BLACK, 24), //
+								flash(color, 24), flash(BLACK, 24), //
+								flash(color, 24), flash(BLACK, 24));
+						scene.flash(ledControl.getAnimator());
+					}
+					return true;
 				}
+				return false;
 			}
 		}
 
-		public static class Score extends ChainElement {
+		public static class Score implements ChainElement {
 
 			private final ScoreScene scoreScene;
 
 			public Score(ScoreScene scoreScene) {
-				super(topicStartWith("team/score/"));
 				this.scoreScene = scoreScene;
 			}
 
@@ -113,51 +118,60 @@ public class SystemRunner {
 			}
 
 			@Override
-			public void handle(MessageWithTopic message, LedControl ledControl) {
-				int teamid = parseInt(message.getTopic().substring("team/score/".length()));
-				this.scoreScene.setScore(teamid, parseInt(message.getPayload()));
+			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+				if (message.getTopic().startsWith("team/score/")) {
+					int teamid = parseInt(message.getTopic().substring("team/score/".length()));
+					this.scoreScene.setScore(teamid, parseInt(message.getPayload()));
+					return true;
+				}
+				return false;
 			}
 		}
 
-		public static class Foul extends ChainElement {
+		public static class Foul implements ChainElement {
 
 			private final FlashScene scene;
 
 			private Foul(Panel panel) {
-				super(topicIsEqualTo("game/foul"));
 				this.scene = new FlashScene(panel, flash(WHITE, 6), flash(BLACK, 6), flash(WHITE, 6), flash(BLACK, 6),
 						flash(WHITE, 6), flash(BLACK, 6));
 			}
 
-			@Override
-			public void handle(MessageWithTopic message, LedControl ledControl) {
-				scene.flash(ledControl.getAnimator());
+			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+				if (message.getTopic().equals("game/foul")) {
+					scene.flash(ledControl.getAnimator());
+					return true;
+				}
+				return false;
 			}
 		}
 
-		public static class Gameover extends ChainElement {
+		public static class Gameover implements ChainElement {
 			private final Panel winnerPanel;
 			private final Color[] teamColors;
 
 			private Gameover(Panel winnerPanel, Color teamColors[]) {
-				super(topicIsEqualTo("game/gameover"));
 				this.winnerPanel = winnerPanel;
 				this.teamColors = teamColors;
 			}
 
 			@Override
-			public void handle(MessageWithTopic message, LedControl ledControl) {
-				Color[] flashColors = getFlashColors(message);
-				FlashScene scene = new FlashScene(winnerPanel, //
-						flash(flashColors[0], 24), flash(BLACK, 24), //
-						flash(flashColors[1], 24), flash(BLACK, 24), //
-						flash(flashColors[0], 24), flash(BLACK, 24), //
-						flash(flashColors[1], 24), flash(BLACK, 24), //
-						flash(flashColors[0], 6), flash(BLACK, 6), //
-						flash(flashColors[1], 6), flash(BLACK, 6), //
-						flash(flashColors[0], 6), flash(BLACK, 6), //
-						flash(flashColors[1], 6), flash(BLACK, 6));
-				scene.flash(ledControl.getAnimator());
+			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+				if (message.getTopic().equals("game/gameover")) {
+					Color[] flashColors = getFlashColors(message);
+					FlashScene scene = new FlashScene(winnerPanel, //
+							flash(flashColors[0], 24), flash(BLACK, 24), //
+							flash(flashColors[1], 24), flash(BLACK, 24), //
+							flash(flashColors[0], 24), flash(BLACK, 24), //
+							flash(flashColors[1], 24), flash(BLACK, 24), //
+							flash(flashColors[0], 6), flash(BLACK, 6), //
+							flash(flashColors[1], 6), flash(BLACK, 6), //
+							flash(flashColors[0], 6), flash(BLACK, 6), //
+							flash(flashColors[1], 6), flash(BLACK, 6));
+					scene.flash(ledControl.getAnimator());
+					return true;
+				}
+				return false;
 			}
 
 			private Color[] getFlashColors(MessageWithTopic message) {
@@ -175,21 +189,24 @@ public class SystemRunner {
 
 		}
 
-		public static class Idle extends ChainElement {
+		public static class Idle implements ChainElement {
 			private final IdleScene scene;
 
 			private Idle(Panel panel, IdleScene scene) {
-				super(topicIsEqualTo("game/idle"));
 				this.scene = scene;
 			}
 
 			@Override
-			public void handle(MessageWithTopic message, LedControl ledControl) {
-				if (parseBoolean(message.getPayload())) {
-					scene.startAnimation(ledControl.getAnimator());
-				} else {
-					scene.stopAnimation().reset();
+			public boolean handle(MessageWithTopic message, LedControl ledControl) {
+				if (message.getTopic().equals("game/idle")) {
+					if (parseBoolean(message.getPayload())) {
+						scene.startAnimation(ledControl.getAnimator());
+					} else {
+						scene.stopAnimation().reset();
+					}
+					return true;
 				}
+				return false;
 			}
 		}
 

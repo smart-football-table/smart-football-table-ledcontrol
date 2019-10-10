@@ -102,24 +102,8 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 	}
 
-	public static abstract class ChainElement {
-
-		private final Predicate<MessageWithTopic> condition;
-
-		public ChainElement(Predicate<MessageWithTopic> condition, Consumer<MessageWithTopic> consumer) {
-			this(condition);
-		}
-
-		public ChainElement(Predicate<MessageWithTopic> condition) {
-			this.condition = condition;
-		}
-
-		public boolean canHandle(MessageWithTopic message) {
-			return condition.test(message);
-		}
-
-		public abstract void handle(MessageWithTopic message, LedControl ledControl);
-
+	public static interface ChainElement {
+		abstract boolean handle(MessageWithTopic message, LedControl ledControl);
 	}
 
 	private final Proto proto;
@@ -162,18 +146,14 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 	public void accept(MessageWithTopic message) {
 		for (ChainElement element : elements) {
-			if (element.canHandle(message)) {
-				try {
-					handleMessage(element, message);
-				} catch (Exception e) {
-					e.printStackTrace();
+			try {
+				if (element.handle(message, this)) {
+					return;
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
-	}
-
-	protected void handleMessage(ChainElement element, MessageWithTopic message) {
-		element.handle(message, this);
 	}
 
 	public LedControl addAll(ChainElement... elements) {
