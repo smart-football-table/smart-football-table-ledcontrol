@@ -10,7 +10,6 @@ import java.awt.Color;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
@@ -103,24 +102,23 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 	}
 
-	public static class ChainElement implements Consumer<MessageWithTopic> {
+	public static abstract class ChainElement {
 
 		private final Predicate<MessageWithTopic> condition;
-		private final Consumer<MessageWithTopic> consumer;
 
 		public ChainElement(Predicate<MessageWithTopic> condition, Consumer<MessageWithTopic> consumer) {
+			this(condition);
+		}
+
+		public ChainElement(Predicate<MessageWithTopic> condition) {
 			this.condition = condition;
-			this.consumer = consumer;
 		}
 
 		public boolean canHandle(MessageWithTopic message) {
 			return condition.test(message);
 		}
 
-		@Override
-		public void accept(MessageWithTopic message) {
-			consumer.accept(message);
-		}
+		public abstract void handle(MessageWithTopic message, LedControl ledControl);
 
 	}
 
@@ -175,11 +173,13 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	}
 
 	protected void handleMessage(ChainElement element, MessageWithTopic message) {
-		element.accept(message);
+		element.handle(message, this);
 	}
 
 	public LedControl addAll(ChainElement... elements) {
-		Collections.addAll(this.elements, elements);
+		for (ChainElement element : elements) {
+			add(element);
+		}
 		return this;
 	}
 

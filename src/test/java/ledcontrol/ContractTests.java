@@ -18,8 +18,6 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockingDetails;
-import org.mockito.Mockito;
 
 import au.com.dius.pact.consumer.MessagePactBuilder;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
@@ -30,11 +28,9 @@ import au.com.dius.pact.core.model.messaging.Message;
 import au.com.dius.pact.core.model.messaging.MessagePact;
 import ledcontrol.LedControl.ChainElement;
 import ledcontrol.LedControl.MessageWithTopic;
-import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.runner.Colors;
 import ledcontrol.runner.SystemRunner.Configurator;
-import ledcontrol.scene.ScoreScene;
 
 @ExtendWith(PactConsumerTestExt.class)
 class ContractTests {
@@ -59,7 +55,7 @@ class ContractTests {
 	void verifyTeamLeftScores(MessagePact pact) throws InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertWasHandled("teamScore");
+		assertWasHandled("Score");
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -79,7 +75,7 @@ class ContractTests {
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertWasHandled("gameFoul");
+		assertWasHandled("Foul");
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -93,6 +89,25 @@ class ContractTests {
 				.toPact();
 	}
 
+	@Test
+	@PactTestFor(providerName = "cognition", pactMethod = "idlePact", providerType = ASYNCH)
+	void idle(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystem();
+		whenMessagesIsReceived(pact.getMessages());
+		assertWasHandled("Idle");
+	}
+
+	@Pact(consumer = "ledcontrol")
+	MessagePact idlePact(MessagePactBuilder builder) {
+		return builder //
+				.given("the table is idle") //
+				.expectsToReceive("the idle message") //
+				.withContent(new PactDslJsonBody() //
+						.stringType("topic", "game/idle") //
+						.stringValue("payload", "true")) //
+				.toPact();
+	}
+
 	private void whenMessagesIsReceived(List<Message> messages) throws InterruptedException {
 		for (Message message : messages) {
 			whenMessageIsReceived(message);
@@ -100,7 +115,7 @@ class ContractTests {
 	}
 
 	private void assertWasHandled(String name) {
-		verify(spies.get(name)).accept(any(MessageWithTopic.class));
+		verify(spies.get(name)).handle(any(MessageWithTopic.class), any(LedControl.class));
 	}
 
 	private void whenMessageIsReceived(Message message) throws InterruptedException {
@@ -113,27 +128,14 @@ class ContractTests {
 	}
 
 	private void givenTheSystem() {
-		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
-
-			protected ScoreScene scoreScene(Panel goalPanel) {
-				return super.scoreScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
-			}
-
-			protected ChainElement gameFoul(LedControl ledControl, Panel panel) {
-				return makeSpy("gameFoul", super.gameFoul(ledControl, panel));
-			};
-
-			protected ChainElement teamScore(Panel panel) {
-				return makeSpy("teamScore", super.teamScore(panel));
-			}
-
-			private ChainElement makeSpy(String name, ChainElement element) {
+		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT).configure(new LedControl(panel, outputStream) {
+			@Override
+			public LedControl add(ChainElement element) {
 				ChainElement spy = spy(element);
-				spies.put(name, spy);
-				return spy;
-			};
-
-		}.configure(new LedControl(panel, outputStream), panel);
+				spies.put(element.getClass().getSimpleName(), spy);
+				return super.add(spy);
+			}
+		}, panel);
 	}
 
 }

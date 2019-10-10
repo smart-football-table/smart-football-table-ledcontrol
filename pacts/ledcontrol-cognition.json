@@ -78,6 +78,33 @@
           }
         }
       }
+    },
+    {
+      "description": "the idle message",
+      "metaData": {
+        "contentType": "application/json; charset\u003dUTF-8"
+      },
+      "contents": {
+        "payload": "true",
+        "topic": "game/idle"
+      },
+      "providerStates": [
+        {
+          "name": "the table is idle"
+        }
+      ],
+      "matchingRules": {
+        "body": {
+          "$.topic": {
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ],
+            "combine": "AND"
+          }
+        }
+      }
     }
   ],
   "metadata": {

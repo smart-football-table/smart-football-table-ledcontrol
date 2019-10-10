@@ -304,11 +304,13 @@ class SystemIntegrationIT {
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
 		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
 
+			@Override
 			protected ScoreScene scoreScene(Panel goalPanel) {
 				return super.scoreScene(goalPanel).pixelsPerGoal(1).spaceDots(0);
 			}
 
-			protected ledcontrol.scene.IdleScene idleScene(ledcontrol.panel.Panel idlePanel) {
+			@Override
+			protected IdleScene idleScene(Panel idlePanel) {
 				return idleScene;
 			};
 

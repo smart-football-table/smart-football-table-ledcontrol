@@ -46,6 +46,149 @@ public class SystemRunner {
 
 	public static class Configurator {
 
+		private static class Background extends ChainElement {
+
+			private final Panel panel;
+
+			private Background(Panel panel) {
+				super(topicIsEqualTo("leds/backgroundlight/color"));
+				this.panel = panel;
+			}
+
+			@Override
+			public void handle(MessageWithTopic message, LedControl ledControl) {
+				panel.fill(colorFromPayload(message)).repaint();
+			}
+		}
+
+		private static class Foreground extends ChainElement {
+			private final Panel panel;
+
+			private Foreground(Panel panel) {
+				super(topicIsEqualTo("leds/foregroundlight/color"));
+				this.panel = panel;
+			}
+
+			@Override
+			public void handle(MessageWithTopic message, LedControl ledControl) {
+				panel.fill(colorFromPayload(message)).repaint();
+			}
+		}
+
+		private static class Scored extends ChainElement {
+			private final Panel panel;
+			private final Color[] teamColors;
+
+			private Scored(Panel panel, Color teamColors[]) {
+				super(topicIsEqualTo("team/scored"));
+				this.panel = panel;
+				this.teamColors = teamColors;
+			}
+
+			@Override
+			public void handle(MessageWithTopic message, LedControl ledControl) {
+				int idx = parseInt(message.getPayload());
+				if (idx >= 0 && idx < teamColors.length) {
+					Color color = teamColors[idx];
+					FlashScene scene = new FlashScene(panel, //
+							flash(color, 24), flash(BLACK, 24), //
+							flash(color, 24), flash(BLACK, 24), //
+							flash(color, 24), flash(BLACK, 24));
+					scene.flash(ledControl.getAnimator());
+				}
+			}
+		}
+
+		private static class Score extends ChainElement {
+
+			private final ScoreScene scoreScene;
+
+			private Score(Panel panel, ScoreScene scoreScene) {
+				super(topicStartWith("team/score/"));
+				this.scoreScene = scoreScene;
+			}
+
+			@Override
+			public void handle(MessageWithTopic message, LedControl ledControl) {
+				int teamid = parseInt(message.getTopic().substring("team/score/".length()));
+				scoreScene.setScore(teamid, parseInt(message.getPayload()));
+			}
+		}
+
+		private static class Foul extends ChainElement {
+
+			private final FlashScene scene;
+
+			private Foul(Panel panel) {
+				super(topicIsEqualTo("game/foul"));
+				this.scene = new FlashScene(panel, flash(WHITE, 6), flash(BLACK, 6), flash(WHITE, 6), flash(BLACK, 6),
+						flash(WHITE, 6), flash(BLACK, 6));
+			}
+
+			@Override
+			public void handle(MessageWithTopic message, LedControl ledControl) {
+				scene.flash(ledControl.getAnimator());
+			}
+		}
+
+		private static class Gameover extends ChainElement {
+			private final Panel winnerPanel;
+			private final Color[] teamColors;
+
+			private Gameover(Panel winnerPanel, Color teamColors[]) {
+				super(topicIsEqualTo("game/gameover"));
+				this.winnerPanel = winnerPanel;
+				this.teamColors = teamColors;
+			}
+
+			@Override
+			public void handle(MessageWithTopic message, LedControl ledControl) {
+				Color[] flashColors = getFlashColors(message);
+				FlashScene scene = new FlashScene(winnerPanel, //
+						flash(flashColors[0], 24), flash(BLACK, 24), //
+						flash(flashColors[1], 24), flash(BLACK, 24), //
+						flash(flashColors[0], 24), flash(BLACK, 24), //
+						flash(flashColors[1], 24), flash(BLACK, 24), //
+						flash(flashColors[0], 6), flash(BLACK, 6), //
+						flash(flashColors[1], 6), flash(BLACK, 6), //
+						flash(flashColors[0], 6), flash(BLACK, 6), //
+						flash(flashColors[1], 6), flash(BLACK, 6));
+				scene.flash(ledControl.getAnimator());
+			}
+
+			private Color[] getFlashColors(MessageWithTopic message) {
+				int[] winners = Arrays.stream(message.getPayload().split("\\,")).mapToInt(Integer::parseInt).toArray();
+				if (winners.length > 1) {
+					return teamColors;
+				}
+				return contains(winners, 0) ? new Color[] { teamColors[0], teamColors[0] }
+						: new Color[] { teamColors[1], teamColors[1] };
+			}
+
+			private boolean contains(int[] winners, int team) {
+				return stream(winners).anyMatch(i -> i == team);
+			}
+
+		}
+
+		private static class Idle extends ChainElement {
+			private final IdleScene scene;
+
+			private Idle(Panel panel, IdleScene scene) {
+				super(topicIsEqualTo("game/idle"));
+				this.scene = scene;
+			}
+
+			@Override
+			public void handle(MessageWithTopic message, LedControl ledControl) {
+				if (parseBoolean(message.getPayload())) {
+					scene.startAnimation(ledControl.getAnimator());
+				} else {
+					scene.stopAnimation().reset();
+				}
+			}
+		}
+
 		private final Color[] teamColors;
 
 		public Configurator() {
@@ -63,108 +206,30 @@ public class SystemRunner {
 			Panel winnerPanel = panel.createSubPanel();
 			Panel idlePanel = panel.createSubPanel();
 			Panel foregroundPanel = panel.createSubPanel().fill(BLACK).overlayStrategy(transparentOn(BLACK));
-			return ledControl.addAll(backgroundLight(backgroundPanel), //
-					foregroundLight(foregroundPanel), //
-					teamScored(ledControl, winnerPanel), //
-					teamScore(scorePanel), //
-					gameFoul(ledControl, foulPanel), //
-					gameover(ledControl, winnerPanel), //
-					idle(ledControl, idlePanel) //
+
+			return ledControl.addAll(new Background(backgroundPanel), //
+					new Foreground(foregroundPanel), //
+					new Scored(winnerPanel, teamColors), //
+					new Score(scorePanel, scoreScene(scorePanel)), //
+					new Foul(foulPanel), //
+					new Gameover(winnerPanel, teamColors), //
+					new Idle(idlePanel, idleScene(idlePanel)) //
 			);
 		}
 
-		protected ChainElement idle(LedControl ledControl, Panel panel) {
-			IdleScene idleScene = idleScene(panel);
-			return new ChainElement(topicIsEqualTo("game/idle"), m -> {
-				if (parseBoolean(m.getPayload())) {
-					idleScene.startAnimation(ledControl.getAnimator());
-				} else {
-					idleScene.stopAnimation().reset();
-				}
-			});
+		@Deprecated
+		protected ScoreScene scoreScene(Panel panel) {
+			return new ScoreScene(panel, teamColors[0], teamColors[1]).pixelsPerGoal(5).spaceDots(1);
 		}
 
-		protected ChainElement gameover(LedControl ledControl, Panel winnerPanel) {
-			return new ChainElement(topicIsEqualTo("game/gameover"), m -> {
-				Color[] flashColors = getFlashColors(m);
-				FlashScene winnerScene = new FlashScene(winnerPanel, //
-						flash(flashColors[0], 24), flash(BLACK, 24), //
-						flash(flashColors[1], 24), flash(BLACK, 24), //
-						flash(flashColors[0], 24), flash(BLACK, 24), //
-						flash(flashColors[1], 24), flash(BLACK, 24), //
-						flash(flashColors[0], 6), flash(BLACK, 6), //
-						flash(flashColors[1], 6), flash(BLACK, 6), //
-						flash(flashColors[0], 6), flash(BLACK, 6), //
-						flash(flashColors[1], 6), flash(BLACK, 6));
-				winnerScene.flash(ledControl.getAnimator());
-			});
-		}
-
-		protected Color[] getFlashColors(MessageWithTopic message) {
-			int[] winners = Arrays.stream(message.getPayload().split("\\,")).mapToInt(Integer::parseInt).toArray();
-			if (winners.length > 1) {
-				return teamColors;
-			}
-			return contains(winners, 0) ? new Color[] { teamColors[0], teamColors[0] }
-					: new Color[] { teamColors[1], teamColors[1] };
-		}
-
-		protected ChainElement gameFoul(LedControl ledControl, Panel panel) {
-			return new ChainElement(topicIsEqualTo("game/foul"), m -> foulScene(panel).flash(ledControl.getAnimator()));
-		}
-
-		protected ChainElement teamScore(Panel panel) {
-			ScoreScene scoreScene = scoreScene(panel);
-			return new ChainElement(topicStartWith("team/score/"), m -> {
-				int teamid = parseInt(m.getTopic().substring("team/score/".length()));
-				scoreScene.setScore(teamid, parseInt(m.getPayload()));
-			});
-		}
-
-		protected ChainElement teamScored(LedControl ledControl, Panel panel) {
-			return new ChainElement(topicIsEqualTo("team/scored"), m -> {
-				int idx = parseInt(m.getPayload());
-				if (idx >= 0 && idx < teamColors.length) {
-					Color color = teamColors[idx];
-					FlashScene fc = new FlashScene(panel, //
-							flash(color, 24), flash(BLACK, 24), //
-							flash(color, 24), flash(BLACK, 24), //
-							flash(color, 24), flash(BLACK, 24));
-					fc.flash(ledControl.getAnimator());
-				}
-			});
-		}
-
-		protected ChainElement foregroundLight(Panel panel) {
-			return new ChainElement(topicIsEqualTo("leds/foregroundlight/color"),
-					m -> panel.fill(colorFromPayload(m)).repaint());
-		}
-
-		private ledcontrol.LedControl.ChainElement backgroundLight(Panel panel) {
-			return new ChainElement(topicIsEqualTo("leds/backgroundlight/color"),
-					m -> panel.fill(colorFromPayload(m)).repaint());
-		}
-
-		private boolean contains(int[] winners, int team) {
-			return stream(winners).anyMatch(i -> i == team);
+		@Deprecated
+		protected IdleScene idleScene(Panel panel) {
+			return new IdleScene(panel, BLACK, teamColors[0], teamColors[1], LIGHT_BLUE, FUCHSIA, YELLOW, TURQUOISE,
+					VIOLET, GREEN, PINK, WHITE);
 		}
 
 		private static Color colorFromPayload(MessageWithTopic message) {
 			return Color.decode(message.getPayload());
-		}
-
-		protected IdleScene idleScene(Panel idlePanel) {
-			return new IdleScene(idlePanel, BLACK, teamColors[0], teamColors[1], LIGHT_BLUE, FUCHSIA, YELLOW, TURQUOISE,
-					VIOLET, GREEN, PINK, WHITE);
-		}
-
-		protected FlashScene foulScene(Panel foulPanel) {
-			return new FlashScene(foulPanel, flash(WHITE, 6), flash(BLACK, 6), flash(WHITE, 6), flash(BLACK, 6),
-					flash(WHITE, 6), flash(BLACK, 6));
-		}
-
-		protected ScoreScene scoreScene(Panel goalPanel) {
-			return new ScoreScene(goalPanel, teamColors[0], teamColors[1]).pixelsPerGoal(5).spaceDots(1);
 		}
 
 	}
