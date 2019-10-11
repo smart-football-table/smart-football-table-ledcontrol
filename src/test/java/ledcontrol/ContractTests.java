@@ -1,17 +1,17 @@
 package ledcontrol;
 
 import static au.com.dius.pact.consumer.junit5.ProviderType.ASYNCH;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.spy;
+import static ledcontrol.runner.Colors.BLUE;
+import static ledcontrol.runner.Colors.ORANGE;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import java.awt.Color;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.collections4.map.HashedMap;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.json.JSONObject;
@@ -26,27 +26,27 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.annotations.Pact;
 import au.com.dius.pact.core.model.messaging.Message;
 import au.com.dius.pact.core.model.messaging.MessagePact;
-import ledcontrol.LedControl.ChainElement;
 import ledcontrol.LedControl.MessageWithTopic;
+import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
-import ledcontrol.runner.Colors;
 import ledcontrol.runner.SystemRunner.Configurator;
-import ledcontrol.runner.SystemRunner.Configurator.Foul;
-import ledcontrol.runner.SystemRunner.Configurator.Idle;
-import ledcontrol.runner.SystemRunner.Configurator.Score;
+import ledcontrol.scene.FlashScene;
+import ledcontrol.scene.IdleScene;
+import ledcontrol.scene.ScoreScene;
 
 @ExtendWith(PactConsumerTestExt.class)
 class ContractTests {
 
-	private static final Color COLOR_TEAM_LEFT = Colors.BLUE;
-	private static final Color COLOR_TEAM_RIGHT = Colors.ORANGE;
+	private static final Color COLOR_TEAM_LEFT = BLUE;
+	private static final Color COLOR_TEAM_RIGHT = ORANGE;
 
-	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	private ScoreScene scoreScene = mock(ScoreScene.class);
+	private FlashScene foulScene = mock(FlashScene.class);
+	private IdleScene idleScene = mock(IdleScene.class);
+
 	private final StackedPanel panel = new StackedPanel(5, 2);
-
+	private final Animator animator = mock(Animator.class);
 	private LedControl ledControl;
-
-	private final Map<Class<? extends ChainElement>, ChainElement> spies = new HashedMap<>();
 
 	@BeforeEach
 	void setup() throws IOException, MqttException {
@@ -54,21 +54,21 @@ class ContractTests {
 	}
 
 	@Test
-	@PactTestFor(providerName = "cognition", pactMethod = "teamLeftScoresPact", providerType = ASYNCH)
+	@PactTestFor(providerName = "cognition", pactMethod = "teamLeftScorePact", providerType = ASYNCH)
 	void verifyTeamLeftScores(MessagePact pact) throws InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertWasHandled(Score.class);
+		verify(scoreScene, timeout(250)).setScore(1, 2);
 	}
 
 	@Pact(consumer = "ledcontrol")
-	MessagePact teamLeftScoresPact(MessagePactBuilder builder) {
+	MessagePact teamLeftScorePact(MessagePactBuilder builder) {
 		return builder //
 				.given("a goal was shot") //
 				.expectsToReceive("the team's new score") //
 				.withContent(new PactDslJsonBody() //
-						.stringMatcher("topic", "team\\/score\\/\\d+", "team/score/0") //
-						.stringMatcher("payload", "\\d+", "1")) //
+						.stringMatcher("topic", "team\\/score\\/\\d+", "team/score/1") //
+						.stringMatcher("payload", "\\d+", "2")) //
 				.toPact();
 	}
 
@@ -78,7 +78,7 @@ class ContractTests {
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertWasHandled(Foul.class);
+		verify(foulScene, timeout(250)).flash(animator);
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -97,7 +97,7 @@ class ContractTests {
 	void idle(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		assertWasHandled(Idle.class);
+		verify(idleScene, timeout(250)).startAnimation(animator);
 	}
 
 	@Pact(consumer = "ledcontrol")
@@ -117,10 +117,6 @@ class ContractTests {
 		}
 	}
 
-	private void assertWasHandled(Class<? extends ChainElement> clazz) {
-		verify(spies.get(clazz)).handle(any(MessageWithTopic.class), any(Animator.class));
-	}
-
 	private void whenMessageIsReceived(Message message) throws InterruptedException {
 		ledControl.accept(toMessage(message));
 	}
@@ -131,12 +127,26 @@ class ContractTests {
 	}
 
 	private void givenTheSystem() {
-		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT).configure(new LedControl(panel, outputStream) {
+		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
+
 			@Override
-			public LedControl add(ChainElement element) {
-				ChainElement spy = spy(element);
-				spies.put(element.getClass(), spy);
-				return super.add(spy);
+			protected ScoreScene scoreScene(Panel scorePanel) {
+				return scoreScene;
+			}
+
+			protected FlashScene foulScene(Panel panel) {
+				return foulScene;
+			};
+
+			@Override
+			protected IdleScene idleScene(Panel panel) {
+				return idleScene;
+			}
+
+		}.configure(new LedControl(panel, mock(OutputStream.class)) {
+			@Override
+			public Animator getAnimator() {
+				return animator;
 			}
 		}, panel);
 	}

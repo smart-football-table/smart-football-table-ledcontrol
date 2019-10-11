@@ -6,6 +6,11 @@ import static java.awt.Color.BLACK;
 import static java.awt.Color.decode;
 import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static ledcontrol.TpmDecode.decodeFrames;
+import static ledcontrol.TpmDecode.toColors;
+import static ledcontrol.runner.Colors.BLUE;
+import static ledcontrol.runner.Colors.ORANGE;
+import static ledcontrol.runner.SystemRunner.Messages.isIdle;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -17,18 +22,16 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import java.awt.Color;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.map.HashedMap;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -49,22 +52,19 @@ import ledcontrol.LedControl.ChainElement;
 import ledcontrol.LedControl.MessageWithTopic;
 import ledcontrol.mqtt.MqttAdapter;
 import ledcontrol.panel.StackedPanel;
-import ledcontrol.runner.Colors;
 import ledcontrol.runner.SystemRunner.Configurator;
-import ledcontrol.runner.SystemRunner.Configurator.Idle;
-import ledcontrol.runner.SystemRunner.Configurator.Score;
 
 class SystemIntegrationIT {
 
 	private Duration timeout = ofSeconds(30);
 
 	private static final String LOCALHOST = "localhost";
-	private static final Color COLOR_TEAM_LEFT = Colors.BLUE;
-	private static final Color COLOR_TEAM_RIGHT = Colors.ORANGE;
+	private static final Color COLOR_TEAM_LEFT = BLUE;
+	private static final Color COLOR_TEAM_RIGHT = ORANGE;
 
 	private int brokerPort;
 
-	private final Map<Class<? extends ChainElement>, ChainElement> spies = new HashedMap<>();
+	private final Map<Predicate<MessageWithTopic>, ChainElement> spies = new HashedMap<>();
 	private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
 	private final StackedPanel panel = new StackedPanel(5, 2);
@@ -158,7 +158,7 @@ class SystemIntegrationIT {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
-			assertWasHandled(Idle.class);
+			assertWasHandled(isIdle);
 		});
 	}
 
@@ -249,35 +249,20 @@ class SystemIntegrationIT {
 			// does the reconnected client subscribe to the topics again?
 			await().atMost(10, SECONDS).until(secondClient::isConnected);
 			whenMessageIsReceived(LOCALHOST, brokerPort, "game/idle", "true");
-			assertWasHandled(Idle.class);
+			assertWasHandled(isIdle);
 		});
 	}
 
 	private Color[][] lastPanelState() throws IOException {
-		return toColors(last(receivedFrames()));
-	}
-
-	private Color[][] toColors(Tpm2Frame frame) {
-		int height = panel.getHeight();
-		int width = panel.getWidth();
-		Color[][] colors = new Color[height][width];
-		for (int y = 0; y < height; y++) {
-			System.arraycopy(frame.getColors(), y * width, colors[y], 0, width);
-		}
-		return colors;
+		return toColors(last(receivedFrames()), panel.getHeight(), panel.getWidth());
 	}
 
 	private List<Tpm2Frame> receivedFrames() throws IOException {
-		InputStream is = new ByteArrayInputStream(outputStream.toByteArray());
-		List<Tpm2Frame> frames = new ArrayList<Tpm2Frame>();
-		while (is.available() > 0) {
-			frames.add(Tpm2Frame.fromStream(is));
-		}
-		return frames;
+		return decodeFrames(outputStream.toByteArray());
 	}
 
-	private void assertWasHandled(Class<? extends ChainElement> name) {
-		verify(spies.get(name), timeout(500)).handle(any(MessageWithTopic.class), any(Animator.class));
+	private void assertWasHandled(Predicate<MessageWithTopic> condition) {
+		verify(spies.get(condition), timeout(500)).handle(any(MessageWithTopic.class), any(Animator.class));
 	}
 
 	private static <T> T last(List<T> list) throws IOException {
@@ -293,11 +278,8 @@ class SystemIntegrationIT {
 		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT).configure(new LedControl(panel, outputStream) {
 			@Override
 			public LedControl add(ChainElement element) {
-				if (element instanceof Score) {
-					element = new Score(((Score) element).getScoreScene().pixelsPerGoal(1).spaceDots(0));
-				}
 				ChainElement spy = spy(element);
-				spies.put(element.getClass(), spy);
+				spies.put(element.condition(), spy);
 				return super.add(spy);
 			}
 		}, panel);

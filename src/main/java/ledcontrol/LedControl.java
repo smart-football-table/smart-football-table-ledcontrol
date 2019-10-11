@@ -1,6 +1,7 @@
 package ledcontrol;
 
 import static java.awt.Color.BLACK;
+import static java.util.Arrays.stream;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -103,7 +104,9 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	}
 
 	public static interface ChainElement {
-		abstract boolean handle(MessageWithTopic message, Animator animator);
+		boolean handle(MessageWithTopic message, Animator animator);
+
+		Predicate<MessageWithTopic> condition();
 	}
 
 	private final Proto proto;
@@ -156,10 +159,52 @@ public class LedControl implements Consumer<MessageWithTopic> {
 		}
 	}
 
-	public LedControl addAll(ChainElement... elements) {
-		for (ChainElement element : elements) {
-			add(element);
+	public static class NamedChainedElement implements ChainElement {
+
+		private final Predicate<MessageWithTopic> condition;
+		private final Consumer<MessageWithTopic> consumer;
+
+		private NamedChainedElement(Predicate<MessageWithTopic> condition, Consumer<MessageWithTopic> consumer) {
+			this.condition = condition;
+			this.consumer = consumer;
 		}
+
+		@Override
+		public boolean handle(MessageWithTopic message, Animator animator) {
+			if (condition.test(message)) {
+				consumer.accept(message);
+				return true;
+			}
+			return false;
+		}
+
+		@Override
+		public Predicate<MessageWithTopic> condition() {
+			return this.condition;
+		}
+	}
+
+	public class When {
+
+		private final Predicate<MessageWithTopic> condition;
+
+		public When(Predicate<MessageWithTopic> predicate) {
+			this.condition = predicate;
+		}
+
+		public LedControl then(Consumer<MessageWithTopic> consumer) {
+			add(new NamedChainedElement(condition, consumer));
+			return LedControl.this;
+		}
+
+	}
+
+	public When when(Predicate<MessageWithTopic> predicate) {
+		return new When(predicate);
+	}
+
+	public LedControl addAll(ChainElement... elements) {
+		stream(elements).forEach(this::add);
 		return this;
 	}
 
