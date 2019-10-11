@@ -12,8 +12,8 @@
         "contentType": "application/json; charset\u003dUTF-8"
       },
       "contents": {
-        "payload": "1",
-        "topic": "team/score/0"
+        "payload": "2",
+        "topic": "team/score/1"
       },
       "providerStates": [
         {
