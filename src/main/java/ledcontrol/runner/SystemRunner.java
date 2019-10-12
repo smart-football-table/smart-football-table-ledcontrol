@@ -148,18 +148,19 @@ public class SystemRunner {
 
 		protected FlashScene gameoverScene(Panel panel, Color... colors) {
 			List<FlashConfig> configs = new ArrayList<>();
-			for (int i = 0; i < 2; i++) {
+			for (int i = 0; i < 2 / colors.length; i++) {
 				for (Color color : colors) {
 					configs.add(flash(color, 24));
 					configs.add(flash(BLACK, 24));
 				}
 			}
-			for (int i = 0; i < 2; i++) {
+			for (int i = 0; i < 2 / colors.length; i++) {
 				for (Color color : colors) {
 					configs.add(flash(color, 6));
 					configs.add(flash(BLACK, 6));
 				}
 			}
+			assert configs.size() == 8;
 			return new FlashScene(panel, configs.toArray(new FlashConfig[configs.size()]));
 		}
 
