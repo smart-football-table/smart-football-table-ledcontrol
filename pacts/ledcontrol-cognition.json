@@ -7,6 +7,42 @@
   },
   "messages": [
     {
+      "description": "the gameover message",
+      "metaData": {
+        "contentType": "application/json; charset\u003dUTF-8"
+      },
+      "contents": {
+        "payload": "0,1,2,3",
+        "topic": "game/gameover"
+      },
+      "providerStates": [
+        {
+          "name": "a game ends draw"
+        }
+      ],
+      "matchingRules": {
+        "body": {
+          "$.topic": {
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ],
+            "combine": "AND"
+          },
+          "$.payload": {
+            "matchers": [
+              {
+                "match": "regex",
+                "regex": "\\d+,\\d+(,\\d+)*"
+              }
+            ],
+            "combine": "AND"
+          }
+        }
+      }
+    },
+    {
       "description": "the team\u0027s new score",
       "metaData": {
         "contentType": "application/json; charset\u003dUTF-8"
@@ -72,6 +108,42 @@
               {
                 "match": "regex",
                 "regex": ".*"
+              }
+            ],
+            "combine": "AND"
+          }
+        }
+      }
+    },
+    {
+      "description": "the gameover message",
+      "metaData": {
+        "contentType": "application/json; charset\u003dUTF-8"
+      },
+      "contents": {
+        "payload": "1",
+        "topic": "game/gameover"
+      },
+      "providerStates": [
+        {
+          "name": "a team has won the game"
+        }
+      ],
+      "matchingRules": {
+        "body": {
+          "$.topic": {
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ],
+            "combine": "AND"
+          },
+          "$.payload": {
+            "matchers": [
+              {
+                "match": "regex",
+                "regex": "\\d+"
               }
             ],
             "combine": "AND"
