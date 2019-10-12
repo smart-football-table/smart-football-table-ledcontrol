@@ -30,7 +30,6 @@ import static org.kohsuke.args4j.ParserProperties.defaults;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -147,8 +146,8 @@ public class SystemRunner {
 					VIOLET, GREEN, PINK, WHITE);
 		}
 
-		private FlashScene gameoverScene(Panel winnerPanel, Color color1, Color color2) {
-			return new FlashScene(winnerPanel, //
+		protected FlashScene gameoverScene(Panel panel, Color color1, Color color2) {
+			return new FlashScene(panel, //
 					flash(color1, 24), flash(BLACK, 24), //
 					flash(color2, 24), flash(BLACK, 24), //
 					flash(color1, 24), flash(BLACK, 24), //
@@ -168,7 +167,7 @@ public class SystemRunner {
 		}
 
 		private Color[] getFlashColors(MessageWithTopic message) {
-			int[] winners = Arrays.stream(message.getPayload().split("\\,")).mapToInt(Integer::parseInt).toArray();
+			int[] winners = stream(message.getPayload().split("\\,")).mapToInt(Integer::parseInt).toArray();
 			if (winners.length > 1) {
 				return teamColors;
 			}

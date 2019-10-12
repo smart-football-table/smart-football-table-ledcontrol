@@ -3,8 +3,9 @@ package ledcontrol;
 import static au.com.dius.pact.consumer.junit5.ProviderType.ASYNCH;
 import static ledcontrol.runner.Colors.BLUE;
 import static ledcontrol.runner.Colors.ORANGE;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import java.awt.Color;
@@ -37,14 +38,34 @@ import ledcontrol.scene.ScoreScene;
 @ExtendWith(PactConsumerTestExt.class)
 class ContractTests {
 
+	private static final class FlashScene4Test extends FlashScene {
+		private Color color1;
+		private Color color2;
+		private Animator animator;
+
+		private FlashScene4Test(Panel panel, Color color1, Color color2) {
+			super(panel);
+			this.color1 = color1;
+			this.color2 = color2;
+		}
+
+		@Override
+		public void flash(Animator animator) {
+			this.animator = animator;
+		}
+	}
+
+	private static final String CONSUMER = "ledcontrol";
+	private static final String PROVIDER = "cognition";
+
 	private static final Color COLOR_TEAM_LEFT = BLUE;
 	private static final Color COLOR_TEAM_RIGHT = ORANGE;
 
 	private ScoreScene scoreScene = mock(ScoreScene.class);
 	private FlashScene foulScene = mock(FlashScene.class);
+	private FlashScene4Test gameoverScene;
 	private IdleScene idleScene = mock(IdleScene.class);
 
-	private final StackedPanel panel = new StackedPanel(5, 2);
 	private final Animator animator = mock(Animator.class);
 	private LedControl ledControl;
 
@@ -54,14 +75,14 @@ class ContractTests {
 	}
 
 	@Test
-	@PactTestFor(providerName = "cognition", pactMethod = "teamLeftScorePact", providerType = ASYNCH)
+	@PactTestFor(providerName = PROVIDER, pactMethod = "teamLeftScorePact", providerType = ASYNCH)
 	void verifyTeamLeftScores(MessagePact pact) throws InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		verify(scoreScene, timeout(250)).setScore(1, 2);
+		verify(scoreScene).setScore(1, 2);
 	}
 
-	@Pact(consumer = "ledcontrol")
+	@Pact(consumer = CONSUMER)
 	MessagePact teamLeftScorePact(MessagePactBuilder builder) {
 		return builder //
 				.given("a goal was shot") //
@@ -73,15 +94,15 @@ class ContractTests {
 	}
 
 	@Test
-	@PactTestFor(providerName = "cognition", pactMethod = "flashesOnFoulPact", providerType = ASYNCH)
+	@PactTestFor(providerName = PROVIDER, pactMethod = "flashesOnFoulPact", providerType = ASYNCH)
 	void flashesOnFoul(MessagePact pact)
 			throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		verify(foulScene, timeout(250)).flash(animator);
+		verify(foulScene).flash(animator);
 	}
 
-	@Pact(consumer = "ledcontrol")
+	@Pact(consumer = CONSUMER)
 	MessagePact flashesOnFoulPact(MessagePactBuilder builder) {
 		return builder //
 				.given("a team fouled") //
@@ -93,14 +114,14 @@ class ContractTests {
 	}
 
 	@Test
-	@PactTestFor(providerName = "cognition", pactMethod = "idlePact", providerType = ASYNCH)
+	@PactTestFor(providerName = PROVIDER, pactMethod = "idlePact", providerType = ASYNCH)
 	void idle(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
-		verify(idleScene, timeout(250)).startAnimation(animator);
+		verify(idleScene).startAnimation(animator);
 	}
 
-	@Pact(consumer = "ledcontrol")
+	@Pact(consumer = CONSUMER)
 	MessagePact idlePact(MessagePactBuilder builder) {
 		return builder //
 				.given("the table is idle") //
@@ -108,6 +129,48 @@ class ContractTests {
 				.withContent(new PactDslJsonBody() //
 						.stringType("topic", "game/idle") //
 						.stringValue("payload", "true")) //
+				.toPact();
+	}
+
+	@Test
+	@PactTestFor(providerName = PROVIDER, pactMethod = "gameoverPact", providerType = ASYNCH)
+	void gameover(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystem();
+		whenMessagesIsReceived(pact.getMessages());
+		assertThat(gameoverScene.animator, is(animator));
+		assertThat(gameoverScene.color1, is(COLOR_TEAM_RIGHT));
+		assertThat(gameoverScene.color2, is(COLOR_TEAM_RIGHT));
+	}
+
+	@Pact(consumer = CONSUMER)
+	MessagePact gameoverPact(MessagePactBuilder builder) {
+		return builder //
+				.given("a team has won the game") //
+				.expectsToReceive("the gameover message") //
+				.withContent(new PactDslJsonBody() //
+						.stringType("topic", "game/gameover") //
+						.stringMatcher("payload", "\\d+", "1")) //
+				.toPact();
+	}
+
+	@Test
+	@PactTestFor(providerName = PROVIDER, pactMethod = "gameoverDrawPact", providerType = ASYNCH)
+	void gameoverDraw(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
+		givenTheSystem();
+		whenMessagesIsReceived(pact.getMessages());
+		assertThat(gameoverScene.animator, is(animator));
+		assertThat(gameoverScene.color1, is(COLOR_TEAM_LEFT));
+		assertThat(gameoverScene.color2, is(COLOR_TEAM_RIGHT));
+	}
+
+	@Pact(consumer = CONSUMER)
+	MessagePact gameoverDrawPact(MessagePactBuilder builder) {
+		return builder //
+				.given("a game ends draw") //
+				.expectsToReceive("the gameover message") //
+				.withContent(new PactDslJsonBody() //
+						.stringType("topic", "game/gameover") //
+						.stringMatcher("payload", "\\d+,\\d+(,\\d+)*", "0,1,2,3")) //
 				.toPact();
 	}
 
@@ -127,15 +190,23 @@ class ContractTests {
 	}
 
 	private void givenTheSystem() {
+		StackedPanel panel = new StackedPanel(3, 1);
 		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
 
 			@Override
-			protected ScoreScene scoreScene(Panel scorePanel) {
+			protected ScoreScene scoreScene(Panel panel) {
 				return scoreScene;
 			}
 
+			@Override
 			protected FlashScene foulScene(Panel panel) {
 				return foulScene;
+			};
+
+			@Override
+			protected FlashScene gameoverScene(Panel panel, Color color1, Color color2) {
+				gameoverScene = new FlashScene4Test(panel, color1, color2);
+				return gameoverScene;
 			};
 
 			@Override

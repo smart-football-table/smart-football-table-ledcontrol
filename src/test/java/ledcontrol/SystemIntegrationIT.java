@@ -130,18 +130,6 @@ class SystemIntegrationIT {
 	}
 
 	@Test
-	void flashesOnWinnerLeft() throws MqttSecurityException, MqttException, InterruptedException, IOException {
-		assertTimeoutPreemptively(timeout, () -> {
-			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-			whenMessageIsReceived(LOCALHOST, brokerPort, "game/gameover", "0");
-			await().until(() -> lastPanelState(), is(new Color[][] { //
-					{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT }, //
-					{ COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT, COLOR_TEAM_LEFT }, //
-			}));
-		});
-	}
-
-	@Test
 	void flashesOnWinnerRight() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
@@ -224,15 +212,15 @@ class SystemIntegrationIT {
 	void canStartAndStopTasks() throws InterruptedException, MqttSecurityException, MqttException {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-			AtomicInteger incremntor = new AtomicInteger(0);
-			Runnable incremetor = () -> incremntor.incrementAndGet();
-			assertThat(incremntor.get(), is(0));
+			AtomicInteger incrementor = new AtomicInteger(0);
+			Runnable incremetor = () -> incrementor.incrementAndGet();
+			assertThat(incrementor.get(), is(0));
 			AnimatorTask task = ledControl.getAnimator().start(incremetor);
-			await().until(() -> incremntor.get(), is(not(0)));
+			await().until(() -> incrementor.get(), is(not(0)));
 
 			task.stop();
-			int currentValue = incremntor.get();
-			await().until(() -> incremntor.get(), is(currentValue));
+			int currentValue = incrementor.get();
+			await().until(() -> incrementor.get(), is(currentValue));
 		});
 	}
 
