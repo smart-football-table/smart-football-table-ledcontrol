@@ -30,6 +30,8 @@ import static org.kohsuke.args4j.ParserProperties.defaults;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -46,6 +48,7 @@ import ledcontrol.mqtt.MqttAdapter;
 import ledcontrol.panel.Panel;
 import ledcontrol.panel.StackedPanel;
 import ledcontrol.scene.FlashScene;
+import ledcontrol.scene.FlashScene.FlashConfig;
 import ledcontrol.scene.IdleScene;
 import ledcontrol.scene.ScoreScene;
 
@@ -109,10 +112,7 @@ public class SystemRunner {
 								parseInt(m.getPayload()));
 					}) //
 					.when(isGameFoul).then(m -> foulScene.flash(animator)) //
-					.when(isGameover).then(m -> {
-						Color[] flashColors = getFlashColors(m);
-						gameoverScene(winnerPanel, flashColors[0], flashColors[1]).flash(animator);
-					}) //
+					.when(isGameover).then(m -> gameoverScene(winnerPanel, flashColors(m)).flash(animator)) //
 					.when(isIdle).then(m -> {
 						if (parseBoolean(m.getPayload())) {
 							idleScene.startAnimation(animator);
@@ -146,16 +146,21 @@ public class SystemRunner {
 					VIOLET, GREEN, PINK, WHITE);
 		}
 
-		protected FlashScene gameoverScene(Panel panel, Color color1, Color color2) {
-			return new FlashScene(panel, //
-					flash(color1, 24), flash(BLACK, 24), //
-					flash(color2, 24), flash(BLACK, 24), //
-					flash(color1, 24), flash(BLACK, 24), //
-					flash(color2, 24), flash(BLACK, 24), //
-					flash(color1, 6), flash(BLACK, 6), //
-					flash(color2, 6), flash(BLACK, 6), //
-					flash(color1, 6), flash(BLACK, 6), //
-					flash(color2, 6), flash(BLACK, 6));
+		protected FlashScene gameoverScene(Panel panel, Color... colors) {
+			List<FlashConfig> configs = new ArrayList<>();
+			for (int i = 0; i < 2; i++) {
+				for (Color color : colors) {
+					configs.add(flash(color, 24));
+					configs.add(flash(BLACK, 24));
+				}
+			}
+			for (int i = 0; i < 2; i++) {
+				for (Color color : colors) {
+					configs.add(flash(color, 6));
+					configs.add(flash(BLACK, 6));
+				}
+			}
+			return new FlashScene(panel, configs.toArray(new FlashConfig[configs.size()]));
 		}
 
 		private Panel fillWithPayloadColor(Panel panel, MessageWithTopic message) {
@@ -166,17 +171,12 @@ public class SystemRunner {
 			return Color.decode(message.getPayload());
 		}
 
-		private Color[] getFlashColors(MessageWithTopic message) {
-			int[] winners = stream(message.getPayload().split("\\,")).mapToInt(Integer::parseInt).toArray();
-			if (winners.length > 1) {
-				return teamColors;
-			}
-			return contains(winners, 0) ? new Color[] { teamColors[0], teamColors[0] }
-					: new Color[] { teamColors[1], teamColors[1] };
-		}
-
-		private boolean contains(int[] winners, int team) {
-			return stream(winners).anyMatch(i -> i == team);
+		private Color[] flashColors(MessageWithTopic message) {
+			return stream(message.getPayload().split("\\,")) //
+					.map(Integer::parseInt) //
+					.filter(i -> i < teamColors.length) //
+					.map(i -> teamColors[i]) //
+					.toArray(Color[]::new);
 		}
 
 	}

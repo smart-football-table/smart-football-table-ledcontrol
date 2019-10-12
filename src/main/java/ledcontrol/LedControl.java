@@ -150,7 +150,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	public void accept(MessageWithTopic message) {
 		for (ChainElement element : elements) {
 			try {
-				if (element.handle(message, getAnimator())) {
+				if (element.handle(message, animator)) {
 					return;
 				}
 			} catch (Exception e) {

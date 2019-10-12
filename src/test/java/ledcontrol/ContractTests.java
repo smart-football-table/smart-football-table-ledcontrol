@@ -39,14 +39,12 @@ import ledcontrol.scene.ScoreScene;
 class ContractTests {
 
 	private static final class FlashScene4Test extends FlashScene {
-		private Color color1;
-		private Color color2;
 		private Animator animator;
+		private final Color[] colors;
 
-		private FlashScene4Test(Panel panel, Color color1, Color color2) {
+		private FlashScene4Test(Panel panel, Color... colors) {
 			super(panel);
-			this.color1 = color1;
-			this.color2 = color2;
+			this.colors = colors;
 		}
 
 		@Override
@@ -138,8 +136,7 @@ class ContractTests {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		assertThat(gameoverScene.animator, is(animator));
-		assertThat(gameoverScene.color1, is(COLOR_TEAM_RIGHT));
-		assertThat(gameoverScene.color2, is(COLOR_TEAM_RIGHT));
+		assertThat(gameoverScene.colors, is(new Color[] { COLOR_TEAM_RIGHT }));
 	}
 
 	@Pact(consumer = CONSUMER)
@@ -159,8 +156,7 @@ class ContractTests {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		assertThat(gameoverScene.animator, is(animator));
-		assertThat(gameoverScene.color1, is(COLOR_TEAM_LEFT));
-		assertThat(gameoverScene.color2, is(COLOR_TEAM_RIGHT));
+		assertThat(gameoverScene.colors, is(new Color[] { COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT }));
 	}
 
 	@Pact(consumer = CONSUMER)
@@ -204,8 +200,8 @@ class ContractTests {
 			};
 
 			@Override
-			protected FlashScene gameoverScene(Panel panel, Color color1, Color color2) {
-				gameoverScene = new FlashScene4Test(panel, color1, color2);
+			protected FlashScene gameoverScene(Panel panel, Color... colors) {
+				gameoverScene = new FlashScene4Test(panel, colors);
 				return gameoverScene;
 			};
 
