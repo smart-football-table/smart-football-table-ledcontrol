@@ -103,11 +103,10 @@
 				<artifactId>jib-maven-plugin</artifactId>
 				<version>1.5.1</version>
 				<configuration>
-                               <configuration>
-                                        <from>
-                                               <!-- <image>gcr.io/distroless/java:11</image> -->
-                                               <image>arm64v8/openjdk:11-slim</image>
-                                         </from>
+					<from>
+						<!-- <image>gcr.io/distroless/java:11</image> -->
+						<image>arm64v8/openjdk:11-slim</image>
+					</from>
 					<container>
 						<mainClass>ledcontrol.runner.SystemRunner</mainClass>
 						<useCurrentTimestamp>true</useCurrentTimestamp>
