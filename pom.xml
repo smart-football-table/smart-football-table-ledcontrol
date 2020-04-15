@@ -13,6 +13,30 @@
 		<image>docker.io/smart-football-table/${project.artifactId}:latest</image>
 	</properties>
 
+	<profiles>
+		<profile>
+			<id>x86</id>
+			<properties>
+				<baseimage>gcr.io/distroless/java:11</baseimage>
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<id>aarch64</id>
+			<properties>
+				<baseimage>arm64v8/openjdk:11-slim</baseimage>
+			</properties>
+			<activation>
+				<os>
+					<family>unix</family>
+					<arch>aarch64</arch>
+				</os>
+			</activation>
+		</profile>
+	</profiles>
+
 	<dependencies>
 		<dependency>
 			<groupId>com.fazecast</groupId>
@@ -104,8 +128,7 @@
 				<version>1.5.1</version>
 				<configuration>
 					<from>
-						<!-- <image>gcr.io/distroless/java:11</image> -->
-						<image>arm64v8/openjdk:11-slim</image>
+						<image>${baseimage}</image>
 					</from>
 					<container>
 						<mainClass>ledcontrol.runner.SystemRunner</mainClass>
