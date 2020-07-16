@@ -116,6 +116,9 @@
 						<include>**/*Test.java</include>
 						<include>**/*IT.java</include>
 					</includes>
+					<systemPropertyVariables>
+						<junit.jupiter.execution.timeout.default>1m</junit.jupiter.execution.timeout.default>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 			<plugin>
