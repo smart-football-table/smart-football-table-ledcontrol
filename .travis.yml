@@ -2,6 +2,15 @@ language: java
 services:
   - docker
 
+jdk:
+  - oraclejdk9
+  - oraclejdk11
+  - openjdk8
+  - openjdk9
+  - openjdk10
+  - openjdk11
+  - openjdk-ea
+
 script:
   - mvn package jib:dockerBuild
 
