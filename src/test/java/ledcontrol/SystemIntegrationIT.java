@@ -253,7 +253,7 @@ class SystemIntegrationIT {
 		verify(spies.get(condition), timeout(500)).handle(any(MessageWithTopic.class), any(Animator.class));
 	}
 
-	private static <T> T last(List<T> list) throws IOException {
+	private static <T> T last(List<T> list) {
 		return list.get(list.size() - 1);
 	}
 
