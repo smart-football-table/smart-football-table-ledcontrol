@@ -8,18 +8,18 @@
 [![GitLicense](https://gitlicense.com/badge/smart-football-table/smart-football-table-ledcontrol)](https://gitlicense.com/license/smart-football-table/smart-football-table-ledcontrol)
 
 
-Java program that receives events via MQTT and displays scenes on a connected LED stripe. 
-The LED stripe can be connected using a serial link. The program writes TPM2 frames to the serial link which will then be interpreted by a TPM2 device. The TPM2 device can be a simple µController like an Arduino or an ESP8266. 
+Java program that receives events via MQTT and displays scenes on a connected LED strip. 
+The LED strip can be connected using a serial link. The program writes TPM2 frames to the serial link which will then be interpreted by a TPM2 device. The TPM2 device can be a simple µController like an Arduino or an ESP8266. 
 However, the Arduino seems to be not fast enough to manage the data send since it is very limited both in processing speed and the size of the serial buffer. 
 
-Scenes visualized using the stripe: 
-* Goals: Whole stripe blinks in the goal getting team's color)
-* Fouls: Whole stripe blinks yellow
+Scenes visualized using the strip: 
+* Goals: Whole strip blinks in the goal getting team's color)
+* Fouls: Whole strip blinks yellow
 * Score: The score of both teams in visualized during the game
-* Game over: Whole stripe blinks in the winning team's color)
+* Game over: Whole strip blinks in the winning team's color)
 * Idle: Plays some animation if non one is playing
 
-The stripe can also be used to lighten the football table. 
+The strip can also be used to lighten the football table. 
 * Foreground color: No matter what else should be displayed, only the foreground color is shown. This can be used to have the brightest possible light on the table by selecting white as color (#FFFFFF) or any other RGB color
 * Background color: All not active (black) leds can be turned on, also any RGB color is supported
 
@@ -43,7 +43,7 @@ Showing the ESP8266 module inside a hand crafted case (used to be a RasPi case)
 
 # Part list
 
-Beside the RGB LED stripe, the three wire (white/green/red) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
+Beside the RGB LED strip, the three wire (white/green/red) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
 
 | Amount | Description             | Price (china)  |
 | ------ | ----------------------- | -------------- |
