@@ -26,11 +26,13 @@ The strip can also be used to lighten the football table.
 ## Docker
 You can either run docker in privileged mode (```--privileged```) or pass in the device(s) available in the container
 ```docker run --rm --device=/dev/ttyUSB4:/dev/ttyUSB0 -e LEDS=72 -e TTY=/dev/ttyUSB0 -e MQTTHOST=mqtt -e MQTTPORT=1883 ledcontrol```
-Because the device numbers depends on the order the devices are connected you should use static links. You can add your own udev rule or just use the already existing links: 
+Because the device numbers depends on the order the devices are connected you should use static links. You can add your own udev rule or just use the already existing link: 
 ```docker run --rm --device=/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0:/dev/ttyUSB0 -e LEDS=72 -e TTY=/dev/ttyUSB0 -e MQTTHOST=mqtt -e MQTTPORT=1883 ledcontrol```
 
 ![Score](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190307_164909.jpg)
 LED strip showing score
+
+See below for building your own TPM2 device. You can find the sketch to upload in this repo. 
 
 ![PCB top](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-top.png) ![PCB bottom](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/esp8266-tpm2-bottom.png)
 <br>LED controller module using an ESP8266, top and bottom layout view
@@ -42,11 +44,9 @@ The soldered PCB
 Showing the ESP8266 module inside a hand crafted case (used to be a RasPi case)
 
 
-If you want to build your own TPM2 device follow the instructions below and upload the sketch included to the microcontroller. 
-
 # Part list
 
-Beside the RGB LED strip (WS2812B), the three wire (white/green/red) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
+Beside the RGB LED strip (WS2812B), the three wire (white/green/red) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 device. 
 
 | Amount | Description             | Price (china)  |
 | ------ | ----------------------- | -------------- |
