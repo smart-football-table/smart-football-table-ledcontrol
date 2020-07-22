@@ -8,16 +8,16 @@
 [![GitLicense](https://gitlicense.com/badge/smart-football-table/smart-football-table-ledcontrol)](https://gitlicense.com/license/smart-football-table/smart-football-table-ledcontrol)
 
 
-Java program that receives events via MQTT and displays scenes on a connected LED strip. 
-The LED strip can be connected using a serial link. The program writes TPM2 frames to the serial link which will then be interpreted by a TPM2 device. The TPM2 device can be a simple µController like an Arduino or an ESP8266. 
-However, the Arduino seems to be not fast enough to manage the data send since it is very limited both in processing speed and the size of the serial buffer. 
+Java program that receives events via MQTT and displays scenes using a TPM2 device (connected via serial link) which controls a connected LED strip. 
+The program writes TPM2 frames to the serial link which will then be interpreted by a TPM2 device. The TPM2 device can be a simple µController like an Arduino or an ESP8266. 
+However, the Arduino seems to be not fast enough to manage the amount of data sent since it is very limited both in processing speed and the size of the serial buffer. 
 
 Scenes visualized using the strip: 
 * Goals: Whole strip blinks in the goal getting team's color)
 * Fouls: Whole strip blinks yellow
 * Score: The score of both teams in visualized during the game
 * Game over: Whole strip blinks in the winning team's color)
-* Idle: Plays some animation if non one is playing
+* Idle: Plays some animation if noone is playing
 
 The strip can also be used to lighten the football table. 
 * Foreground color: No matter what else should be displayed, only the foreground color is shown. This can be used to have the brightest possible light on the table by selecting white as color (#FFFFFF) or any other RGB color
@@ -41,9 +41,12 @@ The soldered PCB
 ![Case](https://smart-football-table.github.io/modules/smart-football-table-ledcontrol/IMG_20190404_131424825.jpg)
 Showing the ESP8266 module inside a hand crafted case (used to be a RasPi case)
 
+
+If you want to build your own TPM2 device follow the instructions below and upload the sketch included to the microcontroller. 
+
 # Part list
 
-Beside the RGB LED strip, the three wire (white/green/red) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
+Beside the RGB LED strip (WS2812B), the three wire (white/green/red) connection cable (JST) and a micro USB cable we used the following parts to build the TPM2 box. 
 
 | Amount | Description             | Price (china)  |
 | ------ | ----------------------- | -------------- |
@@ -54,4 +57,3 @@ Beside the RGB LED strip, the three wire (white/green/red) connection cable (JST
 | 1      | PCB mount power socket connector<br>(matching power supply connector) | 0,05€ |
 | 1      | PCB 15"x15"             | <1€            |
 | (2)    | (Optional) 8 pins single row female pin header | 0,10€ |
-
