@@ -2,6 +2,8 @@ package ledcontrol;
 
 import static au.com.dius.pact.consumer.ConsumerPactBuilder.jsonBody;
 import static au.com.dius.pact.consumer.junit5.ProviderType.ASYNCH;
+import static ledcontrol.ContractTest.PactBuilder.a;
+import static ledcontrol.ContractTest.PactBuilder.message;
 import static ledcontrol.runner.Colors.BLUE;
 import static ledcontrol.runner.Colors.ORANGE;
 import static org.hamcrest.CoreMatchers.is;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import au.com.dius.pact.consumer.MessagePactBuilder;
+import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.annotations.Pact;
@@ -50,6 +53,44 @@ class ContractTest {
 		@Override
 		public void flash(Animator animator) {
 			this.animator = animator;
+		}
+	}
+
+	static class PactBuilder {
+
+		private PactDslJsonBody jsonBody = jsonBody();
+
+		private PactBuilder withTopic(String value) {
+			jsonBody.stringValue("topic", value);
+			return this;
+		}
+
+		private PactBuilder withPayload(String value) {
+			jsonBody.stringValue("payload", value);
+			return this;
+		}
+
+		private PactBuilder withTopic(String regex, String value) {
+			jsonBody.stringMatcher("topic", regex, value);
+			return this;
+		}
+
+		private PactBuilder withPayload(String regex, String value) {
+			jsonBody.stringMatcher("payload", regex, value);
+			return this;
+		}
+
+		public static PactBuilder message() {
+			return new PactBuilder() // .withPayload(".*", "any payload")
+			;
+		}
+
+		private PactDslJsonBody build() {
+			return jsonBody;
+		}
+
+		static PactDslJsonBody a(PactBuilder builder) {
+			return builder.build();
 		}
 	}
 
@@ -85,9 +126,7 @@ class ContractTest {
 		return builder //
 				.given("a goal was shot") //
 				.expectsToReceive("the team's new score") //
-				.withContent(jsonBody() //
-						.stringMatcher("topic", "team\\/score\\/\\d+", "team/score/1") //
-						.stringMatcher("payload", "\\d+", "2")) //
+				.withContent(a(message().withTopic("team\\/score\\/\\d+", "team/score/1").withPayload("\\d+", "2")))
 				.toPact();
 	}
 
@@ -105,9 +144,7 @@ class ContractTest {
 		return builder //
 				.given("a team fouled") //
 				.expectsToReceive("the foul message") //
-				.withContent(jsonBody() //
-						.stringValue("topic", "game/foul") //
-						.stringMatcher("payload", ".*", "")) //
+				.withContent(a(message().withTopic("game/foul").withPayload(".*", ""))) //
 				.toPact();
 	}
 
@@ -124,9 +161,7 @@ class ContractTest {
 		return builder //
 				.given("the table is idle") //
 				.expectsToReceive("the idle message") //
-				.withContent(jsonBody() //
-						.stringValue("topic", "game/idle") //
-						.stringValue("payload", "true")) //
+				.withContent(a(message().withTopic("game/idle").withPayload("true"))) //
 				.toPact();
 	}
 
@@ -144,9 +179,7 @@ class ContractTest {
 		return builder //
 				.given("a team has won the game") //
 				.expectsToReceive("the gameover message") //
-				.withContent(jsonBody() //
-						.stringValue("topic", "game/gameover") //
-						.stringMatcher("payload", "\\d+", "1")) //
+				.withContent(a(message().withTopic("game/gameover").withPayload("\\d+", "1"))) //
 				.toPact();
 	}
 
@@ -164,9 +197,7 @@ class ContractTest {
 		return builder //
 				.given("a game ends draw") //
 				.expectsToReceive("the gameover message") //
-				.withContent(jsonBody() //
-						.stringValue("topic", "game/gameover") //
-						.stringMatcher("payload", "\\d+,\\d+(,\\d+)*", "0,1,2,3")) //
+				.withContent(a(message().withTopic("game/gameover").withPayload("\\d+,\\d+(,\\d+)*", "0,1,2,3"))) //
 				.toPact();
 	}
 
