@@ -2,6 +2,7 @@ package ledcontrol;
 
 import static au.com.dius.pact.consumer.ConsumerPactBuilder.jsonBody;
 import static au.com.dius.pact.consumer.junit5.ProviderType.ASYNCH;
+import static java.util.Optional.empty;
 import static ledcontrol.ContractTest.PactBuilder.a;
 import static ledcontrol.ContractTest.PactBuilder.message;
 import static ledcontrol.runner.Colors.BLUE;
@@ -15,6 +16,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
@@ -81,8 +83,7 @@ class ContractTest {
 		}
 
 		public static PactBuilder message() {
-			return new PactBuilder() // .withPayload(".*", "any payload")
-			;
+			return new PactBuilder();
 		}
 
 		private PactDslJsonBody build() {
@@ -92,6 +93,7 @@ class ContractTest {
 		static PactDslJsonBody a(PactBuilder builder) {
 			return builder.build();
 		}
+
 	}
 
 	private static final String CONSUMER = "ledcontrol";
@@ -115,7 +117,7 @@ class ContractTest {
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "teamLeftScorePact", providerType = ASYNCH)
-	void verifyTeamLeftScores(MessagePact pact) throws InterruptedException, IOException {
+	void verifyTeamLeftScores(MessagePact pact) throws IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		verify(scoreScene).setScore(1, 2);
@@ -132,8 +134,7 @@ class ContractTest {
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "flashesOnFoulPact", providerType = ASYNCH)
-	void flashesOnFoul(MessagePact pact)
-			throws MqttSecurityException, MqttException, InterruptedException, IOException {
+	void flashesOnFoul(MessagePact pact) throws MqttSecurityException, MqttException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		verify(foulScene).flash(animator);
@@ -144,13 +145,13 @@ class ContractTest {
 		return builder //
 				.given("a team fouled") //
 				.expectsToReceive("the foul message") //
-				.withContent(a(message().withTopic("game/foul").withPayload(".*", ""))) //
+				.withContent(a(message().withTopic("game/foul"))) //
 				.toPact();
 	}
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "idlePact", providerType = ASYNCH)
-	void idle(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
+	void idle(MessagePact pact) throws MqttSecurityException, MqttException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		verify(idleScene).startAnimation(animator);
@@ -167,7 +168,7 @@ class ContractTest {
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "gameoverPact", providerType = ASYNCH)
-	void gameover(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
+	void gameover(MessagePact pact) throws MqttSecurityException, MqttException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		assertThat(gameoverScene.animator, is(animator));
@@ -185,7 +186,7 @@ class ContractTest {
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "gameoverDrawPact", providerType = ASYNCH)
-	void gameoverDraw(MessagePact pact) throws MqttSecurityException, MqttException, InterruptedException, IOException {
+	void gameoverDraw(MessagePact pact) throws MqttSecurityException, MqttException, IOException {
 		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		assertThat(gameoverScene.animator, is(animator));
@@ -201,19 +202,26 @@ class ContractTest {
 				.toPact();
 	}
 
-	private void whenMessagesIsReceived(List<Message> messages) throws InterruptedException {
+	private void whenMessagesIsReceived(List<Message> messages) {
 		for (Message message : messages) {
 			whenMessageIsReceived(message);
 		}
 	}
 
-	private void whenMessageIsReceived(Message message) throws InterruptedException {
+	private void whenMessageIsReceived(Message message) {
 		ledControl.accept(toMessage(message));
 	}
 
 	private MessageWithTopic toMessage(Message message) {
 		JSONObject jsonObject = new JSONObject(message.contentsAsString());
-		return new MessageWithTopic(jsonObject.getString("topic"), jsonObject.getString("payload"));
+		return new MessageWithTopic( //
+				attribute(jsonObject, "topic").orElseThrow(() -> new IllegalStateException("No topic defined")), //
+				attribute(jsonObject, "payload").orElse("")) //
+		;
+	}
+
+	private static Optional<String> attribute(JSONObject jsonObject, String key) {
+		return jsonObject.has(key) ? Optional.of(jsonObject.getString(key)) : empty();
 	}
 
 	private void givenTheSystem() {

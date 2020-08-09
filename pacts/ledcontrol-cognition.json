@@ -77,27 +77,13 @@
         "contentType": "application/json"
       },
       "contents": {
-        "payload": "",
         "topic": "game/foul"
       },
       "providerStates": [
         {
           "name": "a team fouled"
         }
-      ],
-      "matchingRules": {
-        "body": {
-          "$.payload": {
-            "matchers": [
-              {
-                "match": "regex",
-                "regex": ".*"
-              }
-            ],
-            "combine": "AND"
-          }
-        }
-      }
+      ]
     },
     {
       "description": "the gameover message",
