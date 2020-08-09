@@ -3,8 +3,8 @@ package ledcontrol;
 import static au.com.dius.pact.consumer.ConsumerPactBuilder.jsonBody;
 import static au.com.dius.pact.consumer.junit5.ProviderType.ASYNCH;
 import static java.util.Optional.empty;
-import static ledcontrol.ContractTest.PactBuilder.a;
-import static ledcontrol.ContractTest.PactBuilder.message;
+import static ledcontrol.ContractTest.PactBuilder.make;
+import static ledcontrol.ContractTest.PactBuilder.pactUsing;
 import static ledcontrol.runner.Colors.BLUE;
 import static ledcontrol.runner.Colors.ORANGE;
 import static org.hamcrest.CoreMatchers.is;
@@ -61,6 +61,25 @@ class ContractTest {
 	static class PactBuilder {
 
 		private PactDslJsonBody jsonBody = jsonBody();
+		private MessagePactBuilder builder;
+
+		public static PactBuilder pactUsing(MessagePactBuilder builder) {
+			return new PactBuilder(builder);
+		}
+
+		private PactBuilder(MessagePactBuilder builder) {
+			this.builder = builder;
+		}
+
+		public PactBuilder when(String providerState) {
+			builder = builder.given(providerState);
+			return this;
+		}
+
+		public PactBuilder aMessageIsSend(String description) {
+			builder = builder.expectsToReceive(description);
+			return this;
+		}
 
 		private PactBuilder withTopic(String value) {
 			jsonBody.stringValue("topic", value);
@@ -82,16 +101,13 @@ class ContractTest {
 			return this;
 		}
 
-		public static PactBuilder message() {
-			return new PactBuilder();
+		static MessagePact make(PactBuilder builder) {
+			return builder.withContent().builder.toPact();
 		}
 
-		private PactDslJsonBody build() {
-			return jsonBody;
-		}
-
-		static PactDslJsonBody a(PactBuilder builder) {
-			return builder.build();
+		private PactBuilder withContent() {
+			this.builder.withContent(jsonBody);
+			return this;
 		}
 
 	}
@@ -113,63 +129,60 @@ class ContractTest {
 	@BeforeEach
 	void setup() throws IOException, MqttException {
 		System.setProperty("pact.rootDir", "pacts");
+		startSut();
 	}
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "teamLeftScorePact", providerType = ASYNCH)
 	void verifyTeamLeftScores(MessagePact pact) throws IOException {
-		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		verify(scoreScene).setScore(1, 2);
 	}
 
 	@Pact(consumer = CONSUMER)
 	MessagePact teamLeftScorePact(MessagePactBuilder builder) {
-		return builder //
-				.given("a goal was shot") //
-				.expectsToReceive("the team's new score") //
-				.withContent(a(message().withTopic("team\\/score\\/\\d+", "team/score/1").withPayload("\\d+", "2")))
-				.toPact();
+		return make(pactUsing(builder) //
+				.when("a goal was shot") //
+				.aMessageIsSend("the team's new score") //
+				.withTopic("team\\/score\\/\\d+", "team/score/1").withPayload("\\d+", "2") //
+		);
 	}
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "flashesOnFoulPact", providerType = ASYNCH)
 	void flashesOnFoul(MessagePact pact) throws MqttSecurityException, MqttException, IOException {
-		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		verify(foulScene).flash(animator);
 	}
 
 	@Pact(consumer = CONSUMER)
 	MessagePact flashesOnFoulPact(MessagePactBuilder builder) {
-		return builder //
-				.given("a team fouled") //
-				.expectsToReceive("the foul message") //
-				.withContent(a(message().withTopic("game/foul"))) //
-				.toPact();
+		return make(pactUsing(builder) //
+				.when("a team fouled") //
+				.aMessageIsSend("the foul message") //
+				.withTopic("game/foul") //
+		);
 	}
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "idlePact", providerType = ASYNCH)
 	void idle(MessagePact pact) throws MqttSecurityException, MqttException, IOException {
-		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		verify(idleScene).startAnimation(animator);
 	}
 
 	@Pact(consumer = CONSUMER)
 	MessagePact idlePact(MessagePactBuilder builder) {
-		return builder //
-				.given("the table is idle") //
-				.expectsToReceive("the idle message") //
-				.withContent(a(message().withTopic("game/idle").withPayload("true"))) //
-				.toPact();
+		return make(pactUsing(builder) //
+				.when("the table is idle") //
+				.aMessageIsSend("the idle message") //
+				.withTopic("game/idle").withPayload("true") //
+		);
 	}
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "gameoverPact", providerType = ASYNCH)
 	void gameover(MessagePact pact) throws MqttSecurityException, MqttException, IOException {
-		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		assertThat(gameoverScene.animator, is(animator));
 		assertThat(gameoverScene.colors, is(new Color[] { COLOR_TEAM_RIGHT }));
@@ -177,17 +190,16 @@ class ContractTest {
 
 	@Pact(consumer = CONSUMER)
 	MessagePact gameoverPact(MessagePactBuilder builder) {
-		return builder //
-				.given("a team has won the game") //
-				.expectsToReceive("the gameover message") //
-				.withContent(a(message().withTopic("game/gameover").withPayload("\\d+", "1"))) //
-				.toPact();
+		return make(pactUsing(builder) //
+				.when("a team has won the game") //
+				.aMessageIsSend("the gameover message") //
+				.withTopic("game/gameover").withPayload("\\d+", "1") //
+		);
 	}
 
 	@Test
 	@PactTestFor(providerName = PROVIDER, pactMethod = "gameoverDrawPact", providerType = ASYNCH)
 	void gameoverDraw(MessagePact pact) throws MqttSecurityException, MqttException, IOException {
-		givenTheSystem();
 		whenMessagesIsReceived(pact.getMessages());
 		assertThat(gameoverScene.animator, is(animator));
 		assertThat(gameoverScene.colors, is(new Color[] { COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT }));
@@ -195,17 +207,14 @@ class ContractTest {
 
 	@Pact(consumer = CONSUMER)
 	MessagePact gameoverDrawPact(MessagePactBuilder builder) {
-		return builder //
-				.given("a game ends draw") //
-				.expectsToReceive("the gameover message") //
-				.withContent(a(message().withTopic("game/gameover").withPayload("\\d+,\\d+(,\\d+)*", "0,1,2,3"))) //
-				.toPact();
+		return make(pactUsing(builder).when("a game ends draw") //
+				.aMessageIsSend("the gameover message") //
+				.withTopic("game/gameover").withPayload("\\d+,\\d+(,\\d+)*", "0,1,2,3") //
+		);
 	}
 
 	private void whenMessagesIsReceived(List<Message> messages) {
-		for (Message message : messages) {
-			whenMessageIsReceived(message);
-		}
+		messages.forEach(this::whenMessageIsReceived);
 	}
 
 	private void whenMessageIsReceived(Message message) {
@@ -224,7 +233,7 @@ class ContractTest {
 		return jsonObject.has(key) ? Optional.of(jsonObject.getString(key)) : empty();
 	}
 
-	private void givenTheSystem() {
+	private void startSut() {
 		StackedPanel panel = new StackedPanel(3, 1);
 		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) {
 
