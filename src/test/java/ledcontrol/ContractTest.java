@@ -76,8 +76,13 @@ class ContractTest {
 			return this;
 		}
 
-		public PactBuilder aMessageIsSend(String description) {
+		public PactBuilder aMessage(String description) {
 			builder = builder.expectsToReceive(description);
+			return this;
+		}
+
+		public PactBuilder isSend() {
+			this.builder.withContent(jsonBody);
 			return this;
 		}
 
@@ -102,12 +107,7 @@ class ContractTest {
 		}
 
 		static MessagePact make(PactBuilder builder) {
-			return builder.withContent().builder.toPact();
-		}
-
-		private PactBuilder withContent() {
-			this.builder.withContent(jsonBody);
-			return this;
+			return builder.builder.toPact();
 		}
 
 	}
@@ -143,8 +143,9 @@ class ContractTest {
 	MessagePact teamLeftScorePact(MessagePactBuilder builder) {
 		return make(pactUsing(builder) //
 				.when("a goal was shot") //
-				.aMessageIsSend("the team's new score") //
-				.withTopic("team\\/score\\/\\d+", "team/score/1").withPayload("\\d+", "2") //
+				.aMessage("the team's new score") //
+				.withTopic("team\\/score\\/\\d+", "team/score/1") //
+				.withPayload("\\d+", "2").isSend() //
 		);
 	}
 
@@ -159,8 +160,7 @@ class ContractTest {
 	MessagePact flashesOnFoulPact(MessagePactBuilder builder) {
 		return make(pactUsing(builder) //
 				.when("a team fouled") //
-				.aMessageIsSend("the foul message") //
-				.withTopic("game/foul") //
+				.aMessage("the foul message").withTopic("game/foul").isSend() //
 		);
 	}
 
@@ -175,8 +175,7 @@ class ContractTest {
 	MessagePact idlePact(MessagePactBuilder builder) {
 		return make(pactUsing(builder) //
 				.when("the table is idle") //
-				.aMessageIsSend("the idle message") //
-				.withTopic("game/idle").withPayload("true") //
+				.aMessage("the idle message").withTopic("game/idle").withPayload("true").isSend() //
 		);
 	}
 
@@ -192,8 +191,7 @@ class ContractTest {
 	MessagePact gameoverPact(MessagePactBuilder builder) {
 		return make(pactUsing(builder) //
 				.when("a team has won the game") //
-				.aMessageIsSend("the gameover message") //
-				.withTopic("game/gameover").withPayload("\\d+", "1") //
+				.aMessage("the gameover message").withTopic("game/gameover").withPayload("\\d+", "1").isSend() //
 		);
 	}
 
@@ -208,8 +206,10 @@ class ContractTest {
 	@Pact(consumer = CONSUMER)
 	MessagePact gameoverDrawPact(MessagePactBuilder builder) {
 		return make(pactUsing(builder).when("a game ends draw") //
-				.aMessageIsSend("the gameover message") //
-				.withTopic("game/gameover").withPayload("\\d+,\\d+(,\\d+)*", "0,1,2,3") //
+				.aMessage("the gameover message") //
+				.withTopic("game/gameover") //
+				.withPayload("\\d+,\\d+(,\\d+)*", "0,1,2,3") //
+				.isSend() //
 		);
 	}
 

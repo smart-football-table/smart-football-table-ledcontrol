@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.map.HashedMap;
+import org.awaitility.Awaitility;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -79,6 +80,7 @@ class SystemIntegrationIT {
 		brokerPort = randomPort();
 		server = newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
+		Awaitility.setDefaultTimeout(timeout);
 	}
 
 	private int randomPort() throws IOException {
@@ -212,15 +214,15 @@ class SystemIntegrationIT {
 	void canStartAndStopTasks() throws InterruptedException, MqttSecurityException, MqttException {
 		assertTimeoutPreemptively(timeout, () -> {
 			givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-			AtomicInteger incrementor = new AtomicInteger(0);
-			Runnable incremetor = () -> incrementor.incrementAndGet();
-			assertThat(incrementor.get(), is(0));
+			AtomicInteger atomicInteger = new AtomicInteger(0);
+			Runnable incremetor = () -> atomicInteger.incrementAndGet();
+			assertThat(atomicInteger.get(), is(0));
 			AnimatorTask task = ledControl.getAnimator().start(incremetor);
-			await().until(() -> incrementor.get(), is(not(0)));
+			await().until(() -> atomicInteger.get(), is(not(0)));
 
 			task.stop();
-			int currentValue = incrementor.get();
-			await().until(() -> incrementor.get(), is(currentValue));
+			int currentValue = atomicInteger.get();
+			await().until(() -> atomicInteger.get(), is(currentValue));
 		});
 	}
 
