@@ -90,9 +90,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>hu.blackbelt.bundles.moquette</groupId>
-			<artifactId>io.moquette</artifactId>
-			<version>0.11_1</version>
+			<groupId>de.fraunhofer.iosb.io.moquette</groupId>
+			<artifactId>moquette-broker</artifactId>
+			<version>0.14.3</version>
 			<scope>test</scope>
 		</dependency>
 		<!-- used for contract testing (PACT) -->
