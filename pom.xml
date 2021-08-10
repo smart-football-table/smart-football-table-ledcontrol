@@ -80,7 +80,7 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>3.11.0</version>
+			<version>3.11.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -128,7 +128,7 @@
 			<plugin>
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>jib-maven-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.1.2</version>
 				<configuration>
 					<from>
 						<image>${baseimage}</image>
