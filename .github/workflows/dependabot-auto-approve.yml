@@ -2,6 +2,7 @@ name: Dependabot auto-approve
 on: pull_request_target
 permissions:
   pull-requests: write
+
 jobs:
   dependabot:
     runs-on: ubuntu-latest
@@ -13,7 +14,15 @@ jobs:
         uses: dependabot/fetch-metadata@v1.1.1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Wait for build to succeed
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        id: wait-for-build
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          checkName: build
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Approve a PR
+        if: steps.wait-for-build.outputs.conclusion == 'success'
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
