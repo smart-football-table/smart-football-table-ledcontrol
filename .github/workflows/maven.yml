@@ -27,11 +27,6 @@ jobs:
         distribution: 'adopt'
         cache: maven
     - name: Build with Maven
-      run: mvn -B org.jacoco:jacoco-maven-plugin:prepare-agent install jib:dockerBuild --file pom.xml
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@v1.6
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: mvn -B org.jacoco:jacoco-maven-plugin:prepare-agent org.sonarsource.scanner.maven:sonar install jib:dockerBuild --file pom.xml
     - name: Codecov
       uses: codecov/codecov-action@v2.0.3
