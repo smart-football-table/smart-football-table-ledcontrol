@@ -16,7 +16,9 @@ jobs:
     
     strategy:
       matrix:
-        java-version: [ 8, 11, 15 ]
+	# sonarcloud analysis not supported using JDK8
+        # java-version: [ 8, 11, 15 ]
+        java-version: [ 11, 15 ]
 
     steps:
     - uses: actions/checkout@v2
