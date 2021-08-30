@@ -30,13 +30,5 @@ jobs:
       run: mvn -B org.jacoco:jacoco-maven-plugin:prepare-agent install jib:dockerBuild --file pom.xml
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v1.6
-
-# addons:
-#   sonarcloud:
-#     organization: "smart-football-table"
-#     token:
-#       secure: "rDYNyget9fElMcK7Ce/b8DmgaOBbZfbY+OAndATDECemIfctf7SZffkrbA75kGO5a3TRImxLbdxyI0ZNekA+jvxwTpLbjehb2Tk+SQeC04Szvx+ZpqiDnh8CagN2SFT0ZtlO5kiFslZseebO8mrMX9gpJUUiZNOTxy+4N5HSd+YHuy0ad3Ik+jiBEqVDZN9I0cvpNecMHg0xy214PmTdt81/GnMu+KHgsicB7lYqvz1dXYxfHzKIz+Qa6alrMkRlfiVAet4clFLOq+E7W5E8htTaxMwiej/KPocnwPtoaAB6HuZnVsUx5mVkzI+qTcX+Xod106J3GgclemdvzL6WdTza2ja1rgTKmllNtiRKZ0IIyDQaiCIfj2dV1kWjtFrw5O4z8xMZmJ4aZxTEqAx94dNEYziUf8lNP+KpLg+FaxYgm6tewbZhsfybM1UTFw6ami0oporIY0/6Yl5EOiQuHw3NBekMofLqSvi413ArUohCyXTA3ZnX6dZSZkkppH7j2Ln42agfGCmv3qDTRALWgrvBbGdOI0Nz1s51+T0KrYdVr2FCe9gM/Q/QGlHTHzSBzxsnk59dYJQRUs1BgZVqorE+v2mh9RN9lAa8MaBJJIjLxlek11p+F5N8wNBWRtpuKCjVfZ7Nwr4ncMpRVK5Zp2HR5WaO/u1xpViViFfnPPU="
-
-# after_success:
-#   - bash <(curl -s https://codecov.io/bash)
-
+    - name: Codecov
+      uses: codecov/codecov-action@v2.0.3
