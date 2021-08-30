@@ -7,6 +7,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/smart-football-table/smart-football-table-ledcontrol/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/smart-football-table/smart-football-table-ledcontrol?targetFile=pom.xml)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=smart-football-table/smart-football-table-ledcontrol)](https://dependabot.com)
 [![GitLicense](https://gitlicense.com/badge/smart-football-table/smart-football-table-ledcontrol)](https://gitlicense.com/license/smart-football-table/smart-football-table-ledcontrol)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsmart-football-table%2Fsmart-football-table-ledcontrol.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsmart-football-table%2Fsmart-football-table-ledcontrol?ref=badge_shield)
 
 Java program that receives events via MQTT and displays scenes using a TPM2 device (connected via serial link) which controls a connected LED strip. 
 The program writes TPM2 frames to the serial link which will then be interpreted by a TPM2 device. The TPM2 device can be a simple µController like an Arduino or an ESP8266. 
@@ -57,3 +58,7 @@ Beside the RGB LED strip (WS2812B), the three wire (white/green/red) connection 
 | 1      | PCB mount power socket connector<br>(matching power supply connector) | 0,05€ |
 | 1      | PCB 15"x15"             | <1€            |
 | (2)    | (Optional) 8 pins single row female pin header | 0,10€ |
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsmart-football-table%2Fsmart-football-table-ledcontrol.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsmart-football-table%2Fsmart-football-table-ledcontrol?ref=badge_large)
