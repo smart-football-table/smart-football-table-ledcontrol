@@ -1,9 +1,9 @@
 package ledcontrol.scene;
 
-import static java.util.function.Function.identity;
+import static java.util.function.IntUnaryOperator.identity;
 
 import java.awt.Color;
-import java.util.function.Function;
+import java.util.function.IntUnaryOperator;
 
 import ledcontrol.panel.Panel;
 
@@ -11,8 +11,8 @@ public class ScoreScene implements Scene {
 
 	private final Panel panel;
 	private final Color[] colors;
-	private final Function<Integer, Integer> xNormal = identity();
-	private final Function<Integer, Integer> xReversed;
+	private final IntUnaryOperator xNormal = identity();
+	private final IntUnaryOperator xReversed;
 	private int pixelsPerGoal = 1;
 	private int spaceDots;
 
@@ -42,9 +42,9 @@ public class ScoreScene implements Scene {
 		panel.repaint();
 	}
 
-	private void draw(int teamid, int score, Function<Integer, Integer> xCalculaor) {
+	private void draw(int teamid, int score, IntUnaryOperator xCalculaor) {
 		for (int x = 0; x < panel.getWidth() / 2; x++) {
-			drawColumn(xCalculaor.apply(x), isGoalDot(x, score) ? colors[teamid] : null);
+			drawColumn(xCalculaor.applyAsInt(x), isGoalDot(x, score) ? colors[teamid] : null);
 		}
 	}
 

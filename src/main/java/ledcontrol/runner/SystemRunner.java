@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -55,6 +54,9 @@ import ledcontrol.scene.ScoreScene;
 public class SystemRunner {
 
 	public static class Messages {
+		private Messages() {
+			super();
+		}
 		public static final Predicate<MessageWithTopic> isTeamScore = topicStartWith("team/score/");
 		public static final Predicate<MessageWithTopic> isTeamScored = topicIsEqualTo("team/scored");
 		public static final Predicate<MessageWithTopic> isGameFoul = topicIsEqualTo("game/foul");
@@ -198,17 +200,17 @@ public class SystemRunner {
 	int mqttPort = 1883;
 
 	public static void main(String... args)
-			throws IOException, InterruptedException, MqttSecurityException, MqttException {
+			throws IOException, InterruptedException, MqttException {
 		new SystemRunner().doMain(args);
 	}
 
-	void doMain(String[] args) throws InterruptedException, MqttSecurityException, MqttException, IOException {
+	void doMain(String[] args) throws InterruptedException, MqttException, IOException {
 		if (parseArgs(args)) {
 			runSystem();
 		}
 	}
 
-	private void runSystem() throws IOException, InterruptedException, MqttSecurityException, MqttException {
+	private void runSystem() throws IOException, InterruptedException, MqttException {
 		SerialConnection connection = new SerialConnection(tty, baudrate);
 		SECONDS.sleep(2);
 		StackedPanel panel = new StackedPanel(leds, 1);

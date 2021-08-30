@@ -123,7 +123,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 		this.proto = Proto.forFrameSizes(outputStream, panel.getWidth() * panel.getHeight());
 		this.buffer = new Color[panel.getWidth() * panel.getHeight()];
 		this.animator = animator;
-		panel.addRepaintListener(p -> repaint(p));
+		panel.addRepaintListener(this::repaint);
 		panel.repaint();
 	}
 

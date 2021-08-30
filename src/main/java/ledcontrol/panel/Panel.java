@@ -19,15 +19,10 @@ public class Panel {
 		OverlayStrategy DEFAULT = transparentOn(null);
 
 		static OverlayStrategy transparentOn(Color transparentColor) {
-			return new OverlayStrategy() {
-
-				@Override
-				public void copy(int x, int y, Color newColor, Panel target) {
-					if (!Objects.equals(transparentColor, newColor)) {
-						target.setColor(x, y, newColor);
-					}
+			return (x, y, newColor, target) -> {
+				if (!Objects.equals(transparentColor, newColor)) {
+					target.setColor(x, y, newColor);
 				}
-
 			};
 		}
 
@@ -35,18 +30,19 @@ public class Panel {
 
 	}
 
-	private final int width, height;
+	private final int width;
+	private final int height;
 	protected final Color[][] colors;
 	private final List<RepaintListener> repaintListeners = new CopyOnWriteArrayList<>();
 	private Panel.OverlayStrategy overlayStrategy = OverlayStrategy.DEFAULT;
 
-	public Panel(final int width, final int height) {
+	public Panel(int width, int height) {
 		this.width = width;
 		this.height = height;
 		this.colors = new Color[height][width];
 	}
 
-	public Panel(final int width, final int height, Color color) {
+	public Panel(int width, int height, Color color) {
 		this(width, height);
 		fill(color);
 	}
@@ -73,7 +69,7 @@ public class Panel {
 		return colors;
 	}
 
-	public Panel setColor(final int x, final int y, final Color color) {
+	public Panel setColor(int x, int y, Color color) {
 		colors[y][x] = color;
 		return this;
 	}

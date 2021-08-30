@@ -9,7 +9,6 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import ledcontrol.LedControl.MessageWithTopic;
@@ -20,13 +19,13 @@ public class MqttAdapter implements Closeable {
 	private final Consumer<MessageWithTopic> consumer;
 
 	public MqttAdapter(String host, int port, Consumer<MessageWithTopic> consumer)
-			throws MqttSecurityException, MqttException {
+			throws MqttException {
 		this.mqttClient = makeMqttClient(host, port);
 		this.consumer = consumer;
 		subscribe();
 	}
 
-	private IMqttClient makeMqttClient(String host, int port) throws MqttException, MqttSecurityException {
+	private IMqttClient makeMqttClient(String host, int port) throws MqttException {
 		IMqttClient client = new MqttClient("tcp://" + host + ":" + port, "theSystemClient", new MemoryPersistence());
 		client.connect(mqttConnectOptions());
 		client.setCallback(callback(client));
@@ -48,10 +47,12 @@ public class MqttAdapter implements Closeable {
 
 			@Override
 			public void messageArrived(String topic, org.eclipse.paho.client.mqttv3.MqttMessage message) {
+				// noop
 			}
 
 			@Override
 			public void deliveryComplete(IMqttDeliveryToken token) {
+				// noop
 			}
 
 			@Override
@@ -69,7 +70,7 @@ public class MqttAdapter implements Closeable {
 		};
 	}
 
-	private void subscribe() throws MqttException, MqttSecurityException {
+	private void subscribe() throws MqttException {
 		mqttClient.subscribe("#", (t, m) -> consumer.accept(new MessageWithTopic(t, new String(m.getPayload()))));
 	}
 

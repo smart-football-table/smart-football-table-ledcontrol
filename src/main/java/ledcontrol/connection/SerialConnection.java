@@ -32,11 +32,11 @@ public class SerialConnection {
 		return commPorts[0];
 	}
 
-	public InputStream getInputStream() throws IOException {
+	public InputStream getInputStream() {
 		return serialPort.getInputStream();
 	}
 
-	public OutputStream getOutputStream() throws IOException {
+	public OutputStream getOutputStream() {
 		return serialPort.getOutputStream();
 	}
 
