@@ -1,0 +1,6 @@
+ignore:
+  - ".github"
+  - "board"
+  - "sketches"
+  - ".*.yml"
+  
