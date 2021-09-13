@@ -80,10 +80,6 @@ public class SystemRunner {
 			this.teamColors = teamColors;
 		}
 
-		public static class Actions {
-
-		}
-
 		public LedControl configure(LedControl ledControl, StackedPanel panel) {
 			Panel backgroundPanel = panel.createSubPanel().fill(BLACK);
 			Panel scorePanel = panel.createSubPanel();
