@@ -8,19 +8,46 @@ import org.junit.jupiter.api.Test;
 
 class ArraysTest {
 
+	private static final String[] ROTATE_BY_ZERO = new String[] { "A", "B", "C" };
+	private static final String[] ROTATE_BY_ONE = new String[] { "C", "A", "B" };
+
+	String[] elements = new String[] { "A", "B", "C" };
+
 	@Test
 	void testRotateSingle() {
-		assertThat(rotate(String.class, new String[] { "A" }, 1), is(new String[] { "A" }));
+		elements = new String[] { "A" };
+		rotate(elements, 1);
+		assertThat(elements, is(new String[] { "A" }));
+	}
+
+	@Test
+	void testRotate0() {
+		rotate(elements, 0);
+		assertThat(elements, is(ROTATE_BY_ZERO));
+	}
+
+	@Test
+	void testRotateArrayLength() {
+		rotate(elements, elements.length);
+		assertThat(elements, is(ROTATE_BY_ZERO));
 	}
 
 	@Test
 	void testRotate() {
-		assertThat(rotate(String.class, new String[] { "A", "B", "C" }, 1), is(new String[] { "C", "A", "B" }));
+		rotate(elements, 1);
+		assertThat(elements, is(ROTATE_BY_ONE));
+	}
+
+	@Test
+	void testRotateArrayLengthPlusOne() {
+		rotate(elements, elements.length + 1);
+		assertThat(elements, is(ROTATE_BY_ONE));
 	}
 
 	@Test
 	void testRotate2() {
-		assertThat(rotate(String.class, new String[] { "A", "B", "C" }, 2), is(new String[] { "B", "C", "A" }));
+		rotate(elements, 2);
+		assertThat(elements, is(new String[] { "B", "C", "A" }));
 	}
 
 }

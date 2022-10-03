@@ -16,6 +16,9 @@ import ledcontrol.connection.SerialConnection;
 
 public class DemoRunner {
 
+	private static final String DEV_TTY_USB = "/dev/ttyUSB4";
+	private static final int BAUDRATE = 230400;
+
 	private static final Color[] fgad_farben = new Color[] { new Color(0, 102, 179), new Color(138, 192, 86),
 			new Color(160, 80, 154), new Color(255, 102, 0), new Color(209, 10, 69), new Color(86, 188, 177),
 			new Color(250, 203, 65) };
@@ -24,7 +27,7 @@ public class DemoRunner {
 
 		SECONDS.sleep(2);
 
-		SerialConnection connection = new SerialConnection("/dev/ttyUSB4", 230400);
+		SerialConnection connection = new SerialConnection(DEV_TTY_USB, BAUDRATE);
 		BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
 		int ledCount = 120;
@@ -34,7 +37,9 @@ public class DemoRunner {
 		Color[] leds = initLeds(ledCount, 5);
 		while (true) {
 			proto.write(leds);
-			rotate(Color.class, leds, 1);
+			// we could introduce a shifting list but currently it is used only here in the
+			// DemoRunner
+			rotate(leds, 1);
 			MILLISECONDS.sleep(40);
 			read(br);
 		}
