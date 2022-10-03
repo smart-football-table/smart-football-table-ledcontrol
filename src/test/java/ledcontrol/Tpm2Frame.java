@@ -5,7 +5,6 @@ import static ledcontrol.util.Preconditions.checkState;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.stream.IntStream;
 
 public class Tpm2Frame {
 
@@ -32,14 +31,20 @@ public class Tpm2Frame {
 		checkState(packetEndByte == 0x36, "PacketStartByte 0x36 expected but got %s", packetEndByte);
 	}
 
-	private Color[] readColors(InputStream is, int size) {
-		return IntStream.range(0, size).mapToObj(n -> {
-			try {
-				return new Color(is.read(), is.read(), is.read());
-			} catch (IOException e) {
-				throw new RuntimeException("Error creating color", e);
-			}
-		}).toArray(Color[]::new);
+	private static Color[] readColors(InputStream is, int size) {
+		Color[] result = new Color[size];
+		for (int i = 0; i < size; i++) {
+			result[i] = readColor(is);
+		}
+		return result;
+	}
+
+	private static Color readColor(InputStream is) {
+		try {
+			return new Color(is.read(), is.read(), is.read());
+		} catch (IOException e) {
+			throw new RuntimeException("Error creating color", e);
+		}
 	}
 
 	public int getCurrentPaket() {

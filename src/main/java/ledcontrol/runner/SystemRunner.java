@@ -6,8 +6,8 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static ledcontrol.LedControl.MessageWithTopic.topicIsEqualTo;
-import static ledcontrol.LedControl.MessageWithTopic.topicStartWith;
+import static ledcontrol.LedControl.MessageWithTopic.TopicIsEqualTo.topicIsEqualTo;
+import static ledcontrol.LedControl.MessageWithTopic.TopicStartsWith.topicStartWith;
 import static ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
 import static ledcontrol.runner.Colors.FUCHSIA;
 import static ledcontrol.runner.Colors.GREEN;
@@ -32,7 +32,6 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.kohsuke.args4j.CmdLineException;
@@ -42,6 +41,8 @@ import org.kohsuke.args4j.Option;
 import ledcontrol.Animator;
 import ledcontrol.LedControl;
 import ledcontrol.LedControl.MessageWithTopic;
+import ledcontrol.LedControl.MessageWithTopic.TopicIsEqualTo;
+import ledcontrol.LedControl.MessageWithTopic.TopicStartsWith;
 import ledcontrol.connection.SerialConnection;
 import ledcontrol.mqtt.MqttAdapter;
 import ledcontrol.panel.Panel;
@@ -57,15 +58,14 @@ public class SystemRunner {
 		private Messages() {
 			super();
 		}
-		public static final Predicate<MessageWithTopic> isTeamScore = topicStartWith("team/score/");
-		public static final Predicate<MessageWithTopic> isTeamScored = topicIsEqualTo("team/scored");
-		public static final Predicate<MessageWithTopic> isGameFoul = topicIsEqualTo("game/foul");
-		public static final Predicate<MessageWithTopic> isGameover = topicIsEqualTo("game/gameover");
-		public static final Predicate<MessageWithTopic> isIdle = topicIsEqualTo("game/idle");
-		public static final Predicate<MessageWithTopic> isForegroundlight = topicIsEqualTo(
-				"leds/foregroundlight/color");
-		public static final Predicate<MessageWithTopic> isBackgroundlight = topicIsEqualTo(
-				"leds/backgroundlight/color");
+
+		public static final TopicStartsWith isTeamScore = topicStartWith("team/score/");
+		public static final TopicIsEqualTo isTeamScored = topicIsEqualTo("team/scored");
+		public static final TopicIsEqualTo isGameFoul = topicIsEqualTo("game/foul");
+		public static final TopicIsEqualTo isGameover = topicIsEqualTo("game/gameover");
+		public static final TopicIsEqualTo isIdle = topicIsEqualTo("game/idle");
+		public static final TopicIsEqualTo isForegroundlight = topicIsEqualTo("leds/foregroundlight/color");
+		public static final TopicIsEqualTo isBackgroundlight = topicIsEqualTo("leds/backgroundlight/color");
 	}
 
 	public static class Configurator {
@@ -106,8 +106,7 @@ public class SystemRunner {
 
 					}) //
 					.when(isTeamScore).then(m -> {
-						scoreScene.setScore(parseInt(m.getTopic().substring("team/score/".length())),
-								parseInt(m.getPayload()));
+						scoreScene.setScore(parseInt(isTeamScore.suffix(m.getTopic())), parseInt(m.getPayload()));
 					}) //
 					.when(isGameFoul).then(m -> foulScene.flash(animator)) //
 					.when(isGameover).then(m -> gameoverScene(winnerPanel, flashColors(m)).flash(animator)) //
@@ -195,8 +194,7 @@ public class SystemRunner {
 	@Option(name = "-mqttPort", usage = "port of the mqtt broker")
 	int mqttPort = 1883;
 
-	public static void main(String... args)
-			throws IOException, InterruptedException, MqttException {
+	public static void main(String... args) throws IOException, InterruptedException, MqttException {
 		new SystemRunner().doMain(args);
 	}
 

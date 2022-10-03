@@ -5,16 +5,15 @@ import static java.util.Arrays.stream;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.function.Predicate.isEqual;
 
 import java.awt.Color;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import ledcontrol.LedControl.MessageWithTopic;
@@ -89,16 +88,46 @@ public class LedControl implements Consumer<MessageWithTopic> {
 			return payload;
 		}
 
-		public static Predicate<MessageWithTopic> topicIsEqualTo(String topic) {
-			return matches(topic, MessageWithTopic::getTopic);
+		public static class TopicIsEqualTo implements Predicate<MessageWithTopic> {
+
+			private final String topic;
+
+			private TopicIsEqualTo(String topic) {
+				this.topic = topic;
+			}
+
+			@Override
+			public boolean test(MessageWithTopic message) {
+				return Objects.equals(topic, message.getTopic());
+			}
+
+			public static TopicIsEqualTo topicIsEqualTo(String topic) {
+				return new TopicIsEqualTo(topic);
+			}
+
 		}
 
-		public static Predicate<MessageWithTopic> topicStartWith(String prefix) {
-			return m -> ((Function<MessageWithTopic, String>) MessageWithTopic::getTopic).apply(m).startsWith(prefix);
-		}
+		public static class TopicStartsWith implements Predicate<MessageWithTopic> {
 
-		public static <T> Predicate<MessageWithTopic> matches(T value, Function<MessageWithTopic, T> f) {
-			return m -> isEqual(value).test(f.apply(m));
+			private final String topic;
+
+			private TopicStartsWith(String topic) {
+				this.topic = topic;
+			}
+
+			@Override
+			public boolean test(MessageWithTopic message) {
+				return message.getTopic().startsWith(topic);
+			}
+
+			public String suffix(String topic) {
+				return topic.substring(this.topic.length());
+			}
+
+			public static MessageWithTopic.TopicStartsWith topicStartWith(String prefix) {
+				return new TopicStartsWith(prefix);
+			}
+
 		}
 
 	}
