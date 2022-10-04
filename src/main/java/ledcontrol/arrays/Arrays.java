@@ -15,8 +15,8 @@ public final class Arrays {
 	 * @param elements elements to rotate
 	 * @param by       the amount to rotate
 	 */
-	public static <T> void rotate(T[] elements, int byX) {
-		int by = byX % elements.length;
+	public static <T> void rotate(T[] elements, int by) {
+		by = by % elements.length;
 		@SuppressWarnings("unchecked")
 		T[] temp = (T[]) Array.newInstance(elements.getClass().getComponentType(), by);
 		System.arraycopy(elements, elements.length - by, temp, 0, by);
