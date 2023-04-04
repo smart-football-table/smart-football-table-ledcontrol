@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.smart-football-table</groupId>
 	<artifactId>ledcontrol</artifactId>
@@ -9,10 +7,9 @@
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<junit.jupiter.version>5.9.2</junit.jupiter.version>
+		<junit.version>5.9.2</junit.version>
+		<pact.version>4.1.7</pact.version>
 		<image>docker.io/smart-football-table/${project.artifactId}:latest</image>
-		<sonar.organization>smart-football-table</sonar.organization>
-		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	</properties>
 
 	<profiles>
@@ -39,6 +36,18 @@
 		</profile>
 	</profiles>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>com.fazecast</groupId>
@@ -57,14 +66,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<version>${junit.jupiter.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<version>${junit.jupiter.version}</version>
+			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -99,25 +101,25 @@
 		</dependency>
 		<!-- used for contract testing (PACT) -->
 		<dependency>
-			<groupId>au.com.dius</groupId>
-			<artifactId>pact-jvm-consumer-junit5</artifactId>
-			<version>4.0.10</version>
+			<groupId>au.com.dius.pact.consumer</groupId>
+			<artifactId>junit5</artifactId>
+			<version>${pact.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.0.0</version>
 				<configuration>
 					<useSystemClassLoader>false</useSystemClassLoader>
-					<includes>
-						<include>**/Test*.java</include>
-						<include>**/*Test.java</include>
-						<include>**/*IT.java</include>
-					</includes>
 					<systemPropertyVariables>
 						<junit.jupiter.execution.timeout.default>1m</junit.jupiter.execution.timeout.default>
 					</systemPropertyVariables>
