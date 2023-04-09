@@ -212,8 +212,10 @@ public class SystemRunner {
 		try (MqttAdapter mqttAdapter = new MqttAdapter(mqttHost, mqttPort, ledControl)) {
 			new Configurator().configure(ledControl, panel);
 			Object o = new Object();
-			synchronized (o) {
-				o.wait();
+			while (true) {
+				synchronized (o) {
+					o.wait();
+				} 
 			}
 		}
 	}
