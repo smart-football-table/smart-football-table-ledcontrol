@@ -16,27 +16,42 @@ public class Color {
 	public static final Color CYAN = new Color(0, 255, 255);
 	public static final Color BLUE = new Color(0, 0, 255);
 
+	private static final int SHIFT_RED = 2;
+	private static final int SHIFT_GREEN = 1;
+	private static final int SHIFT_BLUE = 0;
+
+	private static final int BITS_PER_BYTE = 8;
+	private static final int _0X_FF = 0xFF;
+
 	private final int value;
 
 	public static Color decode(String nm) throws NumberFormatException {
-		int intval = Integer.decode(nm).intValue();
-		return new Color((intval >> 16) & 0xFF, (intval >> 8) & 0xFF, intval & 0xFF);
+		int value = Integer.decode(nm).intValue();
+		return new Color(shiftRight(value, SHIFT_RED), shiftRight(value, SHIFT_GREEN), shiftRight(value, 0));
 	}
 
 	public Color(int r, int g, int b) {
-		value = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | ((b & 0xFF) << 0);
+		value = shiftLeft(r, SHIFT_RED) | shiftLeft(g, SHIFT_GREEN) | shiftLeft(b, SHIFT_BLUE);
 	}
 
 	public int getRed() {
-		return getRGB() >> 16 & 0xFF;
+		return shiftRight(value, SHIFT_RED);
 	}
 
 	public int getGreen() {
-		return getRGB() >> 8 & 0xFF;
+		return shiftRight(value, SHIFT_GREEN);
 	}
 
 	public int getBlue() {
-		return getRGB() >> 0 & 0xFF;
+		return shiftRight(value, SHIFT_BLUE);
+	}
+
+	private static int shiftLeft(int value, int bytes) {
+		return (value & _0X_FF) << bytes * BITS_PER_BYTE;
+	}
+
+	private static int shiftRight(int value, int bytes) {
+		return value >> bytes * BITS_PER_BYTE & _0X_FF;
 	}
 
 	public int getRGB() {
