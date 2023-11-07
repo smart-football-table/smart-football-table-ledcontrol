@@ -35,7 +35,7 @@ public class DemoRunner {
 		Proto proto = Proto.forFrameSizes(connection.getOutputStream(), ledCount);
 
 		Color[] leds = initLeds(ledCount, 5);
-		while (true) {
+		while (!Thread.currentThread().isInterrupted()) {
 			proto.write(leds);
 			// we could introduce a shifting list but currently it is used only here in the
 			// DemoRunner
