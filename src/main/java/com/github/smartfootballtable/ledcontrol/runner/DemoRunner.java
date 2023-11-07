@@ -1,14 +1,14 @@
 package com.github.smartfootballtable.ledcontrol.runner;
 
 import static com.github.smartfootballtable.ledcontrol.Color.BLACK;
+import static com.github.smartfootballtable.ledcontrol.arrays.Arrays.rotate;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static com.github.smartfootballtable.ledcontrol.arrays.Arrays.rotate;
+import static java.util.stream.Stream.generate;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.stream.IntStream;
 
 import com.github.smartfootballtable.ledcontrol.Color;
 import com.github.smartfootballtable.ledcontrol.Proto;
@@ -46,7 +46,7 @@ public class DemoRunner {
 	}
 
 	private static Color[] initLeds(int leds, int breite) {
-		Color[] colors = IntStream.range(0, leds).mapToObj(i -> BLACK).toArray(Color[]::new);
+		Color[] colors = generate(() -> BLACK).limit(leds).toArray(Color[]::new);
 		for (int start = 0; start < leds; start += 60) {
 			for (int i = 0; i < fgad_farben.length; i++) {
 				int base = start + i * breite;
