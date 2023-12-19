@@ -36,6 +36,7 @@ public class FlashScene implements Scene {
 	}
 
 	public void flash(Animator animator) {
+		System.out.println("Starting " + this);
 		task = animator.start(this::tick);
 	}
 
@@ -44,7 +45,7 @@ public class FlashScene implements Scene {
 			if (++currentConfig == flashConfigs.length) {
 				panel.clear();
 				panel.repaint();
-				this.task.stop();
+				task.stop();
 				return;
 			}
 			panel.fill(flashConfigs[currentConfig].color);
