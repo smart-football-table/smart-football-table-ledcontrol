@@ -6,6 +6,8 @@ public interface Animator {
 		void stop();
 	}
 
-	AnimatorTask start(Runnable callable);
+	AnimatorTask start(Runnable runnable);
+
+	void shutdown();
 
 }

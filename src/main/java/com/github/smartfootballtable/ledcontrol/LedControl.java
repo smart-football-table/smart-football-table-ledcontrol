@@ -28,6 +28,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 			public DefaultAnimatorTask(Runnable runnable) {
 				this.runnable = runnable;
+				runnables.add(runnable);
 			}
 
 			@Override
@@ -39,11 +40,12 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 		private final List<Runnable> runnables = new CopyOnWriteArrayList<>();
 		private final long sleepMillis;
+		private volatile boolean interrupted;
 
 		public DefaultAnimator(int fps) {
 			sleepMillis = SECONDS.toMillis(1) / fps;
 			runAsync(() -> {
-				while (true) {
+				while (!interrupted) {
 					long startTime = System.currentTimeMillis();
 					for (Runnable runnable : runnables) {
 						try {
@@ -55,16 +57,20 @@ public class LedControl implements Consumer<MessageWithTopic> {
 					try {
 						MILLISECONDS.sleep(sleepMillis - (System.currentTimeMillis() - startTime));
 					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
+						interrupted = true;
 					}
 				}
 
 			});
 		}
+		
+		@Override
+		public void shutdown() {
+			interrupted = true;
+		}
 
 		@Override
 		public AnimatorTask start(Runnable runnable) {
-			runnables.add(runnable);
 			return new DefaultAnimatorTask(runnable);
 		}
 	}
@@ -199,11 +205,11 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 		@Override
 		public boolean handle(MessageWithTopic message, Animator animator) {
-			if (condition.test(message)) {
+			boolean accept = condition.test(message);
+			if (accept) {
 				consumer.accept(message);
-				return true;
 			}
-			return false;
+			return accept;
 		}
 
 		@Override

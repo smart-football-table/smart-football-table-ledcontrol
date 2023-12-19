@@ -25,7 +25,7 @@ public class MqttAdapter implements Closeable {
 	}
 
 	private IMqttClient makeMqttClient(String host, int port) throws MqttException {
-		IMqttClient client = new MqttClient("tcp://" + host + ":" + port, "theSystemClient", new MemoryPersistence());
+		IMqttClient client = new MqttClient("tcp://" + host + ":" + port, "LedControl", new MemoryPersistence());
 		client.connect(mqttConnectOptions());
 		client.setCallback(callback(client));
 		return client;
