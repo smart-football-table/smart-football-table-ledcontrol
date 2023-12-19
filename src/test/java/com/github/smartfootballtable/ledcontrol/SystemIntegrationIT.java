@@ -9,8 +9,10 @@ import static com.github.smartfootballtable.ledcontrol.runner.Colors.ORANGE;
 import static com.github.smartfootballtable.ledcontrol.runner.SystemRunner.Messages.isIdle;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
+import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.setDefaultTimeout;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
@@ -31,7 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.map.HashedMap;
-import org.awaitility.Awaitility;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -68,7 +69,7 @@ class SystemIntegrationIT {
 
 	private final StackedPanel panel = new StackedPanel(5, 2);
 
-	private Server server;
+	private Server broker;
 	private MqttAdapter mqttAdapter;
 	private LedControl ledControl;
 	private IMqttClient secondClient;
@@ -76,9 +77,9 @@ class SystemIntegrationIT {
 	@BeforeEach
 	void setup() throws IOException, MqttException {
 		brokerPort = randomPort();
-		server = newMqttServer(LOCALHOST, brokerPort);
-		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
-		findAnnotation(getClass(), Timeout.class).ifPresent(c -> Awaitility.setDefaultTimeout(c.value(), c.unit()));
+		broker = newMqttBroker(LOCALHOST, brokerPort);
+		secondClient = newMqttClient(LOCALHOST, brokerPort, "secondClient" + randomUUID());
+		findAnnotation(getClass(), Timeout.class).ifPresent(t -> setDefaultTimeout(t.value(), t.unit()));
 	}
 
 	private int randomPort() throws IOException {
@@ -87,7 +88,7 @@ class SystemIntegrationIT {
 		}
 	}
 
-	private Server newMqttServer(String host, int port) throws IOException {
+	private Server newMqttBroker(String host, int port) throws IOException {
 		Server server = new Server();
 		Properties properties = new Properties();
 		properties.setProperty(HOST_PROPERTY_NAME, host);
@@ -115,7 +116,8 @@ class SystemIntegrationIT {
 		}
 		secondClient.close();
 		mqttAdapter.close();
-		server.stopServer();
+		broker.stopServer();
+		ledControl.getAnimator().shutdown();
 	}
 
 	@Test
@@ -131,7 +133,7 @@ class SystemIntegrationIT {
 	void flashesOnWinnerRight() throws MqttSecurityException, MqttException, InterruptedException, IOException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "game/gameover", "1");
-		await().until(() -> lastPanelState(), is(new Color[][] { //
+		await().until(this::lastPanelState, is(new Color[][] { //
 				{ COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT }, //
 				{ COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT, COLOR_TEAM_RIGHT }, //
 		}));
@@ -149,7 +151,7 @@ class SystemIntegrationIT {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 		Color _1188CC = decode("#1188CC");
-		await().until(() -> lastPanelState(), is(new Color[][] { //
+		await().until(this::lastPanelState, is(new Color[][] { //
 				{ _1188CC, _1188CC, _1188CC, _1188CC, _1188CC }, //
 				{ _1188CC, _1188CC, _1188CC, _1188CC, _1188CC }, //
 		}));
@@ -161,7 +163,7 @@ class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 		Color _22AADD = decode("#22AADD");
-		await().until(() -> lastPanelState(), is(new Color[][] { //
+		await().until(this::lastPanelState, is(new Color[][] { //
 				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 		}));
@@ -174,7 +176,7 @@ class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/backgroundlight/color", "#1188CC");
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 		Color _22AADD = decode("#22AADD");
-		await().until(() -> lastPanelState(), is(new Color[][] { //
+		await().until(this::lastPanelState, is(new Color[][] { //
 				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 				{ _22AADD, _22AADD, _22AADD, _22AADD, _22AADD }, //
 		}));
@@ -188,7 +190,7 @@ class SystemIntegrationIT {
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#22AADD");
 		whenMessageIsReceived(LOCALHOST, brokerPort, "leds/foregroundlight/color", "#000000");
 		Color _1188cc = decode("#1188CC");
-		await().until(() -> lastPanelState(), is(new Color[][] { //
+		await().until(this::lastPanelState, is(new Color[][] { //
 				{ _1188cc, _1188cc, _1188cc, _1188cc, _1188cc }, //
 				{ _1188cc, _1188cc, _1188cc, _1188cc, _1188cc }, //
 		}));
@@ -212,9 +214,9 @@ class SystemIntegrationIT {
 	void doesReconnectToBrokerAndResubscribeToTopics()
 			throws InterruptedException, MqttSecurityException, MqttException, IOException, TimeoutException {
 		givenTheSystemConnectedToBroker(LOCALHOST, brokerPort);
-		server.stopServer();
+		broker.stopServer();
 
-		server = newMqttServer(LOCALHOST, brokerPort);
+		broker = newMqttBroker(LOCALHOST, brokerPort);
 		await().atMost(10, SECONDS).until(mqttAdapter::isConnected);
 
 		// does the reconnected client subscribe to the topics again?
