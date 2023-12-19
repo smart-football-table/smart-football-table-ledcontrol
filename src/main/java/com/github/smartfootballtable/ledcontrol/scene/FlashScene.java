@@ -36,7 +36,6 @@ public class FlashScene implements Scene {
 	}
 
 	public void flash(Animator animator) {
-		System.out.println("Starting " + this);
 		task = animator.start(this::tick);
 	}
 
