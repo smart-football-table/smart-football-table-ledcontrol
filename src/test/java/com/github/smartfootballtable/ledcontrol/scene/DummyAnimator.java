@@ -12,13 +12,18 @@ public final class DummyAnimator implements Animator {
 		return new AnimatorTask() {
 			@Override
 			public void stop() {
-				// nothing todo
+				// noop
 			}
 		};
 	}
 
 	public void next() {
 		runnable.run();
+	}
+
+	@Override
+	public void shutdown() {
+		// noop
 	}
 
 }
