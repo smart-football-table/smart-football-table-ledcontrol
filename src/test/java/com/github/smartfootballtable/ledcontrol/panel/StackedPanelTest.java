@@ -3,13 +3,19 @@ package com.github.smartfootballtable.ledcontrol.panel;
 import static com.github.smartfootballtable.ledcontrol.Color.BLACK;
 import static com.github.smartfootballtable.ledcontrol.Color.GREEN;
 import static com.github.smartfootballtable.ledcontrol.Color.RED;
+import static com.github.smartfootballtable.ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
 import static com.github.smartfootballtable.ledcontrol.scene.FlashScene.FlashConfig.flash;
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+
+import java.util.List;
+import java.util.function.ToIntFunction;
 
 import org.junit.jupiter.api.Test;
 
 import com.github.smartfootballtable.ledcontrol.Color;
+import com.github.smartfootballtable.ledcontrol.panel.Panel.OverlayStrategy;
 import com.github.smartfootballtable.ledcontrol.scene.DummyAnimator;
 import com.github.smartfootballtable.ledcontrol.scene.FlashScene;
 
@@ -72,7 +78,27 @@ class StackedPanelTest {
 
 	@Test
 	void mixTwoColors() {
-		Panel.OverlayStrategy overlayStrategy = new Panel.OverlayStrategy() {
+		StackedPanel sut = newSut(1, 1);
+		Panel inner1 = sut.createSubPanel();
+		Panel inner2 = sut.createSubPanel().overlayStrategy(mixColorsStrategy());
+		setColors(inner1, RED);
+		setColors(inner2, GREEN);
+		assertColors(sut, new Color(127, 127, 0));
+	}
+
+	@Test
+	void transparent() {
+		StackedPanel sut = newSut(4, 1);
+		Panel inner1 = sut.createSubPanel();
+		Panel inner2 = sut.createSubPanel().overlayStrategy(transparentOn(RED));
+		setColors(inner1, RED, GREEN, RED, null);
+		setColors(inner2, GREEN, RED, null, RED);
+		assertColors(sut, GREEN, GREEN, null, null);
+	}
+
+	private static OverlayStrategy mixColorsStrategy() {
+		return new OverlayStrategy() {
+
 			@Override
 			public void copy(int x, int y, Color color, Panel target) {
 				target.setColor(x, y, mix(color, target.getColors()[y][x]));
@@ -85,23 +111,19 @@ class StackedPanelTest {
 				if (c2 == null) {
 					return c1;
 				}
-				int r = (c1.getRed() + c2.getRed()) / 2;
-				int g = (c1.getGreen() + c2.getGreen()) / 2;
-				int b = (c1.getBlue() + c2.getBlue()) / 2;
-				return new Color(r, g, b);
+				List<Color> colors = asList(c1, c2);
+				return new Color( //
+						avg(colors, Color::getRed), //
+						avg(colors, Color::getGreen), //
+						avg(colors, Color::getBlue) //
+				);
 			}
-		};
-		StackedPanel sut = newSut(1, 1);
 
-		Panel inner1 = sut.createSubPanel();
-		Panel inner2 = sut.createSubPanel().overlayStrategy(overlayStrategy);
-		inner1.setColor(0, 0, RED);
-		inner1.repaint();
-		inner2.setColor(0, 0, GREEN);
-		inner2.repaint();
-		assertThat(getColors(sut), is(new Color[][] { //
-				new Color[] { new Color(127, 127, 0) } //
-		}));
+			private int avg(List<Color> colors, ToIntFunction<Color> toIntFunction) {
+				return (int) colors.stream().mapToInt(toIntFunction).average().getAsDouble();
+			}
+
+		};
 	}
 
 	@Test
@@ -140,6 +162,17 @@ class StackedPanelTest {
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel }, //
 				{ colorOnUnderlyingPanel, colorOnUnderlyingPanel, colorOnUnderlyingPanel } //
 		}));
+	}
+
+	private void setColors(Panel panel, Color... colors) {
+		for (int i = 0; i < colors.length; i++) {
+			panel.setColor(i, 0, colors[i]);
+		}
+		panel.repaint();
+	}
+
+	private void assertColors(StackedPanel sut, Color... colors) {
+		assertThat(getColors(sut), is(new Color[][] { colors }));
 	}
 
 	private void doFlash(FlashScene flashScene) {
