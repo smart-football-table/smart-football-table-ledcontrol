@@ -3,6 +3,7 @@ package com.github.smartfootballtable.ledcontrol.panel;
 import static com.github.smartfootballtable.ledcontrol.Color.BLACK;
 import static com.github.smartfootballtable.ledcontrol.Color.GREEN;
 import static com.github.smartfootballtable.ledcontrol.Color.RED;
+import static com.github.smartfootballtable.ledcontrol.Color.WHITE;
 import static com.github.smartfootballtable.ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
 import static com.github.smartfootballtable.ledcontrol.scene.FlashScene.FlashConfig.flash;
 import static java.util.Arrays.asList;
@@ -78,22 +79,22 @@ class StackedPanelTest {
 
 	@Test
 	void mixTwoColors() {
-		StackedPanel sut = newSut(1, 1);
+		StackedPanel sut = newSut(5, 1);
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel().overlayStrategy(mixColorsStrategy());
-		setColors(inner1, RED);
-		setColors(inner2, GREEN);
-		assertColors(sut, new Color(127, 127, 0));
+		setColors(inner1, RED, RED, null, RED, BLACK);
+		setColors(inner2, RED, GREEN, RED, null, WHITE);
+		assertColors(sut, RED, new Color(127, 127, 0), RED, RED, new Color(127, 127, 127));
 	}
 
 	@Test
 	void transparent() {
-		StackedPanel sut = newSut(4, 1);
+		StackedPanel sut = newSut(6, 1);
 		Panel inner1 = sut.createSubPanel();
 		Panel inner2 = sut.createSubPanel().overlayStrategy(transparentOn(RED));
-		setColors(inner1, RED, GREEN, RED, null);
-		setColors(inner2, GREEN, RED, null, RED);
-		assertColors(sut, GREEN, GREEN, null, null);
+		setColors(inner1, RED, GREEN, RED, null, null, BLACK);
+		setColors(inner2, GREEN, RED, null, RED, BLACK, null);
+		assertColors(sut, GREEN, GREEN, null, null, BLACK, null);
 	}
 
 	private static OverlayStrategy mixColorsStrategy() {
