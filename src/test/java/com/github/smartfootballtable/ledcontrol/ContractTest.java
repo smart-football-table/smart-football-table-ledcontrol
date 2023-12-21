@@ -258,12 +258,7 @@ class ContractTest {
 				return idleScene;
 			}
 
-		}.configure(new LedControl(panel, mock(OutputStream.class)) {
-			@Override
-			public Animator getAnimator() {
-				return animator;
-			}
-		}, panel);
+		}.configure(new LedControl(panel, mock(OutputStream.class), animator), panel);
 	}
 
 }

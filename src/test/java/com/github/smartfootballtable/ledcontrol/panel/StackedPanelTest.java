@@ -79,22 +79,24 @@ class StackedPanelTest {
 
 	@Test
 	void mixTwoColors() {
-		StackedPanel sut = newSut(5, 1);
-		Panel inner1 = sut.createSubPanel();
-		Panel inner2 = sut.createSubPanel().overlayStrategy(mixColorsStrategy());
+		OverlayStrategy sut = mixColorsStrategy();
+		StackedPanel panel = newSut(5, 1);
+		Panel inner1 = panel.createSubPanel();
+		Panel inner2 = panel.createSubPanel().overlayStrategy(sut);
 		setColors(inner1, RED, RED, null, RED, BLACK);
 		setColors(inner2, RED, GREEN, RED, null, WHITE);
-		assertColors(sut, RED, new Color(127, 127, 0), RED, RED, new Color(127, 127, 127));
+		assertColors(panel, RED, new Color(127, 127, 0), RED, RED, new Color(127, 127, 127));
 	}
 
 	@Test
 	void transparent() {
-		StackedPanel sut = newSut(6, 1);
-		Panel inner1 = sut.createSubPanel();
-		Panel inner2 = sut.createSubPanel().overlayStrategy(transparentOn(RED));
+		OverlayStrategy sut = transparentOn(RED);
+		StackedPanel panel = newSut(6, 1);
+		Panel inner1 = panel.createSubPanel();
+		Panel inner2 = panel.createSubPanel().overlayStrategy(sut);
 		setColors(inner1, RED, GREEN, RED, null, null, BLACK);
 		setColors(inner2, GREEN, RED, null, RED, BLACK, null);
-		assertColors(sut, GREEN, GREEN, null, null, BLACK, null);
+		assertColors(panel, GREEN, GREEN, null, null, BLACK, null);
 	}
 
 	private static OverlayStrategy mixColorsStrategy() {

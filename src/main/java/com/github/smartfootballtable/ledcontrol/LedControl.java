@@ -1,9 +1,12 @@
 package com.github.smartfootballtable.ledcontrol;
 
 import static com.github.smartfootballtable.ledcontrol.Color.BLACK;
+import static com.github.smartfootballtable.ledcontrol.LedControl.FPS.framesPerSecond;
+import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
@@ -12,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -19,6 +23,24 @@ import com.github.smartfootballtable.ledcontrol.LedControl.MessageWithTopic;
 import com.github.smartfootballtable.ledcontrol.panel.Panel;
 
 public class LedControl implements Consumer<MessageWithTopic> {
+
+	public static class FPS {
+
+		private final int fps;
+
+		public FPS(int fps) {
+			this.fps = fps;
+		}
+
+		public static FPS framesPerSecond(int fps) {
+			return new FPS(fps);
+		}
+
+		public long sleepTime(TimeUnit timeUnit) {
+			return timeUnit.convert(NANOSECONDS.convert(1, SECONDS) / fps, NANOSECONDS);
+		}
+
+	}
 
 	public static class DefaultAnimator implements Animator {
 
@@ -42,8 +64,8 @@ public class LedControl implements Consumer<MessageWithTopic> {
 		private final long sleepMillis;
 		private volatile boolean interrupted;
 
-		public DefaultAnimator(int fps) {
-			sleepMillis = SECONDS.toMillis(1) / fps;
+		public DefaultAnimator(FPS fps) {
+			sleepMillis = fps.sleepTime(MILLISECONDS);
 			runAsync(() -> {
 				while (!interrupted) {
 					long startTime = System.currentTimeMillis();
@@ -150,7 +172,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	private final Animator animator;
 
 	public LedControl(Panel panel, OutputStream outputStream) {
-		this(panel, outputStream, new DefaultAnimator(25));
+		this(panel, outputStream, new DefaultAnimator(framesPerSecond(25)));
 	}
 
 	public LedControl(Panel panel, OutputStream outputStream, Animator animator) {
@@ -182,14 +204,15 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	}
 
 	public void accept(MessageWithTopic message) {
-		for (ChainElement element : elements) {
-			try {
-				if (element.handle(message, animator)) {
-					return;
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		elements.stream().map(e -> tryHandle(e, message)).anyMatch(TRUE::equals);
+	}
+
+	private boolean tryHandle(ChainElement element, MessageWithTopic message) {
+		try {
+			return element.handle(message, animator);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
 

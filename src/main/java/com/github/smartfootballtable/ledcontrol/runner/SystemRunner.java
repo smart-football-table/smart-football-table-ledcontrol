@@ -2,6 +2,7 @@ package com.github.smartfootballtable.ledcontrol.runner;
 
 import static com.github.smartfootballtable.ledcontrol.Color.BLACK;
 import static com.github.smartfootballtable.ledcontrol.Color.WHITE;
+import static com.github.smartfootballtable.ledcontrol.LedControl.FPS.framesPerSecond;
 import static com.github.smartfootballtable.ledcontrol.LedControl.MessageWithTopic.TopicIsEqualTo.topicIsEqualTo;
 import static com.github.smartfootballtable.ledcontrol.LedControl.MessageWithTopic.TopicStartsWith.topicStartWith;
 import static com.github.smartfootballtable.ledcontrol.panel.Panel.OverlayStrategy.transparentOn;
@@ -40,6 +41,7 @@ import org.kohsuke.args4j.Option;
 import com.github.smartfootballtable.ledcontrol.Animator;
 import com.github.smartfootballtable.ledcontrol.Color;
 import com.github.smartfootballtable.ledcontrol.LedControl;
+import com.github.smartfootballtable.ledcontrol.LedControl.DefaultAnimator;
 import com.github.smartfootballtable.ledcontrol.LedControl.MessageWithTopic;
 import com.github.smartfootballtable.ledcontrol.LedControl.MessageWithTopic.TopicIsEqualTo;
 import com.github.smartfootballtable.ledcontrol.LedControl.MessageWithTopic.TopicStartsWith;
@@ -94,29 +96,34 @@ public class SystemRunner {
 
 			Animator animator = ledControl.getAnimator();
 
-			return //
-			ledControl //
-					.when(isBackgroundlight).then(m -> fillWithPayloadColor(backgroundPanel, m)) //
-					.when(isForegroundlight).then(m -> fillWithPayloadColor(foregrounddPanel, m)) //
-					.when(isTeamScored).then(m -> {
-						int idx = parseInt(m.getPayload());
-						if (idx >= 0 && idx < teamColors.length) {
-							teamScoredScene(winnerPanel, teamColors[idx]).flash(animator);
-						}
-
-					}) //
-					.when(isTeamScore).then(m -> {
-						scoreScene.setScore(parseInt(isTeamScore.suffix(m.getTopic())), parseInt(m.getPayload()));
-					}) //
+			return ledControl //
+					.when(isBackgroundlight).then(m -> fillWithColor(backgroundPanel, colorFromPayload(m))) //
+					.when(isForegroundlight).then(m -> fillWithColor(foregrounddPanel, colorFromPayload(m))) //
+					.when(isTeamScored).then(m -> teamScored(winnerPanel, animator, parseInt(m.getPayload()))) //
+					.when(isTeamScore)
+					.then(m -> teamScore(scoreScene, parseInt(isTeamScore.suffix(m.getTopic())),
+							parseInt(m.getPayload()))) //
 					.when(isGameFoul).then(m -> foulScene.flash(animator)) //
 					.when(isGameover).then(m -> gameoverScene(winnerPanel, flashColors(m)).flash(animator)) //
-					.when(isIdle).then(m -> {
-						if (parseBoolean(m.getPayload())) {
-							idleScene.startAnimation(animator);
-						} else {
-							idleScene.stopAnimation().reset();
-						}
-					});
+					.when(isIdle).then(m -> idle(idleScene, animator, parseBoolean(m.getPayload())));
+		}
+
+		private void teamScored(Panel winnerPanel, Animator animator, int teamId) {
+			if (teamId >= 0 && teamId < teamColors.length) {
+				teamScoredScene(winnerPanel, teamColors[teamId]).flash(animator);
+			}
+		}
+
+		private static void teamScore(ScoreScene scene, int teamId, int score) {
+			scene.setScore(teamId, score);
+		}
+
+		private static void idle(IdleScene idleScene, Animator animator, boolean idle) {
+			if (idle) {
+				idleScene.startAnimation(animator);
+			} else {
+				idleScene.stopAnimation().reset();
+			}
 		}
 
 		protected FlashScene teamScoredScene(Panel panel, Color color) {
@@ -161,8 +168,8 @@ public class SystemRunner {
 			return new FlashScene(panel, configs.toArray(new FlashConfig[configs.size()]));
 		}
 
-		private Panel fillWithPayloadColor(Panel panel, MessageWithTopic message) {
-			return panel.fill(colorFromPayload(message)).repaint();
+		private static Panel fillWithColor(Panel panel, Color color) {
+			return panel.fill(color).repaint();
 		}
 
 		private static Color colorFromPayload(MessageWithTopic message) {
@@ -208,16 +215,16 @@ public class SystemRunner {
 		SerialConnection connection = new SerialConnection(tty, baudrate);
 		SECONDS.sleep(2);
 		StackedPanel panel = new StackedPanel(leds, 1);
-		LedControl ledControl = new LedControl(panel, connection.getOutputStream());
+		LedControl ledControl = new LedControl(panel, connection.getOutputStream(),
+				new DefaultAnimator(framesPerSecond(25)));
 		try (MqttAdapter mqttAdapter = new MqttAdapter(mqttHost, mqttPort, ledControl)) {
 			new Configurator().configure(ledControl, panel);
-			Object o = new Object();
-			while (true) {
-				synchronized (o) {
-					o.wait();
-				} 
-			}
+			waitForever();
 		}
+	}
+
+	private static void waitForever() throws InterruptedException {
+		Thread.currentThread().join();
 	}
 
 	boolean parseArgs(String... args) {
