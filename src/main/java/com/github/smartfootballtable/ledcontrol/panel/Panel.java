@@ -83,10 +83,10 @@ public class Panel {
 	}
 
 	public void copyTo(Panel target) {
-		Color[][] colors = getColors();
-		for (int y = 0; y < colors.length; y++) {
-			for (int x = 0; x < colors[y].length; x++) {
-				Color newColor = colors[y][x];
+		Color[][] sourceColors = getColors();
+		for (int y = 0; y < sourceColors.length; y++) {
+			for (int x = 0; x < sourceColors[y].length; x++) {
+				Color newColor = sourceColors[y][x];
 				overlayStrategy.copy(x, y, newColor, target);
 			}
 		}

@@ -25,18 +25,18 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 	public static class FPS {
 
-		private final int fps;
+		private final int value;
 
-		public FPS(int fps) {
-			this.fps = fps;
+		public FPS(int value) {
+			this.value = value;
 		}
 
-		public static FPS framesPerSecond(int fps) {
-			return new FPS(fps);
+		public static FPS framesPerSecond(int value) {
+			return new FPS(value);
 		}
 
 		public long sleepTime(TimeUnit timeUnit) {
-			return timeUnit.convert(NANOSECONDS.convert(1, SECONDS) / fps, NANOSECONDS);
+			return timeUnit.convert(NANOSECONDS.convert(1, SECONDS) / value, NANOSECONDS);
 		}
 
 	}
