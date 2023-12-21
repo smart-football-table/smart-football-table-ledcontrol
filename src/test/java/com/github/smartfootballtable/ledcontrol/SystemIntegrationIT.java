@@ -247,14 +247,15 @@ class SystemIntegrationIT {
 	}
 
 	private void givenTheSystemConnectedToBroker(String host, int port) throws MqttSecurityException, MqttException {
-		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT).configure(new LedControl(panel, outputStream) {
-			@Override
-			public LedControl add(ChainElement element) {
-				ChainElement spy = spy(element);
-				spies.put(element.condition(), spy);
-				return super.add(spy);
-			}
-		}, panel);
+		ledControl = new Configurator(COLOR_TEAM_LEFT, COLOR_TEAM_RIGHT) //
+				.configure(new LedControl(panel, outputStream) {
+					@Override
+					public LedControl add(ChainElement element) {
+						ChainElement spy = spy(element);
+						spies.put(element.condition(), spy);
+						return super.add(spy);
+					}
+				}, panel);
 		mqttAdapter = new MqttAdapter(host, port, ledControl);
 	}
 

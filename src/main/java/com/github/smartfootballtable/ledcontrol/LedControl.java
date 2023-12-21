@@ -63,7 +63,7 @@ public class LedControl implements Consumer<MessageWithTopic> {
 
 			});
 		}
-		
+
 		@Override
 		public void shutdown() {
 			interrupted = true;
