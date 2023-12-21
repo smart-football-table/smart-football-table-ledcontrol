@@ -2,7 +2,6 @@ package com.github.smartfootballtable.ledcontrol;
 
 import static com.github.smartfootballtable.ledcontrol.Color.BLACK;
 import static com.github.smartfootballtable.ledcontrol.LedControl.FPS.framesPerSecond;
-import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -204,10 +203,13 @@ public class LedControl implements Consumer<MessageWithTopic> {
 	}
 
 	public void accept(MessageWithTopic message) {
-		elements.stream().map(e -> tryHandle(e, message)).anyMatch(TRUE::equals);
+		for (ChainElement element : elements) {
+			if (tryHandle(message, element))
+				return;
+		}
 	}
 
-	private boolean tryHandle(ChainElement element, MessageWithTopic message) {
+	private boolean tryHandle(MessageWithTopic message, ChainElement element) {
 		try {
 			return element.handle(message, animator);
 		} catch (Exception e) {
