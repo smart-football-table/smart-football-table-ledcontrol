@@ -14,10 +14,10 @@ The program writes TPM2 frames to the serial link which will then be interpreted
 However, the Arduino seems to be not fast enough to manage the amount of data sent since it is very limited both in processing speed and the size of the serial buffer. 
 
 Scenes visualized using the strip: 
-* Goals: Whole strip blinks in the goal getting team's color)
+* Goals: Whole strip blinks in the goal getting team's color
 * Fouls: Whole strip blinks yellow
 * Score: The score of both teams in visualized during the game
-* Game over: Whole strip blinks in the winning team's color)
+* Game over: Whole strip blinks in the winning team's color
 * Idle: Plays some animation if noone is playing
 
 The strip can also be used to lighten the football table. 
