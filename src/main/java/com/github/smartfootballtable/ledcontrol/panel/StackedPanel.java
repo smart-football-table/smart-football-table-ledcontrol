@@ -10,7 +10,7 @@ public class StackedPanel extends Panel {
 
 	public StackedPanel(int width, int height) {
 		super(width, height);
-		this.subPanelRepaintListener = panel -> copyTo(this);
+		this.subPanelRepaintListener = __ -> copyTo(this);
 	}
 
 	@Override
