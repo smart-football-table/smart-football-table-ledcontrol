@@ -7,7 +7,7 @@
 	<properties>
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
-		<junit.version>5.10.2</junit.version>
+		<junit.version>5.10.3</junit.version>
 		<pact.version>4.1.7</pact.version>
 		<image>docker.io/smart-football-table/${project.artifactId}:latest</image>
 	</properties>
