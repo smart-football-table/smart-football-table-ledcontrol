@@ -37,10 +37,12 @@ import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.annotations.Pact;
+import au.com.dius.pact.core.model.annotations.PactFolder;
 import au.com.dius.pact.core.model.messaging.Message;
 import au.com.dius.pact.core.model.messaging.MessagePact;
 
 @ExtendWith(PactConsumerTestExt.class)
+@PactFolder("pacts")
 class ContractTest {
 
 	private static final class FlashScene4Test extends FlashScene {
@@ -127,8 +129,7 @@ class ContractTest {
 	private LedControl ledControl;
 
 	@BeforeEach
-	void setup() throws IOException, MqttException {
-		System.setProperty("pact.rootDir", "pacts");
+	void setup() {
 		startSut();
 	}
 
