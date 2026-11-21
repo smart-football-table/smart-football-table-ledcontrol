@@ -19,7 +19,7 @@ jobs:
     
     strategy:
       matrix:
-        java-version: [ 11, 15 ]
+        java-version: [ 11, 17, 21 ]
 
     steps:
     - uses: actions/checkout@v7
@@ -27,7 +27,7 @@ jobs:
       uses: actions/setup-java@v5
       with:
         java-version: ${{ matrix.java-version }}
-        distribution: 'adopt'
+        distribution: 'temurin'
         cache: maven
     - name: Cache SonarCloud packages
       uses: actions/cache@v6
