@@ -1,19 +1,21 @@
 version: 2
-
 updates:
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
     # Check for updates to GitHub Actions every weekday
     interval: "daily"
-    time: "04:00"
-
+    time: "04:42"
+  assignees:
+  - pfichtner
 - package-ecosystem: maven
   directory: "/"
   schedule:
     interval: "daily"
-    time: "04:00"
-  open-pull-requests-limit: 10
+    time: "04:42"
   assignees:
   - pfichtner
+  ignore:
+    - dependency-name: "org.junit:junit-bom"
+      versions: [">=6.0.0"]
 
